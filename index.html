@@ -1,1 +1,700 @@
-PASTE_CONTENT_HERE
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AEW System — AI Employee Workflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#00ffcc;
+  --teal-mid:rgba(0,255,204,0.12);
+  --teal-glow:rgba(0,255,204,0.35);
+  --gold:#f0c040;
+  --gold-mid:rgba(240,192,64,0.12);
+  --purple:#a855f7;
+  --white:#f0f0f0;
+  --muted:#55556a;
+  --card:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#000;color:#f0f0f0;font-family:'Syne',sans-serif;overflow-x:hidden}
+
+/* ── TOP NAV ── */
+.topnav{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 52px;
+  background:rgba(0,0,0,0.9);
+  border-bottom:1px solid var(--border);
+}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;letter-spacing:4px;color:var(--teal);text-shadow:0 0 20px var(--teal-glow)}
+.desknav{display:flex;gap:4px}
+.dnav-btn{padding:8px 22px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;border-radius:3px;transition:all 0.25s}
+.dnav-btn:hover{color:#f0f0f0}
+.dnav-btn.on{color:var(--teal);background:var(--teal-mid)}
+.nav-cta{background:transparent;color:var(--teal);border:1px solid var(--teal);padding:9px 24px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
+.nav-cta:hover{background:var(--teal);color:#000}
+
+/* ── BOTTOM MOB NAV ── */
+.mobnav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:500;
+  background:#0a0a0a;
+  border-top:1px solid rgba(0,255,204,0.2);
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.mobnav-inner{display:flex;height:56px}
+.mnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:8px 4px;
+  font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  background:none;border:none;color:#55556a;cursor:pointer;
+  border-right:1px solid var(--border);
+  transition:all 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mnav-btn:last-child{border-right:none}
+.mnav-btn.on{color:var(--teal);background:rgba(0,255,204,0.06)}
+.mnav-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── PAGES ── */
+.pg{display:none;min-height:100vh;padding-top:70px}
+.pg.on{display:block}
+
+/* ── PAGE 1 SCENE ── */
+.scene{
+  position:relative;
+  min-height:calc(100vh - 70px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 20px 60px;
+}
+.gridbg{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,204,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,204,0.025) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+.glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,204,0.05) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+
+/* ── SPHERE ── */
+.sph-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;margin-bottom:40px}
+.sph-outer{position:relative;width:250px;height:250px;cursor:pointer}
+.orbit{position:absolute;border-radius:50%;border:1px solid rgba(0,255,204,0.08);top:50%;left:50%;transform:translate(-50%,-50%)}
+.o1{width:310px;height:310px;animation:spin 22s linear infinite}
+.o2{width:380px;height:380px;animation:spin 35s linear infinite reverse;border-color:rgba(0,255,204,0.05)}
+.o3{width:460px;height:460px;animation:spin 50s linear infinite;border-color:rgba(0,255,204,0.03)}
+.odot{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);top:0;left:50%;transform:translate(-50%,-50%)}
+@keyframes spin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.sph{position:absolute;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle at 38% 32%,rgba(0,255,204,0.18) 0%,rgba(0,20,16,0.92) 55%,#000 100%);border:1px solid rgba(0,255,204,0.3);box-shadow:0 0 40px rgba(0,255,204,0.12),inset 0 0 60px rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;transition:all 0.4s;top:0;left:0}
+.sph.listen{background:radial-gradient(circle at 38% 32%,rgba(240,192,64,0.22) 0%,rgba(20,14,0,0.92) 55%,#000 100%);border-color:rgba(240,192,64,0.45);animation:pulse-listen 1.2s ease-in-out infinite}
+.sph.think{background:radial-gradient(circle at 38% 32%,rgba(168,85,247,0.22) 0%,rgba(14,0,20,0.92) 55%,#000 100%);border-color:rgba(168,85,247,0.45);animation:pulse-think 2s ease-in-out infinite}
+@keyframes pulse-listen{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes pulse-think{0%,100%{box-shadow:0 0 80px rgba(168,85,247,0.28)}50%{box-shadow:0 0 130px rgba(168,85,247,0.5)}}
+.sph-core{text-align:center}
+.sph-label{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-top:8px;display:block}
+.sph-hint{position:absolute;top:-32px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(0,255,204,0.4);animation:hint 3s ease-in-out infinite;pointer-events:none}
+@keyframes hint{0%,100%{opacity:0;transform:translateX(-50%) translateY(4px)}50%{opacity:1;transform:translateX(-50%) translateY(0)}}
+.waves{position:absolute;width:250px;height:250px;top:0;left:0;border-radius:50%;pointer-events:none;opacity:0;transition:opacity 0.4s}
+.sph.listen~.waves,.sph.think~.waves{opacity:1}
+.wave-row{position:absolute;bottom:-52px;left:50%;transform:translateX(-50%);display:flex;align-items:flex-end;gap:3px;height:44px}
+.wb{width:4px;border-radius:2px;background:var(--teal);animation:wa 0.9s ease-in-out infinite;transform-origin:bottom}
+.wb:nth-child(1){height:7px;animation-delay:0s}.wb:nth-child(2){height:13px;animation-delay:.1s}.wb:nth-child(3){height:21px;animation-delay:.2s}.wb:nth-child(4){height:33px;animation-delay:.05s}.wb:nth-child(5){height:40px;animation-delay:.15s}.wb:nth-child(6){height:44px;animation-delay:.25s}.wb:nth-child(7){height:40px;animation-delay:.1s}.wb:nth-child(8){height:33px;animation-delay:.2s}.wb:nth-child(9){height:21px;animation-delay:.05s}.wb:nth-child(10){height:13px;animation-delay:.15s}.wb:nth-child(11){height:7px;animation-delay:.25s}
+@keyframes wa{0%,100%{transform:scaleY(0.25);opacity:0.35}50%{transform:scaleY(1);opacity:1}}
+.waves.gold .wb{background:var(--gold)}
+.waves.purple .wb{background:var(--purple)}
+.vtx{position:absolute;bottom:-108px;left:50%;transform:translateX(-50%);width:300px;text-align:center;font-size:13px;color:rgba(255,255,255,0.5);font-style:italic;min-height:32px;line-height:1.6}
+
+/* ── HERO TEXT ── */
+.hero{position:relative;z-index:10;text-align:center;margin-top:70px}
+.hero-eye{font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--teal);margin-bottom:14px;text-shadow:0 0 12px var(--teal-glow)}
+.hero-h{font-family:'Cormorant Garamond',serif;font-size:clamp(44px,7vw,86px);font-weight:700;line-height:1.0;margin-bottom:18px;letter-spacing:-1px}
+.hero-h span{color:var(--teal);text-shadow:0 0 30px var(--teal-glow)}
+.hero-p{font-size:15px;color:rgba(255,255,255,0.4);max-width:420px;margin:0 auto 40px;line-height:1.85;animation:hue 3s ease-in-out infinite}
+@keyframes hue{0%,100%{color:rgba(255,255,255,0.55)}25%{color:var(--teal);text-shadow:0 0 20px var(--teal-glow)}50%{color:rgba(255,255,255,0.85)}75%{color:var(--gold)}}
+
+/* ── BUTTONS ── */
+.btngroup{display:flex;flex-direction:column;align-items:center;gap:14px}
+.sbtn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;
+  background:transparent;border:1px solid var(--teal);color:var(--teal);
+  padding:18px 48px;width:320px;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.3s;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+.sbtn::before{content:'';position:absolute;inset:0;background:var(--teal);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;z-index:0}
+.sbtn:hover::before{transform:scaleX(1)}.sbtn:hover{color:#000;box-shadow:0 0 40px var(--teal-glow)}
+.sbtn>*{position:relative;z-index:1}
+.sbtn.sec{border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.55)}
+.sbtn.sec::before{background:rgba(255,255,255,0.08)}
+.sbtn.sec:hover{color:#f0f0f0;box-shadow:none}
+.sbtn.rec{border-color:#e74c3c;color:#e74c3c;animation:rec 1s ease-in-out infinite}
+@keyframes rec{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,0.4)}50%{box-shadow:0 0 0 12px rgba(231,76,60,0)}}
+
+/* ── PLATFORMS ── */
+.platforms{position:relative;z-index:10;margin-top:44px;text-align:center;padding:0 20px}
+.plat-lbl{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(0,255,204,0.6);margin-bottom:16px;text-shadow:0 0 12px rgba(0,255,204,0.3)}
+.plat-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:480px;margin:0 auto}
+.plat{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);font-size:11px;font-weight:600;color:rgba(255,255,255,0.75);text-decoration:none;cursor:pointer;border-radius:3px;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
+.plat:hover,.plat.live{border-color:rgba(0,255,204,0.5);color:var(--teal);background:var(--teal-mid);box-shadow:0 0 12px rgba(0,255,204,0.1)}
+.plat.dim{opacity:0.55;cursor:default}
+.plat.dim:hover{border-color:var(--border);color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.02)}
+.plat svg{width:14px;height:14px;flex-shrink:0}
+.pbadge{font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 5px;border-radius:2px;margin-left:2px}
+.pbadge.go{background:var(--teal);color:#000}
+.pbadge.soon{background:rgba(240,192,64,0.15);color:var(--gold)}
+
+/* ── TUTORIAL OVERLAY ── */
+.tut-ov{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.tut-ov.on{display:flex}
+.tut-box{max-width:460px;width:100%;text-align:center}
+.tut-sphere{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 38% 32%,rgba(0,255,204,0.18) 0%,rgba(0,20,16,0.92) 55%,#000 100%);border:1px solid rgba(0,255,204,0.3);box-shadow:0 0 40px rgba(0,255,204,0.2);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;animation:pulse-listen 1.5s ease-in-out infinite}
+.tut-h{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;margin-bottom:6px}
+.tut-s{font-size:13px;color:rgba(255,255,255,0.38);margin-bottom:22px;line-height:1.7}
+.tut-step{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-left:2px solid var(--teal);padding:16px 20px;margin-bottom:10px;text-align:left}
+.tut-snum{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
+.tut-stit{font-size:13px;font-weight:700;margin-bottom:4px}
+.tut-sdesc{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.7}
+.tut-go{margin-top:18px;background:var(--teal);color:#000;border:none;padding:14px 44px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer}
+
+/* ── CONFIRM OVERLAY ── */
+.conf-ov{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+.conf-ov.on{display:flex}
+.phone{width:248px;background:#111;border-radius:26px;border:1px solid rgba(255,255,255,0.07);overflow:hidden;margin-bottom:24px}
+.ph-top{background:#0d0d0d;padding:11px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.ph-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ph-n{font-size:11px;font-weight:700}.ph-s{font-size:9px;color:var(--teal)}
+.ph-msgs{padding:12px 10px;display:flex;flex-direction:column;gap:7px;min-height:180px;max-height:220px;overflow:hidden}
+.msg{max-width:90%;padding:8px 12px;font-size:11px;line-height:1.5;border-radius:9px;opacity:0;transform:translateY(5px);transition:all 0.35s ease}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg-b{background:#1a2620;border:1px solid rgba(0,255,204,0.12);color:rgba(255,255,255,0.8);align-self:flex-start;border-bottom-left-radius:3px}
+.msg-u{background:rgba(0,255,204,0.1);border:1px solid rgba(0,255,204,0.18);color:var(--teal);align-self:flex-end;border-bottom-right-radius:3px}
+.msg-ty{background:#1a2620;border:1px solid rgba(0,255,204,0.12);align-self:flex-start;padding:10px 13px}
+.dots{display:flex;gap:4px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:da 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes da{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+.conf-h{font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:6px}
+.conf-s{font-size:13px;color:rgba(255,255,255,0.38);margin-bottom:22px;line-height:1.7}
+.conf-s strong{color:var(--teal)}
+.conf-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.conf-btn{background:transparent;border:1px solid var(--teal);color:var(--teal);padding:12px 36px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
+.conf-btn:hover{background:var(--teal);color:#000}
+.conf-sec{background:none;border:1px solid var(--border);color:var(--muted);padding:12px 20px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
+.conf-sec:hover{color:#f0f0f0}
+
+/* ── TASK FORM ── */
+.form-ov{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;padding:16px}
+.form-ov.on{display:flex}
+.form-box{background:#0a0a0a;border:1px solid var(--border);border-top:1px solid var(--teal);width:90%;max-width:500px;max-height:90vh;overflow-y:auto}
+.form-head{padding:24px 28px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.form-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;margin-bottom:3px}
+.form-sub{font-size:12px;color:var(--muted)}
+.form-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+.form-body{padding:24px 28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:7px}
+.field input,.field textarea,.field select{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-bottom:1px solid rgba(0,255,204,0.3);color:#f0f0f0;padding:12px 13px;font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s}
+.field input:focus,.field textarea:focus{border-bottom-color:var(--teal)}
+.field textarea{resize:vertical;min-height:80px}
+.field select{background:#111}
+.form-submit{width:100%;background:linear-gradient(135deg,var(--teal),var(--purple));color:#f0f0f0;border:none;padding:15px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;margin-top:8px}
+
+/* ── SHARED SECTION STYLES ── */
+.pw{max-width:1080px;margin:0 auto;padding:72px 24px 60px}
+.stag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--teal);background:var(--teal-mid);border:1px solid rgba(0,255,204,0.14);padding:5px 14px;border-radius:100px;margin-bottom:18px}
+.stag.g{color:var(--gold);background:var(--gold-mid);border-color:rgba(240,192,64,0.14)}
+.stitle{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,5vw,58px);font-weight:700;line-height:1.05;margin-bottom:14px;letter-spacing:-0.5px}
+.ssub{font-size:15px;color:rgba(255,255,255,0.38);max-width:490px;line-height:1.85;margin-bottom:52px}
+
+/* ── PAGE 2: EDU ── */
+.edu-grid{display:grid;grid-template-columns:1fr 36px 1fr 36px 1fr;align-items:center;margin-bottom:64px}
+.en{background:var(--card);border:1px solid var(--border);padding:32px 20px;text-align:center;transition:all 0.3s;position:relative;overflow:hidden;cursor:pointer}
+.en::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--teal-mid),transparent);opacity:0;transition:opacity 0.3s}
+.en:hover::before{opacity:1}.en:hover{border-color:rgba(0,255,204,0.22);transform:translateY(-3px)}
+.en-icon{font-size:32px;margin-bottom:12px;display:block}
+.en-name{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:8px}
+.en-desc{font-size:12px;color:rgba(255,255,255,0.38);line-height:1.7}
+.ea{display:flex;align-items:center;justify-content:center;color:rgba(0,255,204,0.22);font-size:18px}
+.en-tog{position:absolute;top:12px;right:14px;font-size:18px;color:rgba(0,255,204,0.2);transition:transform 0.3s,color 0.3s;user-select:none}
+.en.open .en-tog{transform:rotate(45deg);color:var(--teal)}
+.en-det{display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:14px;text-align:left}
+.en.open .en-det{display:block}
+.en-list{list-style:none;margin:0 0 12px}
+.en-list li{font-size:11.5px;color:rgba(255,255,255,0.35);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:flex-start;gap:7px;line-height:1.5}
+.en-list li:last-child{border-bottom:none}
+.edot-s{color:var(--teal)}.edot-e{color:var(--gold)}.edot-v{color:#38bdf8}
+.en-quote{font-style:italic;font-size:11px;color:rgba(0,255,204,0.3);border-left:2px solid rgba(0,255,204,0.2);padding-left:12px;line-height:1.65}
+.hier{margin-bottom:64px}
+.hier-lbl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:20px}
+.hr{display:flex;align-items:center;padding:20px 28px;border:1px solid var(--border);border-bottom:none;position:relative;overflow:hidden;transition:all 0.3s}
+.hr:last-child{border-bottom:1px solid var(--border)}
+.hr::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background 0.3s}
+.hr:hover{background:rgba(0,255,204,0.015)}.hr:hover::after{background:var(--teal)}
+.h-lv{font-size:9px;font-weight:700;letter-spacing:3px;color:var(--muted);width:70px;flex-shrink:0}
+.h-ti{font-size:14px;font-weight:700;flex:1;letter-spacing:0.3px}
+.badge{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:100px}
+.bt{background:var(--teal-mid);color:var(--teal);border:1px solid rgba(0,255,204,0.18)}
+.bg2{background:var(--gold-mid);color:var(--gold);border:1px solid rgba(240,192,64,0.18)}
+.bp{background:rgba(168,85,247,0.1);color:var(--purple);border:1px solid rgba(168,85,247,0.18)}
+.email-b{display:flex;align-items:center;gap:28px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-left:2px solid var(--teal);padding:32px 44px}
+.eb-text h3{font-family:'Cormorant Garamond',serif;font-size:20px;margin-bottom:5px}
+.eb-text p{font-size:13px;color:rgba(255,255,255,0.32);max-width:300px;line-height:1.7}
+.e-row{display:flex;gap:9px;flex:1;min-width:220px}
+.ei{flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-bottom:1px solid rgba(0,255,204,0.28);color:#f0f0f0;padding:13px 14px;font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s}
+.ei:focus{border-bottom-color:var(--teal)}
+.eb2{background:transparent;border:1px solid var(--teal);color:var(--teal);padding:13px 20px;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
+.eb2:hover{background:var(--teal);color:#000}
+
+/* ── PAGE 3: PRICING ── */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:var(--border);margin-bottom:1px}
+.pc{background:#000;padding:44px 32px;position:relative;overflow:hidden;display:flex;flex-direction:column;transition:background 0.3s}
+.pc:hover{background:#040404}.pc.pf{background:#01080a}.pc.pp{background:#080600}
+.pt{font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px}
+.t1 .pt{color:var(--teal)}.t2 .pt{color:var(--purple)}.t3 .pt{color:var(--gold)}
+.pn{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin-bottom:10px}
+.pp2{display:flex;align-items:baseline;gap:2px;margin-bottom:7px}
+.pa{font-family:'Cormorant Garamond',serif;font-size:50px;font-weight:700;line-height:1}
+.t1 .pa{color:var(--teal)}.t2 .pa{color:var(--purple)}.t3 .pa{color:var(--gold)}
+.ppe{font-size:13px;color:var(--muted)}
+.pd{font-size:13px;color:rgba(255,255,255,0.32);line-height:1.7;margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--border)}
+.pf2{list-style:none;flex:1;margin-bottom:24px}
+.pf2 li{display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.6;margin-bottom:9px;color:rgba(255,255,255,0.65)}
+.pd2{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:8px}
+.t1 .pd2{background:var(--teal)}.t2 .pd2{background:var(--purple)}.t3 .pd2{background:var(--gold)}
+.pbtn{width:100%;padding:14px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.3s}
+.t1 .pbtn{background:var(--teal-mid);color:var(--teal);border:1px solid rgba(0,255,204,0.18)}.t1 .pbtn:hover{background:var(--teal);color:#000}
+.t2 .pbtn{background:var(--purple);color:#f0f0f0}.t2 .pbtn:hover{background:#bf7fff}
+.t3 .pbtn{background:var(--gold);color:#000}.t3 .pbtn:hover{background:#f8d060}
+.pop{position:absolute;top:0;right:0;background:var(--purple);color:#f0f0f0;font-size:7px;font-weight:700;letter-spacing:2px;padding:5px 11px}
+.con{background:var(--card);border:1px solid var(--border);border-top:1px solid var(--gold);padding:50px 40px;text-align:center;position:relative}
+.con::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(240,192,64,0.04),transparent 60%);pointer-events:none}
+.con-t{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;margin-bottom:10px}
+.con-s{font-size:14px;color:rgba(255,255,255,0.38);max-width:420px;margin:0 auto 24px;line-height:1.8}
+.con-ms{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.cm{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.02);border:1px solid var(--border);padding:8px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.38)}
+.con-e{display:flex;gap:9px;max-width:420px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.ci{flex:1;min-width:180px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-bottom:1px solid rgba(240,192,64,0.28);color:#f0f0f0;padding:12px 14px;font-family:'Syne',sans-serif;font-size:13px;outline:none}
+.ci:focus{border-bottom-color:var(--gold)}
+.cb{background:var(--gold);color:#000;border:none;padding:12px 22px;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.cb:hover{background:#f8d060}
+
+/* ── FOOTER ── */
+footer{background:#000;border-top:1px solid var(--border);padding:24px 52px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.fl{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;letter-spacing:4px;color:var(--teal);text-shadow:0 0 12px var(--teal-glow)}
+.ft{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.ftg{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);text-decoration:none;border:1px solid rgba(0,255,204,0.18);padding:9px 16px;transition:all 0.25s}
+.ftg:hover{background:var(--teal);color:#000}
+
+/* ── MOBILE ── */
+@media(max-width:900px){
+  .topnav{padding:13px 18px}
+  .desknav{display:none}
+  .mobnav{display:block}
+  .pg{padding-bottom:70px}
+  .scene{padding:24px 16px 80px;min-height:auto}
+  .glow{display:none}
+  .sphere-container .bg-pros{display:none}
+  .hero{margin-top:28px}
+  .hero-h{font-size:46px}
+  .hero-p{font-size:14px}
+  .btngroup{width:100%}
+  .sbtn{width:100%;max-width:360px}
+  .sph-outer{width:190px;height:190px}
+  .sph{width:190px;height:190px}
+  .o1{width:240px;height:240px}
+  .o2{width:300px;height:300px}
+  .o3{width:360px;height:360px}
+  .vtx{width:250px;font-size:12px}
+  .platforms{padding:0 12px}
+  .plat{font-size:10px;padding:8px 11px}
+  .edu-grid{grid-template-columns:1fr;gap:0}
+  .ea{transform:rotate(90deg);padding:10px 0}
+  .email-b{padding:22px 16px}
+  .pw{padding:36px 14px 70px}
+  .con{padding:28px 14px}
+  footer{padding:14px 16px 70px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="logo">AEW</div>
+  <div class="desknav">
+    <button class="dnav-btn on" onclick="gp(1)">AI Employee</button>
+    <button class="dnav-btn" onclick="gp(2)">Eduvolution</button>
+    <button class="dnav-btn" onclick="gp(3)">Pricing</button>
+  </div>
+  <button class="nav-cta" onclick="gp(1)">Deploy Now</button>
+</nav>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobnav">
+  <div class="mobnav-inner">
+    <button class="mnav-btn on" id="mn1" onclick="gp(1)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      AI Employee
+    </button>
+    <button class="mnav-btn" id="mn2" onclick="gp(2)">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Eduvolution
+    </button>
+    <button class="mnav-btn" id="mn3" onclick="gp(3)">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Pricing
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE 1 -->
+<div class="pg on" id="pg1">
+  <div class="scene">
+    <div class="gridbg"></div>
+    <div class="glow"></div>
+    <div class="sph-wrap">
+      <div class="sph-outer" id="sphOuter">
+        <div class="sph-hint">Tap to learn how to use</div>
+        <div class="orbit o1"><div class="odot"></div></div>
+        <div class="orbit o2"></div>
+        <div class="orbit o3"></div>
+        <div class="sph" id="sph">
+          <div class="sph-core">
+            <svg width="80" height="45" viewBox="0 0 90 50" fill="none">
+              <path d="M45 25 C45 25 38 10 25 10 C13 10 5 17 5 25 C5 33 13 40 25 40 C38 40 45 25 45 25 C45 25 52 10 65 10 C77 10 85 17 85 25 C85 33 77 40 65 40 C52 40 45 25 45 25 Z" stroke="#00ffcc" stroke-width="3" stroke-linecap="round" fill="none">
+                <animate attributeName="stroke-dasharray" values="0,300;300,0;0,300" dur="3s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-dashoffset" values="0;-300;-600" dur="3s" repeatCount="indefinite"/>
+              </path>
+              <path d="M45 25 C45 25 38 10 25 10 C13 10 5 17 5 25 C5 33 13 40 25 40 C38 40 45 25 45 25 C45 25 52 10 65 10 C77 10 85 17 85 25 C85 33 77 40 65 40 C52 40 45 25 45 25 Z" stroke="rgba(0,255,204,0.15)" stroke-width="8" stroke-linecap="round" fill="none"/>
+            </svg>
+            <span class="sph-label">AI Employee</span>
+          </div>
+        </div>
+        <div class="waves" id="wv">
+          <div class="wave-row"><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div></div>
+        </div>
+      </div>
+      <div class="vtx" id="vtx"></div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-eye">AI Employee Workflow System</div>
+      <h1 class="hero-h">Delegate<br><span>Your Task.</span></h1>
+      <p class="hero-p">What's the one task you hate doing at work? Tell Your AI Employee what the task is and It executes to completion!</p>
+      <div class="btngroup">
+        <button class="sbtn" id="spkBtn" onclick="toggleVoice()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+          <span id="spkTxt">Speak to Your AI Employee</span>
+        </button>
+        <button class="sbtn sec" onclick="openForm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Type Your Task</span>
+        </button>
+      </div>
+
+      <div class="platforms">
+        <div class="plat-lbl">Delegate from any platform you already use</div>
+        <div class="plat-grid">
+          <a href="https://t.me/aewworkflow_bot" target="_blank" class="plat live">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            Telegram <span class="pbadge go">Live</span>
+          </a>
+          <a href="sms:?body=I want to delegate a task to my AEW AI Employee" class="plat live">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            SMS / Text <span class="pbadge go">Live</span>
+          </a>
+          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>WhatsApp <span class="pbadge soon">Soon</span></span>
+          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>FB Messenger <span class="pbadge soon">Soon</span></span>
+          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>Instagram DM <span class="pbadge soon">Soon</span></span>
+          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.114 18.1.136 18.115a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>Discord <span class="pbadge soon">Soon</span></span>
+          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>LinkedIn <span class="pbadge soon">Soon</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="pg" id="pg2">
+  <div class="pw">
+    <div class="stag">Eduvolution System</div>
+    <h2 class="stitle">Your AI Employee<br>Never Stops Learning.</h2>
+    <p class="ssub">Every delegated task feeds the loop. Your AI Employee studies, executes, and evolves — building a growing Digital Twin of how you work.</p>
+    <div class="edu-grid">
+      <div class="en" onclick="toggleEdu(this)"><span class="en-tog">+</span><span class="en-icon">📚</span><div class="en-name">Study</div><div class="en-desc">Absorbs your business knowledge from trusted sources and domain experts</div><div class="en-det"><ul class="en-list"><li><span class="edot-s">›</span>Website &amp; blog content</li><li><span class="edot-s">›</span>SOPs &amp; internal documentation</li><li><span class="edot-s">›</span>CRM &amp; client interaction data</li><li><span class="edot-s">›</span>Industry reports &amp; articles</li><li><span class="edot-s">›</span>Custom knowledge bases</li></ul><p class="en-quote">Study transforms raw business knowledge into working intelligence — specific to you.</p></div></div>
+      <div class="ea">→</div>
+      <div class="en" onclick="toggleEdu(this)"><span class="en-tog">+</span><span class="en-icon">⚡</span><div class="en-name">Execute</div><div class="en-desc">Applies learned skillsets to complete delegated tasks with precision</div><div class="en-det"><ul class="en-list"><li><span class="edot-e">›</span>Lead follow-up &amp; outreach</li><li><span class="edot-e">›</span>Client communication &amp; support</li><li><span class="edot-e">›</span>Content creation in your brand voice</li><li><span class="edot-e">›</span>Research &amp; intelligent summaries</li><li><span class="edot-e">›</span>Scheduling &amp; task coordination</li></ul><p class="en-quote">Execute turns intelligence into real output — completed work delivered with precision.</p></div></div>
+      <div class="ea">→</div>
+      <div class="en" onclick="toggleEdu(this)"><span class="en-tog">+</span><span class="en-icon">🔁</span><div class="en-name">Evolve</div><div class="en-desc">Every completed task feeds back — building your Digital Twin workforce intelligence</div><div class="en-det"><ul class="en-list"><li><span class="edot-v">›</span>Performance feedback refines responses</li><li><span class="edot-v">›</span>Digital Twin business profile builds</li><li><span class="edot-v">›</span>Pattern recognition per your clients</li><li><span class="edot-v">›</span>Contextual memory — nothing resets</li></ul><p class="en-quote">Evolve builds a Digital Twin intelligence unique to your business.</p></div></div>
+    </div>
+    <div class="hier">
+      <div class="hier-lbl">AI Workforce Hierarchy</div>
+      <div class="hr"><div class="h-lv">Level 01</div><div class="h-ti">AI Employee — Task Executor</div><div class="badge bt">Active</div></div>
+      <div class="hr"><div class="h-lv">Level 02</div><div class="h-ti">AI Supervisor — Quality Control</div><div class="badge bt">Active</div></div>
+      <div class="hr"><div class="h-lv">Level 03</div><div class="h-ti">AI Manager — Workflow Assignment</div><div class="badge bg2">Pro+</div></div>
+      <div class="hr"><div class="h-lv">Level 04</div><div class="h-ti">AI COO — Operations Optimization</div><div class="badge bg2">Pro+</div></div>
+      <div class="hr"><div class="h-lv">Level 05</div><div class="h-ti">AI CEO — Strategic Intelligence</div><div class="badge bp">Enterprise</div></div>
+    </div>
+    <div class="email-b">
+      <div class="eb-text"><h3>Stay Ahead of the Evolution.</h3><p>Early access updates sent directly to you.</p></div>
+      <div class="e-row"><input class="ei" type="email" placeholder="your@email.com" id="eemail"/><button class="eb2" onclick="capEmail()">Notify Me</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3 -->
+<div class="pg" id="pg3">
+  <div class="pw">
+    <div class="stag">Pricing</div>
+    <h2 class="stitle">Choose Your<br>AI Workforce.</h2>
+    <p class="ssub">Start free. Scale as you grow. Every tier includes the Eduvolution engine.</p>
+    <div class="pgrid">
+      <div class="pc t1"><div class="pt">Starter</div><div class="pn">AI Employee</div><div class="pp2"><span class="pa">Free</span><span class="ppe">&nbsp;/ 30 days</span></div><div class="pd">One AI Employee. One task you hate. Handled.</div><ul class="pf2"><li><div class="pd2"></div>1 dedicated AI Employee</li><li><div class="pd2"></div>1 task — unlimited executions</li><li><div class="pd2"></div>Eduvolution skillset building</li><li><div class="pd2"></div>Telegram bot access</li><li><div class="pd2"></div>30-day access — no credit card</li></ul><button class="pbtn" onclick="gp(1)">Start Free →</button></div>
+      <div class="pc t2 pf"><div class="pop">Most Popular</div><div class="pt">Professional</div><div class="pn">AI Team</div><div class="pp2"><span class="pa">$99</span><span class="ppe">.99 / mo</span></div><div class="pd">5 AI Employees with advanced Eduvolution and voice + text delegation.</div><ul class="pf2"><li><div class="pd2"></div>5 dedicated AI Employees</li><li><div class="pd2"></div>Unlimited task types</li><li><div class="pd2"></div>Advanced Eduvolution</li><li><div class="pd2"></div>Voice and text delegation</li><li><div class="pd2"></div>AI Supervisor layer</li></ul><button class="pbtn" onclick="openTG()">Get Started →</button></div>
+      <div class="pc t3 pp"><div class="pt">Enterprise</div><div class="pn">Digital Twin</div><div class="pp2"><span class="pa">$199</span><span class="ppe">.99 / mo</span></div><div class="pd">10 AI Employees, full Digital Twin activation, complete hierarchy.</div><ul class="pf2"><li><div class="pd2"></div>10 dedicated AI Employees</li><li><div class="pd2"></div>Full Digital Twin workflow</li><li><div class="pd2"></div>Complete Eduvolution</li><li><div class="pd2"></div>AI Manager &amp; COO access</li><li><div class="pd2"></div>White-glove onboarding</li></ul><button class="pbtn" onclick="openTG()">Unlock Everything →</button></div>
+    </div>
+    <div class="con">
+      <div class="stag g">AEW Launch Contest</div>
+      <h3 class="con-t">Win Your Digital Twin — Free.</h3>
+      <p class="con-s">Enterprise subscribers get automatic entry. Win 3 months of Digital Twin access.</p>
+      <div class="con-ms">
+        <span class="cm" style="cursor:pointer">✉️ Email Entry</span>
+        <a href="sms:?body=AEW Contest Entry" class="cm" style="text-decoration:none;cursor:pointer">💬 Text Entry</a>
+        <a href="https://t.me/aewworkflow_bot" target="_blank" class="cm" style="text-decoration:none;cursor:pointer">📲 Telegram Entry</a>
+      </div>
+      <div class="con-e"><input class="ci" type="text" placeholder="Email, phone, or @Telegram" id="ci"/><button class="cb" onclick="enterC()">Enter Contest</button></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="fl">AEW SYSTEM</div>
+  <div class="ft">AI Employee Workflow · Digital Twin · Eduvolution</div>
+  <a href="https://t.me/aewworkflow_bot" class="ftg" target="_blank">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+    @aewworkflow_bot
+  </a>
+</footer>
+
+<!-- TUTORIAL -->
+<div class="tut-ov" id="tutOv">
+  <div class="tut-box">
+    <div class="tut-sphere"><svg width="54" height="30" viewBox="0 0 90 50" fill="none"><path d="M45 25 C45 25 38 10 25 10 C13 10 5 17 5 25 C5 33 13 40 25 40 C38 40 45 25 45 25 C45 25 52 10 65 10 C77 10 85 17 85 25 C85 33 77 40 65 40 C52 40 45 25 45 25 Z" stroke="#00ffcc" stroke-width="3" stroke-linecap="round" fill="none"><animate attributeName="stroke-dasharray" values="0,300;300,0;0,300" dur="3s" repeatCount="indefinite"/></path></svg></div>
+    <div class="tut-h">Your AI Employee is ready.</div>
+    <div class="tut-s">Delegate your first task in under 60 seconds.</div>
+    <div class="tut-step"><div class="tut-snum">Step 01</div><div class="tut-stit">🎙️ Tap "Speak to Your AI Employee"</div><div class="tut-sdesc">Talk naturally. Stumble, pause, restart — the AI understands you regardless. It listens until you stop for 2.5 seconds, then processes.</div></div>
+    <div class="tut-step"><div class="tut-snum">Step 02</div><div class="tut-stit">📋 Describe the task you hate doing</div><div class="tut-sdesc">Be specific. "Follow up with leads daily and send personalised emails" beats "handle my emails." The AI cleans up your speech automatically.</div></div>
+    <div class="tut-step"><div class="tut-snum">Step 03</div><div class="tut-stit">⚡ Your AI Employee gets deployed</div><div class="tut-sdesc">You'll see confirmation on screen and receive a Telegram message. Your AI Employee goes to work immediately.</div></div>
+    <div class="tut-step"><div class="tut-snum">Prefer typing?</div><div class="tut-stit">✍️ Use "Type Your Task"</div><div class="tut-sdesc">Fill in the form with your name, role, task, frequency and contact. Same result — just typed.</div></div>
+    <button class="tut-go" onclick="closeTut()">Got It — Let's Go →</button>
+  </div>
+</div>
+
+<!-- TASK FORM -->
+<div class="form-ov" id="formOv">
+  <div class="form-box">
+    <div class="form-head">
+      <div><div class="form-title">Delegate Your Task</div><div class="form-sub">Your AI Employee receives this directly.</div></div>
+      <button class="form-close" onclick="closeForm()">×</button>
+    </div>
+    <div class="form-body">
+      <div class="field"><label>Your Name</label><input id="fn" type="text" placeholder="First name"/></div>
+      <div class="field"><label>Role or Business</label><input id="fr" type="text" placeholder="e.g. Sales Manager, Agency Owner..."/></div>
+      <div class="field"><label>Task to Delegate</label><textarea id="ft" placeholder="What do you hate doing at work? Be specific."></textarea></div>
+      <div class="field"><label>How Often?</label><select id="ff"><option value="" disabled selected>Select frequency...</option><option>Multiple times daily</option><option>Daily</option><option>Several times a week</option><option>Weekly</option><option>Monthly</option></select></div>
+      <div class="field"><label>Contact (Email or @Telegram)</label><input id="fc" type="text" placeholder="email@domain.com or @YourHandle"/></div>
+      <button class="form-submit" onclick="submitForm()">Deploy My AI Employee →</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="conf-ov" id="confOv">
+  <div class="phone">
+    <div class="ph-top"><div class="ph-av" style="font-size:16px;font-family:serif;">∞</div><div><div class="ph-n">AEW System Portal</div><div class="ph-s">● online now</div></div></div>
+    <div class="ph-msgs" id="phm"></div>
+  </div>
+  <div class="conf-h">Task Received.</div>
+  <div class="conf-s">Your AI Employee is ready.<br>Open Telegram with <strong>@aewworkflow_bot</strong></div>
+  <div class="conf-acts">
+    <button class="conf-btn" onclick="openTG()">Open Telegram →</button>
+    <button class="conf-sec" onclick="closeConf()">Close</button>
+  </div>
+</div>
+
+<script>
+function gp(n){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.dnav-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg'+n).classList.add('on');
+  document.querySelectorAll('.dnav-btn')[n-1].classList.add('on');
+  document.getElementById('mn'+n).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+function openTG(){window.open('https://t.me/aewworkflow_bot','_blank')}
+function openForm(){document.getElementById('formOv').classList.add('on')}
+function closeForm(){document.getElementById('formOv').classList.remove('on')}
+function closeConf(){document.getElementById('confOv').classList.remove('on');resetSph()}
+function closeTut(){document.getElementById('tutOv').classList.remove('on');tutDone=true}
+
+let tutDone=false;
+document.getElementById('sphOuter').addEventListener('click',()=>{
+  if(!tutDone){document.getElementById('tutOv').classList.add('on')}
+  else{toggleVoice()}
+});
+
+function setSph(s){
+  const el=document.getElementById('sph'),w=document.getElementById('wv');
+  el.className='sph';w.className='waves';
+  if(s==='listen'){el.classList.add('listen');w.classList.add('gold')}
+  else if(s==='think'){el.classList.add('think');w.classList.add('purple')}
+}
+function resetSph(){setSph('');capturedTask='';fullT=''}
+function showConf(task){document.getElementById('confOv').classList.add('on');animPhone(task);sendToBackend({type:'voice',task})}
+
+async function submitForm(){
+  const n=document.getElementById('fn').value,r=document.getElementById('fr').value,
+        t=document.getElementById('ft').value,f=document.getElementById('ff').value,
+        c=document.getElementById('fc').value;
+  if(!n||!t||!c){alert('Please fill in your name, task, and contact.');return}
+  await sendToBackend({type:'task',name:n,role:r,task:t,freq:f,contact:c});
+  closeForm();
+  document.getElementById('confOv').classList.add('on');
+  animPhone(t);
+}
+
+// NOTE: This currently does not send anywhere — a secure backend endpoint
+// needs to be wired up before this goes live for real customers.
+// Do NOT put a bot token or API key directly in this file — it is
+// publicly visible to anyone who views the page source.
+async function sendToBackend(data){
+  console.log('Task captured (not yet wired to a backend):', data);
+}
+
+function animPhone(task){
+  const c=document.getElementById('phm');c.innerHTML='';
+  const ty=document.createElement('div');ty.className='msg msg-ty';
+  ty.innerHTML='<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  c.appendChild(ty);
+  setTimeout(()=>{
+    c.innerHTML='';
+    addMsg(c,'b','👋 Welcome to AEW System. What task do you want your AI Employee to handle?',0);
+    addMsg(c,'u',task||'Handle my repetitive daily tasks.',600);
+    addMsg(c,'b','⚡ Task received. Entering the AEW Intelligence Loop...',1200);
+    addMsg(c,'b','✅ Deployed. You supervise. It executes.',2200);
+  },800);
+}
+function addMsg(c,t,txt,d){
+  setTimeout(()=>{
+    const m=document.createElement('div');
+    m.className='msg '+(t==='b'?'msg-b':'msg-u');m.textContent=txt;
+    c.appendChild(m);setTimeout(()=>m.classList.add('show'),40);
+    c.scrollTop=c.scrollHeight;
+  },d);
+}
+
+// VOICE — WisprFlow style
+let recog=null,listening=false,capturedTask='',silT=null,fullT='';
+function toggleVoice(){listening?stopV():startV()}
+let maxTimer=null;
+
+function startV(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('vtx').textContent='Voice unavailable — use Type Your Task.';return}
+  recog=new SR();recog.continuous=true;recog.interimResults=true;recog.lang='en-US';recog.maxAlternatives=3;
+  fullT='';silT=null;
+  recog.onstart=()=>{
+    listening=true;setSph('listen');
+    document.getElementById('spkBtn').classList.add('rec');
+    document.getElementById('spkTxt').textContent='Tap "Deploy Now" when done';
+    document.getElementById('vtx').textContent='Speak freely — take all the time you need.';
+    maxTimer=setTimeout(()=>{
+      if(listening){
+        document.getElementById('vtx').textContent='5-minute limit reached — deploying now...';
+        finishV();
+      }
+    },300000);
+  };
+  recog.onresult=(e)=>{
+    clearTimeout(silT);
+    let interim='',finalC='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal){
+        let b=e.results[i][0].transcript,bc=e.results[i][0].confidence;
+        for(let j=1;j<e.results[i].length;j++){if(e.results[i][j].confidence>bc){b=e.results[i][j].transcript;bc=e.results[i][j].confidence}}
+        finalC+=b+' ';
+      } else interim+=e.results[i][0].transcript;
+    }
+    if(finalC)fullT+=finalC;
+    const d=(fullT+interim).trim();capturedTask=d;
+    const shown=d.length>120?'...'+d.slice(-120):d;
+    document.getElementById('vtx').textContent='"'+shown+'"';
+    setSph('think');
+    silT=setTimeout(()=>{
+      if(fullT.trim().length>3){
+        document.getElementById('vtx').textContent='No speech detected for 5 minutes — deploying...';
+        finishV();
+      }
+    },300000);
+  };
+  recog.onerror=(e)=>{
+    if(e.error==='no-speech')return;
+    listening=false;clearTimeout(maxTimer);resetSph();
+    document.getElementById('spkBtn').classList.remove('rec');
+    document.getElementById('spkTxt').textContent='Speak to Your AI Employee';
+    document.getElementById('vtx').textContent='Mic error — try again.';
+  };
+  recog.onend=()=>{
+    if(listening){try{recog.start()}catch(e){}}
+  };
+  recog.start();
+}
+function finishV(){
+  listening=false;clearTimeout(silT);clearTimeout(maxTimer);
+  try{recog.stop()}catch(e){}
+  document.getElementById('spkBtn').classList.remove('rec');
+  document.getElementById('spkTxt').textContent='Speak to Your AI Employee';
+  const t=clean(fullT.trim());
+  if(t&&t.length>3){
+    document.getElementById('vtx').textContent='Deploying your task...';
+    setTimeout(()=>{document.getElementById('vtx').textContent='';showConf(t)},1200);
+  } else resetSph();
+}
+function stopV(){
+  listening=false;clearTimeout(silT);clearTimeout(maxTimer);
+  try{recog.stop()}catch(e){}
+  document.getElementById('spkBtn').classList.remove('rec');
+  document.getElementById('spkTxt').textContent='Speak to Your AI Employee';
+  if(fullT.trim().length>3) finishV();
+  else{resetSph();document.getElementById('vtx').textContent='';}
+}
+function clean(r){
+  if(!r)return r;
+  let t=r.charAt(0).toUpperCase()+r.slice(1);
+  t=t.replace(/\b(\w+)\s+\1\b/gi,'$1').replace(/\bi\b/g,'I').replace(/\bcant\b/g,"can't").replace(/\bdont\b/g,"don't").replace(/\bwont\b/g,"won't").replace(/\bim\b/g,"I'm").replace(/\ba i\b/gi,'AI').replace(/\bcrm\b/gi,'CRM');
+  return t.replace(/\s{2,}/g,' ').trim();
+}
+
+function capEmail(){
+  const v=document.getElementById('eemail').value;if(!v)return;
+  sendToBackend({text:'📧 Email Signup: '+v});
+  alert('Confirmed — AEW updates coming to '+v);
+  document.getElementById('eemail').value='';
+}
+function toggleEdu(card){
+  document.querySelectorAll('.en').forEach(c=>{if(c!==card)c.classList.remove('open')});
+  card.classList.toggle('open');
+}
+function enterC(){
+  const v=document.getElementById('ci').value;if(!v)return;
+  sendToBackend({text:'🏆 Contest Entry: '+v});
+  alert('Entry confirmed: '+v);
+  document.getElementById('ci').value='';
+}
+</script>
+</body>
+</html>
