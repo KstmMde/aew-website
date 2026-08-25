@@ -397,7 +397,7 @@ footer{background:#000;border-top:1px solid var(--border);padding:24px 52px 60px
       <div class="platforms">
         <div class="plat-lbl">Delegate from any platform you already use</div>
         <div class="plat-grid">
-          <a href="https://t.me/aewworkflow_bot" target="_blank" class="plat live">
+          <a href="https://t.me/AEWTWINBOT" target="_blank" class="plat live">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
             Telegram <span class="pbadge go">Live</span>
           </a>
@@ -462,7 +462,7 @@ footer{background:#000;border-top:1px solid var(--border);padding:24px 52px 60px
       <div class="con-ms">
         <span class="cm" style="cursor:pointer">✉️ Email Entry</span>
         <a href="sms:?body=AEW Contest Entry" class="cm" style="text-decoration:none;cursor:pointer">💬 Text Entry</a>
-        <a href="https://t.me/aewworkflow_bot" target="_blank" class="cm" style="text-decoration:none;cursor:pointer">📲 Telegram Entry</a>
+        <a href="https://t.me/AEWTWINBOT" target="_blank" class="cm" style="text-decoration:none;cursor:pointer">📲 Telegram Entry</a>
       </div>
       <div class="con-e"><input class="ci" type="text" placeholder="Email, phone, or @Telegram" id="ci"/><button class="cb" onclick="enterC()">Enter Contest</button></div>
     </div>
@@ -472,9 +472,9 @@ footer{background:#000;border-top:1px solid var(--border);padding:24px 52px 60px
 <footer>
   <div class="fl">AEW SYSTEM</div>
   <div class="ft">AI Employee Workflow · Digital Twin · Eduvolution</div>
-  <a href="https://t.me/aewworkflow_bot" class="ftg" target="_blank">
+  <a href="https://t.me/AEWTWINBOT" class="ftg" target="_blank">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-    @aewworkflow_bot
+    @AEWTWINBOT
   </a>
 </footer>
 
@@ -517,7 +517,7 @@ footer{background:#000;border-top:1px solid var(--border);padding:24px 52px 60px
     <div class="ph-msgs" id="phm"></div>
   </div>
   <div class="conf-h">Task Received.</div>
-  <div class="conf-s">Your AI Employee is ready.<br>Open Telegram with <strong>@aewworkflow_bot</strong></div>
+  <div class="conf-s">Your AI Employee is ready.<br>Open Telegram with <strong>@AEWTWINBOT</strong></div>
   <div class="conf-acts">
     <button class="conf-btn" onclick="openTG()">Open Telegram →</button>
     <button class="conf-sec" onclick="closeConf()">Close</button>
@@ -535,7 +535,7 @@ function gp(n){
   window.scrollTo(0,0);
 }
 
-function openTG(){window.open('https://t.me/aewworkflow_bot','_blank')}
+function openTG(){window.open('https://t.me/AEWTWINBOT','_blank')}
 function openForm(){document.getElementById('formOv').classList.add('on')}
 function closeForm(){document.getElementById('formOv').classList.remove('on')}
 function closeConf(){document.getElementById('confOv').classList.remove('on');resetSph()}
@@ -567,12 +567,23 @@ async function submitForm(){
   animPhone(t);
 }
 
-// NOTE: This currently does not send anywhere — a secure backend endpoint
-// needs to be wired up before this goes live for real customers.
-// Do NOT put a bot token or API key directly in this file — it is
-// publicly visible to anyone who views the page source.
+// Sends task data to the secure Cloudflare relay Worker, which holds the
+// Telegram bot token privately as an encrypted secret. No credentials
+// ever live in this public file.
+const RELAY_URL = 'https://aew-task-relay.aew-workflow.workers.dev';
 async function sendToBackend(data){
-  console.log('Task captured (not yet wired to a backend):', data);
+  try{
+    const res = await fetch(RELAY_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    if(!res.ok){
+      console.error('Relay request failed:', res.status);
+    }
+  }catch(e){
+    console.error('Relay request error:', e);
+  }
 }
 
 function animPhone(task){
