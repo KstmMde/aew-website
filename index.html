@@ -1,711 +1,1057 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>AEW System — AI Employee Workflow</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Employee Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
+/* Layout: the globe owns the screen. One sentence under it. Everything else appears after they talk, or one tap away in a quiet corner menu. Single committed dark look. */
 :root{
-  --teal:#00ffcc;
-  --teal-mid:rgba(0,255,204,0.12);
-  --teal-glow:rgba(0,255,204,0.35);
-  --gold:#f0c040;
-  --gold-mid:rgba(240,192,64,0.12);
-  --purple:#a855f7;
-  --white:#f0f0f0;
-  --muted:#55556a;
-  --card:rgba(255,255,255,0.03);
-  --border:rgba(255,255,255,0.06);
+  --ink:#03100f;  --deep:#062220;  --line:#12403b;
+  --mint:#2ee8b5; --mist:#a9d9cc;  --cloud:#effcf8; --warm:#ffd7a8;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Instrument Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#000;color:#f0f0f0;font-family:'Syne',sans-serif;overflow-x:hidden}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{background:var(--ink);color:var(--cloud);font:16px/1.6 var(--body);margin:0;overflow-x:hidden}
+a{color:var(--mint)}
+:focus-visible{outline:2px solid var(--mint);outline-offset:3px;border-radius:8px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05;letter-spacing:-.02em}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mint)}
+.note{font-size:13.5px;color:var(--mist);margin:0}
 
-/* ── TOP NAV ── */
-.topnav{
-  position:fixed;top:0;left:0;right:0;z-index:500;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 52px;
-  background:rgba(0,0,0,0.9);
-  border-bottom:1px solid var(--border);
+/* sidebar, like Claude's: a slim icon rail that opens to labels */
+.side{position:fixed;left:0;top:0;bottom:0;z-index:30;width:60px;overflow-y:auto;background:color-mix(in srgb,var(--deep) 88%,var(--ink));border-right:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 10px calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;flex-direction:column;gap:4px;transition:width .25s ease;overflow-x:hidden}
+.side.open{width:260px}
+.side .top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;margin-bottom:8px}
+.brandname{font:800 16px var(--display);white-space:nowrap;display:flex;align-items:center;gap:10px;color:var(--cloud);text-decoration:none}
+.mark{flex:none;width:34px;height:18px}
+.item{display:flex;align-items:center;gap:12px;padding:9px 9px;border-radius:10px;color:var(--cloud);text-decoration:none;font:500 15px var(--body);white-space:nowrap;background:none;border:0;cursor:pointer;width:100%;text-align:left}
+.item svg{flex:none;width:20px;height:20px;color:var(--mist)}
+.item:hover,.item[aria-current="page"]{background:color-mix(in srgb,var(--mint) 10%,transparent)}
+.item:hover svg,.item[aria-current="page"] svg{color:var(--mint)}
+.label{transition:opacity .2s}
+.side:not(.open) .label,.side:not(.open) .grouplabel,.side:not(.open) .recent,.side:not(.open) .brandname span{opacity:0;pointer-events:none}
+.side:not(.open) .top{justify-content:center}
+.side:not(.open) .brandname{display:none}
+.grouplabel{font:500 12px var(--mono);letter-spacing:.08em;color:var(--mist);padding:16px 9px 6px;white-space:nowrap}
+.recent{display:grid;gap:2px;overflow:auto;min-height:0}
+.recent span{font-size:14px;color:var(--mist);padding:7px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:8px}
+.recent em{font-style:normal;font-size:13px;color:color-mix(in srgb,var(--mist) 70%,transparent);padding:4px 9px;white-space:normal}
+.side .foot{margin-top:auto}
+.iconbtn{width:40px;height:40px;flex:none;border-radius:10px;border:0;background:none;color:var(--mist);cursor:pointer;display:grid;place-items:center}
+.iconbtn:hover{color:var(--cloud);background:color-mix(in srgb,var(--mint) 10%,transparent)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25}
+.mobtoggle{display:none}
+body{padding-left:60px}
+@media (max-width:700px){
+  body{padding-left:0}
+  .side{transform:translateX(-100%);width:260px;transition:transform .25s ease}
+  .side.open{transform:none}
+  .side:not(.open) .label,.side:not(.open) .grouplabel,.side:not(.open) .recent{opacity:1}
+  .side .top{justify-content:space-between}.side .brandname{display:flex}
+  .mobtoggle{display:grid;position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;z-index:20;border:1px solid var(--line);background:color-mix(in srgb,var(--deep) 80%,transparent)}
 }
-.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;letter-spacing:4px;color:var(--teal);text-shadow:0 0 20px var(--teal-glow)}
-.desknav{display:flex;gap:4px}
-.dnav-btn{padding:8px 22px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;border-radius:3px;transition:all 0.25s}
-.dnav-btn:hover{color:#f0f0f0}
-.dnav-btn.on{color:var(--teal);background:var(--teal-mid)}
-.nav-cta{background:transparent;color:var(--teal);border:1px solid var(--teal);padding:9px 24px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
-.nav-cta:hover{background:var(--teal);color:#000}
 
-/* ── BOTTOM MOB NAV ── */
-.mobnav{
-  display:none;
-  position:fixed;
-  bottom:0;left:0;right:0;
-  z-index:500;
-  background:#0a0a0a;
-  border-top:1px solid rgba(0,255,204,0.2);
-  -webkit-transform:translateZ(0);
-  transform:translateZ(0);
-  padding-bottom:env(safe-area-inset-bottom,0px);
-}
-.mobnav-inner{display:flex;height:56px}
-.mnav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;padding:8px 4px;
-  font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  background:none;border:none;color:#55556a;cursor:pointer;
-  border-right:1px solid var(--border);
-  transition:all 0.2s;
-  -webkit-tap-highlight-color:transparent;
-}
-.mnav-btn:last-child{border-right:none}
-.mnav-btn.on{color:var(--teal);background:rgba(0,255,204,0.06)}
-.mnav-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* home */
+#home{min-height:100vh;min-height:100dvh;display:grid;justify-items:center;align-content:center;gap:18px;padding:84px 16px 48px;text-align:center}
+.globe{position:relative;width:min(380px,78vw);aspect-ratio:1;max-width:100%;transition:width .7s cubic-bezier(.2,.8,.2,1);border:0;padding:0;background:none;cursor:pointer;border-radius:50%}
+.talking .globe{width:min(200px,46vw)}
+#globe{width:100%;height:100%;display:block}
+.invite{font:600 clamp(20px,3vw,26px)/1.3 var(--display);color:var(--cloud);margin:0;letter-spacing:-.01em}
+.invite span{color:var(--mint)}
+.invite-sub{color:var(--mist);margin:-6px 0 0;font-size:16px;max-width:42ch}
+.sheet{width:100%;max-width:400px;display:grid;gap:10px;padding:22px;border-radius:22px;background:var(--deep);border:1px solid var(--line);text-align:center;animation:rise .4s ease both}
+.sheet h2{font-size:24px;font-weight:800}
+.sheet p{margin:0 0 6px;color:var(--mist);font-size:15px}
+.sso{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 16px;border-radius:14px;border:1px solid var(--line);background:var(--ink);color:var(--cloud);font:600 15px var(--body);cursor:pointer}
+.sso:hover{border-color:var(--mint)}
+.sso svg{width:20px;height:20px;flex:none}
+.sheet .fine{font-size:12.5px;color:color-mix(in srgb,var(--mist) 80%,transparent);margin-top:4px}
+.meter{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:20px}
+.meter .top{display:flex;justify-content:space-between;font-size:14px}
+.meter .top span:last-child{font:500 13px var(--mono);color:var(--mist);font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:999px;background:var(--ink);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--mint);border-radius:999px;transition:width .6s ease}
+.limits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px}
+.limits div{display:grid;gap:6px;align-content:start}
+.limits b{font:700 17px var(--display)}
+.limits p{margin:0;color:var(--mist);font-size:15px}
+.tier .cap{font:700 30px var(--display);color:var(--cloud);letter-spacing:-.02em}
+.tier .cap small{font:500 13px var(--body);color:var(--mist);letter-spacing:0;margin-left:6px}
+.placeholder{font-size:13px;color:var(--warm);margin-top:14px}
+.sizes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 34px}
+.size{border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:4px;align-content:start}
+.size .u{font:700 26px var(--display);color:var(--mint);letter-spacing:-.02em}
+.size .u small{font:500 13px var(--body);color:var(--mist);margin-left:6px;letter-spacing:0}
+.size b{font:600 16px var(--display)}
+.size p{margin:0;color:var(--mist);font-size:14.5px}
+.secthead{font:800 clamp(24px,3.4vw,32px) var(--display);margin:56px 0 8px;letter-spacing:-.02em}
+.sectsub{color:var(--mist);margin:0 0 22px;max-width:60ch}
+.ot{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+.otmock{border:1px solid var(--line);border-radius:18px;padding:16px;background:color-mix(in srgb,var(--deep) 70%,transparent);display:grid;gap:10px}
+.otmock .msg{max-width:100%;animation:none}
+.otrules{display:grid;gap:14px}
+.otrules>div{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.otrules i{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font:600 12px var(--mono);font-style:normal;color:var(--mint)}
+.otrules b{display:block;font:600 16px var(--display)}
+.otrules p{margin:2px 0 0;color:var(--mist);font-size:14.5px}
+.tier .ot-rate{font:500 13px var(--mono);color:var(--mist);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+.otlimit{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13.5px;color:var(--mist)}
+.otlimit button{font:500 12.5px var(--mono);background:none;border:1px solid var(--line);color:var(--mist);border-radius:999px;padding:4px 10px;cursor:pointer}
+.otlimit button[aria-pressed="true"]{border-color:var(--mint);color:var(--mint)}
+.sizechip{display:inline-block;font:500 11.5px var(--mono);border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-top:6px;color:var(--cloud)}
+@media (max-width:800px){.limits,.sizes,.ot{grid-template-columns:1fr}}
+/* feed, ideas, goals, library */
+.prompt{border-radius:22px;background:var(--deep);border:1px solid var(--line);padding:20px;display:grid;gap:12px;margin-bottom:30px}
+.prompt textarea{min-height:70px;background:var(--ink)}
+.prompt .row{justify-content:flex-end}
+.list{display:grid;gap:4px}
+.li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;padding:14px 8px;border-radius:14px;align-items:start}
+.li:hover{background:color-mix(in srgb,var(--mint) 5%,transparent)}
+.li .ic{width:44px;height:44px;border-radius:12px;background:var(--deep);border:1px solid var(--line);display:grid;place-items:center;color:var(--mint)}
+.li .ic svg{width:21px;height:21px}
+.li b{font:600 17px var(--display);display:block;line-height:1.3}
+.li p{margin:4px 0 0;color:var(--mist);font-size:15px}
+.li time{font:500 12.5px var(--mono);color:var(--mist);white-space:nowrap}
+.sect{font:700 19px var(--display);margin:34px 0 10px}
+.check{width:22px;height:22px;border-radius:6px;border:2px solid var(--mist);background:none;cursor:pointer;margin-top:2px;flex:none;display:grid;place-items:center;color:var(--ink)}
+.check[aria-checked="true"]{background:var(--mint);border-color:var(--mint)}
+.goal{display:flex;gap:14px;padding:12px 4px;align-items:flex-start}
+.goal b{font:600 17px var(--display);display:block}
+.goal p{margin:3px 0 0;color:var(--mist);font-size:15px}
+.tracking{display:flex;align-items:center;gap:8px;color:var(--mint);font:600 18px var(--display);margin:6px 0 6px}
+.tracking i{width:10px;height:10px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}
+.cat{display:flex;align-items:center;gap:14px;width:100%;padding:14px 4px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--cloud);font:500 17px var(--body);cursor:pointer;text-align:left}
+.cat svg{width:22px;height:22px;color:var(--mist);flex:none}
+.cat span{margin-left:auto;color:var(--mist)}
+.cat:hover{color:var(--mint)}
+.libwrap{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px}
+.libnav{display:grid;gap:2px;align-content:start}
+.libnav button{display:flex;gap:10px;align-items:center;background:none;border:0;color:var(--cloud);font:500 15px var(--body);padding:9px 10px;border-radius:10px;cursor:pointer;text-align:left}
+.libnav button svg{width:18px;height:18px;color:var(--mist)}
+.libnav button[aria-pressed="true"]{background:color-mix(in srgb,var(--mint) 12%,transparent)}
+.libnav small{font:500 12px var(--mono);letter-spacing:.08em;color:var(--mist);padding:12px 10px 4px}
+.empty{display:grid;justify-items:center;gap:8px;padding:70px 10px;color:var(--mist);text-align:center}
+.empty svg{width:34px;height:34px;color:var(--mist)}
+.empty b{color:var(--cloud);font:600 17px var(--display)}
+@media (max-width:700px){.libwrap{grid-template-columns:1fr}.libnav{display:flex;flex-wrap:wrap}.libnav small{display:none}}
+/* modals */
+.modal{position:fixed;inset:0;z-index:60;display:grid;place-items:start center;padding:calc(env(safe-area-inset-top,0px) + 70px) 16px 16px;background:rgba(0,0,0,.55)}
+.searchbox{width:min(620px,100%);background:var(--deep);border:1px solid var(--line);border-radius:20px;padding:10px;box-shadow:0 30px 80px -30px #000;animation:rise .25s ease both}
+.searchbox .q{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.searchbox .q svg{width:20px;height:20px;color:var(--mist)}
+.searchbox input{flex:1;min-width:0;background:none;border:0;color:var(--cloud);font:17px var(--body);outline:none}
+.sres{display:grid;gap:2px;padding-top:8px;max-height:60vh;overflow:auto}
+.sres small{font:500 12px var(--mono);letter-spacing:.08em;color:var(--mist);padding:8px 10px 4px}
+.sres button{display:flex;gap:12px;align-items:center;background:none;border:0;color:var(--cloud);font:500 15px var(--body);padding:10px;border-radius:12px;cursor:pointer;text-align:left;width:100%}
+.sres button:hover,.sres button:focus-visible{background:color-mix(in srgb,var(--mint) 10%,transparent)}
+.sres button svg{width:18px;height:18px;color:var(--mist);flex:none}
+.sres button span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settings{width:min(900px,100%);height:min(640px,calc(100dvh - 100px));background:var(--deep);border:1px solid var(--line);border-radius:24px;display:grid;grid-template-columns:230px minmax(0,1fr);overflow:hidden;box-shadow:0 30px 80px -30px #000;animation:rise .25s ease both}
+.snav{border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px;overflow:auto}
+.snav h2{font-size:22px;font-weight:800;padding:0 8px 12px}
+.snav button{display:flex;gap:10px;align-items:center;background:none;border:1px solid transparent;color:var(--cloud);font:500 15px var(--body);padding:9px 10px;border-radius:12px;cursor:pointer;text-align:left}
+.snav button svg{width:18px;height:18px;color:var(--mist);flex:none}
+.snav button[aria-selected="true"]{border-color:var(--mint);background:color-mix(in srgb,var(--mint) 8%,transparent)}
+.snav .out{margin-top:auto}
+.spane{padding:22px 24px;overflow:auto;position:relative}
+.spane h3{font-size:22px;margin:0 0 16px}
+.spane .x{position:absolute;top:14px;right:14px}
+.card{border:1px solid var(--line);background:var(--ink);border-radius:16px;padding:16px;display:grid;gap:10px;margin-bottom:14px}
+.card .top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.card b{font:600 16px var(--display)}
+.card .sub{color:var(--mist);font-size:14px}
+.card .bar{background:var(--deep)}
+.sres button span{padding-right:6px}
+.slabel{font:600 13px var(--body);color:var(--mist);margin:18px 0 8px}
+.rowline{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.rowline:first-of-type{border-top:0}
+.rowline span:first-child{min-width:0}
+.rowline small{display:block;color:var(--mist);font-size:13px}
+.switch{width:44px;height:26px;border-radius:999px;border:1px solid var(--line);background:var(--deep);position:relative;cursor:pointer;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--mist);transition:transform .2s}
+.switch[aria-checked="true"]{background:color-mix(in srgb,var(--mint) 40%,var(--deep));border-color:var(--mint)}
+.switch[aria-checked="true"]::after{transform:translateX(18px);background:var(--cloud)}
+.pill-s{font:500 12px var(--mono);padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mist);white-space:nowrap}
+.pill-s.live{border-color:var(--mint);color:var(--mint)}
+.inline{display:flex;gap:8px;flex-wrap:wrap}
+.inline input,select{background:var(--ink);border:1px solid var(--line);color:var(--cloud);border-radius:12px;padding:10px 12px;font:15px var(--body);min-width:0}
+.inline input{flex:1}
+.toast{min-height:18px;font-size:13.5px;color:var(--warm);margin:0}
+.btn.danger{border-color:color-mix(in srgb,var(--warm) 60%,transparent);color:var(--warm)}
+@media (max-width:700px){.settings{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.snav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px}.snav h2{display:none}.snav button{white-space:nowrap}.snav .out{margin-top:0}}
+.status{font:500 13px var(--mono);color:var(--mint);letter-spacing:.06em;min-height:20px}
 
-/* ── PAGES ── */
-.pg{display:none;min-height:100vh;padding-top:70px}
-.pg.on{display:block}
+/* talk panel */
+.panel{width:100%;max-width:640px;display:grid;gap:14px;text-align:left}
+.live{font-size:clamp(18px,2.6vw,22px);line-height:1.5;color:var(--cloud);min-height:1.5em}
+.live .interim{color:var(--mist)}
+.filler{color:color-mix(in srgb,var(--mist) 60%,transparent);text-decoration:line-through}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.timer{font:500 13px var(--mono);color:var(--mist);font-variant-numeric:tabular-nums;margin-left:auto}
+textarea{width:100%;min-height:110px;resize:vertical;background:var(--deep);color:var(--cloud);border:1px solid var(--line);border-radius:16px;padding:14px;font:17px/1.55 var(--body)}
+textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
+.btn{font:600 15px var(--body);border-radius:999px;padding:11px 18px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--cloud);text-decoration:none;display:inline-block}
+.btn.go{background:var(--mint);color:var(--ink);border-color:var(--mint)}
+.btn.warm{background:var(--warm);color:var(--ink);border-color:var(--warm)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.link{background:none;border:0;color:var(--mist);font:500 14px var(--body);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:6px 2px}
+.pace{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mist);margin-left:auto}
+.pace button{font:500 12.5px var(--mono);background:none;border:1px solid var(--line);color:var(--mist);border-radius:999px;padding:5px 10px;cursor:pointer}
+.pace button[aria-pressed="true"]{border-color:var(--mint);color:var(--mint)}
 
-/* ── PAGE 1 SCENE ── */
-.scene{
-  position:relative;
-  min-height:calc(100vh - 70px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 20px 60px;
-}
-.gridbg{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,204,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,204,0.025) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
-.glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,204,0.05) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+/* the magic */
+.thread{display:grid;gap:12px}
+.composer{position:fixed;left:60px;right:0;bottom:0;z-index:15;padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 12px);background:linear-gradient(transparent,var(--ink) 30%)}
+.composer .bar2{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:8px;background:var(--deep);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 18px;box-shadow:0 20px 50px -25px #000}
+.composer .bar2:focus-within{border-color:var(--mint)}
+.composer input{flex:1;min-width:0;background:none;border:0;color:var(--cloud);font:16px var(--body);outline:none;padding:8px 0}
+.composer input::placeholder{color:color-mix(in srgb,var(--mist) 70%,transparent)}
+.cbtn{width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;flex:none;background:none;color:var(--mist)}
+.cbtn:hover{color:var(--cloud)}
+.cbtn.send{background:var(--mint);color:var(--ink)}
+.cbtn.send:disabled{opacity:.35;cursor:not-allowed}
+.cbtn svg{width:20px;height:20px}
+.composer .hint{max-width:680px;margin:6px auto 0;text-align:center;font-size:12px;color:color-mix(in srgb,var(--mist) 75%,transparent)}
+.chatting{padding-bottom:150px}
+.chatting .msg{scroll-margin-bottom:150px}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.choices .btn{padding:8px 14px;font-size:14px}
+.msg.ask{border-color:color-mix(in srgb,var(--warm) 45%,transparent)}
+.msg.ask small{color:var(--warm)}
+@media (max-width:700px){.composer{left:0}}
+.msg{max-width:90%;padding:12px 16px;border-radius:18px;animation:rise .45s ease both}
+.msg.you{justify-self:end;background:color-mix(in srgb,var(--warm) 13%,var(--deep));border:1px solid color-mix(in srgb,var(--warm) 30%,transparent);border-bottom-right-radius:6px}
+.msg.aew{justify-self:start;background:var(--deep);border:1px solid var(--line);border-bottom-left-radius:6px}
+.msg small{display:block;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mint);margin-bottom:4px}
+.dots{display:inline-flex;gap:5px;padding:4px 2px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--mist);animation:bub 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bub{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes rise{from{transform:translateY(8px);opacity:.3}to{transform:none;opacity:1}}
+.trail{list-style:none;margin:8px 0 6px;padding:0;display:grid;gap:9px}
+.trail li{display:grid;grid-template-columns:16px 1fr;gap:10px;font-size:15px;color:var(--mist);animation:rise .4s ease both}
+.trail li::before{content:"";width:10px;height:10px;margin-top:6px;border-radius:50%;border:2px solid var(--mint)}
+.trail li.done::before{background:var(--mint)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.chips span{font:500 11.5px var(--mono);border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--cloud)}
+.msg.work{background:none;border:0;padding:4px 0;max-width:100%}
+.workline{display:inline-flex;align-items:center;gap:10px;background:none;border:0;padding:6px 4px;cursor:pointer;color:var(--mist);font:500 16px var(--body)}
+.workline:hover{color:var(--cloud)}
+.spark{display:inline-flex;gap:3px;align-items:center;width:22px}
+.spark i{width:5px;height:5px;border-radius:50%;background:var(--warm);animation:spark 1.1s infinite ease-in-out}
+.spark i:nth-child(2){animation-delay:.18s;background:var(--mint)}.spark i:nth-child(3){animation-delay:.36s}
+@keyframes spark{0%,100%{transform:translateY(0) scale(.8);opacity:.5}50%{transform:translateY(-4px) scale(1.15);opacity:1}}
+.finished .spark i{animation:none;opacity:.9;transform:none}
+.secs{font:500 14px var(--mono);font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--mist) 75%,transparent)}
+.chev{font-size:20px;line-height:1;transition:transform .2s}
+.workline[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.detail{padding:4px 0 0 34px}
+.handoff{border-color:var(--mint)!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--mint) 12%,transparent)}
+.handoff b{font:800 24px var(--display);display:block;color:var(--mint);margin-bottom:4px}
+.tease{font-style:italic;color:var(--warm);margin:10px 0 0}
 
-/* ── SPHERE ── */
-.sph-wrap{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;margin-bottom:40px}
-.sph-outer{position:relative;width:250px;height:250px;cursor:pointer}
-.orbit{position:absolute;border-radius:50%;border:1px solid rgba(0,255,204,0.08);top:50%;left:50%;transform:translate(-50%,-50%)}
-.o1{width:310px;height:310px;animation:spin 22s linear infinite}
-.o2{width:380px;height:380px;animation:spin 35s linear infinite reverse;border-color:rgba(0,255,204,0.05)}
-.o3{width:460px;height:460px;animation:spin 50s linear infinite;border-color:rgba(0,255,204,0.03)}
-.odot{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);top:0;left:50%;transform:translate(-50%,-50%)}
-@keyframes spin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
-.sph{position:absolute;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle at 38% 32%,rgba(0,255,204,0.18) 0%,rgba(0,20,16,0.92) 55%,#000 100%);border:1px solid rgba(0,255,204,0.3);box-shadow:0 0 40px rgba(0,255,204,0.12),inset 0 0 60px rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;transition:all 0.4s;top:0;left:0}
-.sph.listen{background:radial-gradient(circle at 38% 32%,rgba(240,192,64,0.22) 0%,rgba(20,14,0,0.92) 55%,#000 100%);border-color:rgba(240,192,64,0.45);animation:pulse-listen 1.2s ease-in-out infinite}
-.sph.think{background:radial-gradient(circle at 38% 32%,rgba(168,85,247,0.22) 0%,rgba(14,0,20,0.92) 55%,#000 100%);border-color:rgba(168,85,247,0.45);animation:pulse-think 2s ease-in-out infinite}
-@keyframes pulse-listen{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-@keyframes pulse-think{0%,100%{box-shadow:0 0 80px rgba(168,85,247,0.28)}50%{box-shadow:0 0 130px rgba(168,85,247,0.5)}}
-.sph-core{text-align:center}
-.sph-label{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-top:8px;display:block}
-.sph-hint{position:absolute;top:-32px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(0,255,204,0.4);animation:hint 3s ease-in-out infinite;pointer-events:none}
-@keyframes hint{0%,100%{opacity:0;transform:translateX(-50%) translateY(4px)}50%{opacity:1;transform:translateX(-50%) translateY(0)}}
-.waves{position:absolute;width:250px;height:250px;top:0;left:0;border-radius:50%;pointer-events:none;opacity:0;transition:opacity 0.4s}
-.sph.listen~.waves,.sph.think~.waves{opacity:1}
-.wave-row{position:absolute;bottom:-52px;left:50%;transform:translateX(-50%);display:flex;align-items:flex-end;gap:3px;height:44px}
-.wb{width:4px;border-radius:2px;background:var(--teal);animation:wa 0.9s ease-in-out infinite;transform-origin:bottom}
-.wb:nth-child(1){height:7px;animation-delay:0s}.wb:nth-child(2){height:13px;animation-delay:.1s}.wb:nth-child(3){height:21px;animation-delay:.2s}.wb:nth-child(4){height:33px;animation-delay:.05s}.wb:nth-child(5){height:40px;animation-delay:.15s}.wb:nth-child(6){height:44px;animation-delay:.25s}.wb:nth-child(7){height:40px;animation-delay:.1s}.wb:nth-child(8){height:33px;animation-delay:.2s}.wb:nth-child(9){height:21px;animation-delay:.05s}.wb:nth-child(10){height:13px;animation-delay:.15s}.wb:nth-child(11){height:7px;animation-delay:.25s}
-@keyframes wa{0%,100%{transform:scaleY(0.25);opacity:0.35}50%{transform:scaleY(1);opacity:1}}
-.waves.gold .wb{background:var(--gold)}
-.waves.purple .wb{background:var(--purple)}
-.vtx{position:absolute;bottom:-108px;left:50%;transform:translateX(-50%);width:300px;text-align:center;font-size:13px;color:rgba(255,255,255,0.5);font-style:italic;min-height:32px;line-height:1.6}
-
-/* ── HERO TEXT ── */
-.hero{position:relative;z-index:10;text-align:center;margin-top:70px}
-.hero-eye{font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--teal);margin-bottom:14px;text-shadow:0 0 12px var(--teal-glow)}
-.hero-h{font-family:'Cormorant Garamond',serif;font-size:clamp(44px,7vw,86px);font-weight:700;line-height:1.0;margin-bottom:18px;letter-spacing:-1px}
-.hero-h span{color:var(--teal);text-shadow:0 0 30px var(--teal-glow)}
-.hero-p{font-size:15px;color:rgba(255,255,255,0.4);max-width:420px;margin:0 auto 40px;line-height:1.85;animation:hue 3s ease-in-out infinite}
-@keyframes hue{0%,100%{color:rgba(255,255,255,0.55)}25%{color:var(--teal);text-shadow:0 0 20px var(--teal-glow)}50%{color:rgba(255,255,255,0.85)}75%{color:var(--gold)}}
-
-/* ── BUTTONS ── */
-.btngroup{display:flex;flex-direction:column;align-items:center;gap:14px}
-.sbtn{
-  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;
-  background:transparent;border:1px solid var(--teal);color:var(--teal);
-  padding:18px 48px;width:320px;
-  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
-  cursor:pointer;transition:all 0.3s;overflow:hidden;
-  -webkit-tap-highlight-color:transparent;
-}
-.sbtn::before{content:'';position:absolute;inset:0;background:var(--teal);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;z-index:0}
-.sbtn:hover::before{transform:scaleX(1)}.sbtn:hover{color:#000;box-shadow:0 0 40px var(--teal-glow)}
-.sbtn>*{position:relative;z-index:1}
-.sbtn.sec{border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.55)}
-.sbtn.sec::before{background:rgba(255,255,255,0.08)}
-.sbtn.sec:hover{color:#f0f0f0;box-shadow:none}
-.sbtn.rec{border-color:#e74c3c;color:#e74c3c;animation:rec 1s ease-in-out infinite}
-@keyframes rec{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,0.4)}50%{box-shadow:0 0 0 12px rgba(231,76,60,0)}}
-
-/* ── PLATFORMS ── */
-.platforms{position:relative;z-index:10;margin-top:44px;text-align:center;padding:0 20px}
-.plat-lbl{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(0,255,204,0.6);margin-bottom:16px;text-shadow:0 0 12px rgba(0,255,204,0.3)}
-.plat-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:480px;margin:0 auto}
-.plat{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);font-size:11px;font-weight:600;color:rgba(255,255,255,0.75);text-decoration:none;cursor:pointer;border-radius:3px;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
-.plat:hover,.plat.live{border-color:rgba(0,255,204,0.5);color:var(--teal);background:var(--teal-mid);box-shadow:0 0 12px rgba(0,255,204,0.1)}
-.plat.dim{opacity:0.55;cursor:default}
-.plat.dim:hover{border-color:var(--border);color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.02)}
-.plat svg{width:14px;height:14px;flex-shrink:0}
-.pbadge{font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 5px;border-radius:2px;margin-left:2px}
-.pbadge.go{background:var(--teal);color:#000}
-.pbadge.soon{background:rgba(240,192,64,0.15);color:var(--gold)}
-
-/* ── TUTORIAL OVERLAY ── */
-.tut-ov{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.tut-ov.on{display:flex}
-.tut-box{max-width:460px;width:100%;text-align:center}
-.tut-sphere{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 38% 32%,rgba(0,255,204,0.18) 0%,rgba(0,20,16,0.92) 55%,#000 100%);border:1px solid rgba(0,255,204,0.3);box-shadow:0 0 40px rgba(0,255,204,0.2);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;animation:pulse-listen 1.5s ease-in-out infinite}
-.tut-h{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;margin-bottom:6px}
-.tut-s{font-size:13px;color:rgba(255,255,255,0.38);margin-bottom:22px;line-height:1.7}
-.tut-step{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-left:2px solid var(--teal);padding:16px 20px;margin-bottom:10px;text-align:left}
-.tut-snum{font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
-.tut-stit{font-size:13px;font-weight:700;margin-bottom:4px}
-.tut-sdesc{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.7}
-.tut-go{margin-top:18px;background:var(--teal);color:#000;border:none;padding:14px 44px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer}
-
-/* ── CONFIRM OVERLAY ── */
-.conf-ov{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
-.conf-ov.on{display:flex}
-.phone{width:248px;background:#111;border-radius:26px;border:1px solid rgba(255,255,255,0.07);overflow:hidden;margin-bottom:24px}
-.ph-top{background:#0d0d0d;padding:11px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid rgba(255,255,255,0.05)}
-.ph-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.ph-n{font-size:11px;font-weight:700}.ph-s{font-size:9px;color:var(--teal)}
-.ph-msgs{padding:12px 10px;display:flex;flex-direction:column;gap:7px;min-height:180px;max-height:220px;overflow:hidden}
-.msg{max-width:90%;padding:8px 12px;font-size:11px;line-height:1.5;border-radius:9px;opacity:0;transform:translateY(5px);transition:all 0.35s ease}
-.msg.show{opacity:1;transform:translateY(0)}
-.msg-b{background:#1a2620;border:1px solid rgba(0,255,204,0.12);color:rgba(255,255,255,0.8);align-self:flex-start;border-bottom-left-radius:3px}
-.msg-u{background:rgba(0,255,204,0.1);border:1px solid rgba(0,255,204,0.18);color:var(--teal);align-self:flex-end;border-bottom-right-radius:3px}
-.msg-ty{background:#1a2620;border:1px solid rgba(0,255,204,0.12);align-self:flex-start;padding:10px 13px}
-.dots{display:flex;gap:4px}
-.dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:da 1.2s ease-in-out infinite}
-.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-@keyframes da{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
-.conf-h{font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:6px}
-.conf-s{font-size:13px;color:rgba(255,255,255,0.38);margin-bottom:22px;line-height:1.7}
-.conf-s strong{color:var(--teal)}
-.conf-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.conf-btn{background:transparent;border:1px solid var(--teal);color:var(--teal);padding:12px 36px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
-.conf-btn:hover{background:var(--teal);color:#000}
-.conf-sec{background:none;border:1px solid var(--border);color:var(--muted);padding:12px 20px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
-.conf-sec:hover{color:#f0f0f0}
-
-/* ── TASK FORM ── */
-.form-ov{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;padding:16px}
-.form-ov.on{display:flex}
-.form-box{background:#0a0a0a;border:1px solid var(--border);border-top:1px solid var(--teal);width:90%;max-width:500px;max-height:90vh;overflow-y:auto}
-.form-head{padding:24px 28px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
-.form-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;margin-bottom:3px}
-.form-sub{font-size:12px;color:var(--muted)}
-.form-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
-.form-body{padding:24px 28px}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:7px}
-.field input,.field textarea,.field select{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-bottom:1px solid rgba(0,255,204,0.3);color:#f0f0f0;padding:12px 13px;font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s}
-.field input:focus,.field textarea:focus{border-bottom-color:var(--teal)}
-.field textarea{resize:vertical;min-height:80px}
-.field select{background:#111}
-.form-submit{width:100%;background:linear-gradient(135deg,var(--teal),var(--purple));color:#f0f0f0;border:none;padding:15px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;margin-top:8px}
-
-/* ── SHARED SECTION STYLES ── */
-.pw{max-width:1080px;margin:0 auto;padding:72px 24px 60px}
-.stag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--teal);background:var(--teal-mid);border:1px solid rgba(0,255,204,0.14);padding:5px 14px;border-radius:100px;margin-bottom:18px}
-.stag.g{color:var(--gold);background:var(--gold-mid);border-color:rgba(240,192,64,0.14)}
-.stitle{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,5vw,58px);font-weight:700;line-height:1.05;margin-bottom:14px;letter-spacing:-0.5px}
-.ssub{font-size:15px;color:rgba(255,255,255,0.38);max-width:490px;line-height:1.85;margin-bottom:52px}
-
-/* ── PAGE 2: EDU ── */
-.edu-grid{display:grid;grid-template-columns:1fr 36px 1fr 36px 1fr;align-items:center;margin-bottom:64px}
-.en{background:var(--card);border:1px solid var(--border);padding:32px 20px;text-align:center;transition:all 0.3s;position:relative;overflow:hidden;cursor:pointer}
-.en::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--teal-mid),transparent);opacity:0;transition:opacity 0.3s}
-.en:hover::before{opacity:1}.en:hover{border-color:rgba(0,255,204,0.22);transform:translateY(-3px)}
-.en-icon{font-size:32px;margin-bottom:12px;display:block}
-.en-name{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:8px}
-.en-desc{font-size:12px;color:rgba(255,255,255,0.38);line-height:1.7}
-.ea{display:flex;align-items:center;justify-content:center;color:rgba(0,255,204,0.22);font-size:18px}
-.en-tog{position:absolute;top:12px;right:14px;font-size:18px;color:rgba(0,255,204,0.2);transition:transform 0.3s,color 0.3s;user-select:none}
-.en.open .en-tog{transform:rotate(45deg);color:var(--teal)}
-.en-det{display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:14px;text-align:left}
-.en.open .en-det{display:block}
-.en-list{list-style:none;margin:0 0 12px}
-.en-list li{font-size:11.5px;color:rgba(255,255,255,0.35);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:flex-start;gap:7px;line-height:1.5}
-.en-list li:last-child{border-bottom:none}
-.edot-s{color:var(--teal)}.edot-e{color:var(--gold)}.edot-v{color:#38bdf8}
-.en-quote{font-style:italic;font-size:11px;color:rgba(0,255,204,0.3);border-left:2px solid rgba(0,255,204,0.2);padding-left:12px;line-height:1.65}
-.hier{margin-bottom:64px}
-.hier-lbl{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:20px}
-.hr{display:flex;align-items:center;padding:20px 28px;border:1px solid var(--border);border-bottom:none;position:relative;overflow:hidden;transition:all 0.3s}
-.hr:last-child{border-bottom:1px solid var(--border)}
-.hr::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background 0.3s}
-.hr:hover{background:rgba(0,255,204,0.015)}.hr:hover::after{background:var(--teal)}
-.h-lv{font-size:9px;font-weight:700;letter-spacing:3px;color:var(--muted);width:70px;flex-shrink:0}
-.h-ti{font-size:14px;font-weight:700;flex:1;letter-spacing:0.3px}
-.badge{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:100px}
-.bt{background:var(--teal-mid);color:var(--teal);border:1px solid rgba(0,255,204,0.18)}
-.bg2{background:var(--gold-mid);color:var(--gold);border:1px solid rgba(240,192,64,0.18)}
-.bp{background:rgba(168,85,247,0.1);color:var(--purple);border:1px solid rgba(168,85,247,0.18)}
-.email-b{display:flex;align-items:center;gap:28px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-left:2px solid var(--teal);padding:32px 44px}
-.eb-text h3{font-family:'Cormorant Garamond',serif;font-size:20px;margin-bottom:5px}
-.eb-text p{font-size:13px;color:rgba(255,255,255,0.32);max-width:300px;line-height:1.7}
-.e-row{display:flex;gap:9px;flex:1;min-width:220px}
-.ei{flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-bottom:1px solid rgba(0,255,204,0.28);color:#f0f0f0;padding:13px 14px;font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s}
-.ei:focus{border-bottom-color:var(--teal)}
-.eb2{background:transparent;border:1px solid var(--teal);color:var(--teal);padding:13px 20px;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.25s}
-.eb2:hover{background:var(--teal);color:#000}
-
-/* ── PAGE 3: PRICING ── */
-.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:var(--border);margin-bottom:1px}
-.pc{background:#000;padding:44px 32px;position:relative;overflow:hidden;display:flex;flex-direction:column;transition:background 0.3s}
-.pc:hover{background:#040404}.pc.pf{background:#01080a}.pc.pp{background:#080600}
-.pt{font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px}
-.t1 .pt{color:var(--teal)}.t2 .pt{color:var(--purple)}.t3 .pt{color:var(--gold)}
-.pn{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin-bottom:10px}
-.pp2{display:flex;align-items:baseline;gap:2px;margin-bottom:7px}
-.pa{font-family:'Cormorant Garamond',serif;font-size:50px;font-weight:700;line-height:1}
-.t1 .pa{color:var(--teal)}.t2 .pa{color:var(--purple)}.t3 .pa{color:var(--gold)}
-.ppe{font-size:13px;color:var(--muted)}
-.pd{font-size:13px;color:rgba(255,255,255,0.32);line-height:1.7;margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--border)}
-.pf2{list-style:none;flex:1;margin-bottom:24px}
-.pf2 li{display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.6;margin-bottom:9px;color:rgba(255,255,255,0.65)}
-.pd2{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:8px}
-.t1 .pd2{background:var(--teal)}.t2 .pd2{background:var(--purple)}.t3 .pd2{background:var(--gold)}
-.pbtn{width:100%;padding:14px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.3s}
-.t1 .pbtn{background:var(--teal-mid);color:var(--teal);border:1px solid rgba(0,255,204,0.18)}.t1 .pbtn:hover{background:var(--teal);color:#000}
-.t2 .pbtn{background:var(--purple);color:#f0f0f0}.t2 .pbtn:hover{background:#bf7fff}
-.t3 .pbtn{background:var(--gold);color:#000}.t3 .pbtn:hover{background:#f8d060}
-.pop{position:absolute;top:0;right:0;background:var(--purple);color:#f0f0f0;font-size:7px;font-weight:700;letter-spacing:2px;padding:5px 11px}
-.con{background:var(--card);border:1px solid var(--border);border-top:1px solid var(--gold);padding:50px 40px;text-align:center;position:relative}
-.con::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(240,192,64,0.04),transparent 60%);pointer-events:none}
-.con-t{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;margin-bottom:10px}
-.con-s{font-size:14px;color:rgba(255,255,255,0.38);max-width:420px;margin:0 auto 24px;line-height:1.8}
-.con-ms{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
-.cm{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.02);border:1px solid var(--border);padding:8px 14px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.38)}
-.con-e{display:flex;gap:9px;max-width:420px;margin:0 auto;flex-wrap:wrap;justify-content:center}
-.ci{flex:1;min-width:180px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-bottom:1px solid rgba(240,192,64,0.28);color:#f0f0f0;padding:12px 14px;font-family:'Syne',sans-serif;font-size:13px;outline:none}
-.ci:focus{border-bottom-color:var(--gold)}
-.cb{background:var(--gold);color:#000;border:none;padding:12px 22px;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
-.cb:hover{background:#f8d060}
-
-/* ── FOOTER ── */
-footer{background:#000;border-top:1px solid var(--border);padding:24px 52px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.fl{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;letter-spacing:4px;color:var(--teal);text-shadow:0 0 12px var(--teal-glow)}
-.ft{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
-.ftg{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);text-decoration:none;border:1px solid rgba(0,255,204,0.18);padding:9px 16px;transition:all 0.25s}
-.ftg:hover{background:var(--teal);color:#000}
-
-/* ── MOBILE ── */
-@media(max-width:900px){
-  .topnav{padding:13px 18px}
-  .desknav{display:none}
-  .mobnav{display:block}
-  .pg{padding-bottom:70px}
-  .scene{padding:24px 16px 80px;min-height:auto}
-  .glow{display:none}
-  .sphere-container .bg-pros{display:none}
-  .hero{margin-top:28px}
-  .hero-h{font-size:46px}
-  .hero-p{font-size:14px}
-  .btngroup{width:100%}
-  .sbtn{width:100%;max-width:360px}
-  .sph-outer{width:190px;height:190px}
-  .sph{width:190px;height:190px}
-  .o1{width:240px;height:240px}
-  .o2{width:300px;height:300px}
-  .o3{width:360px;height:360px}
-  .vtx{width:250px;font-size:12px}
-  .platforms{padding:0 12px}
-  .plat{font-size:10px;padding:8px 11px}
-  .edu-grid{grid-template-columns:1fr;gap:0}
-  .ea{transform:rotate(90deg);padding:10px 0}
-  .email-b{padding:22px 16px}
-  .pw{padding:36px 14px 70px}
-  .con{padding:28px 14px}
-  footer{padding:14px 16px 70px}
-}
+/* info pages */
+.page{max-width:980px;margin:0 auto;padding:96px 20px 80px;animation:rise .4s ease both}
+.back{display:inline-flex;gap:8px;align-items:center;color:var(--mist);text-decoration:none;font-size:14.5px;margin-bottom:34px}
+.back:hover{color:var(--cloud)}
+.head{display:grid;gap:12px;max-width:660px;margin-bottom:36px}
+.head h1{font-size:clamp(34px,6vw,60px);font-weight:800}
+.head p{color:var(--mist);margin:0;font-size:18px}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.step{border-top:2px solid var(--line);padding-top:18px;display:grid;gap:8px;align-content:start}
+.step:first-child{border-color:var(--mint)}
+.step .n{font:500 12px var(--mono);color:var(--mint);letter-spacing:.12em}
+.step h3{font-size:24px}
+.step p{margin:0;color:var(--mist)}
+.quote{margin-top:48px;font:600 clamp(22px,3.4vw,34px)/1.2 var(--display);max-width:26ch}
+.quote span{color:var(--mint)}
+.ladder{display:grid;gap:12px;max-width:620px}
+.lvl{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:16px;border-radius:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--deep) 70%,transparent)}
+.lvl.locked{opacity:.65;border-style:dashed}
+.lvl .face{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--ink);border:1px solid var(--line)}
+.lvl b{font:600 17px var(--display);display:block}
+.lvl span{color:var(--mist);font-size:14px}
+.tag{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--warm)}
+.points{margin:30px 0 0;padding-left:18px;color:var(--mist);display:grid;gap:6px;max-width:60ch}
+.channels{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.channels span{font:500 12.5px var(--mono);padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--mist)}
+.channels .live-c{border-color:var(--mint);color:var(--mint)}
+.trial{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px;align-items:center;padding:28px;border-radius:24px;
+  background:radial-gradient(40rem 20rem at 0 0,color-mix(in srgb,var(--mint) 18%,var(--deep)),var(--deep));border:1px solid color-mix(in srgb,var(--mint) 40%,transparent);margin-bottom:22px}
+.trial h2{font-size:clamp(28px,4vw,40px)}
+.trial p{color:var(--mist);margin:8px 0 0}
+.cta{display:grid;gap:10px;justify-items:start}
+.copy{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.copy code{font:500 14px var(--mono);background:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:10px;user-select:all}
+.tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.tier{border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:10px;align-content:start}
+.tier .price{font:600 14px var(--mono);color:var(--warm)}
+.tier h3{font-size:26px}
+.tier p{margin:0;color:var(--mist);font-size:15px}
+.tier ul{margin:0;padding-left:18px;font-size:14.5px;display:grid;gap:4px}
+.emp{position:fixed;top:0;right:0;bottom:0;z-index:40;width:min(420px,100%);background:color-mix(in srgb,var(--deep) 92%,var(--ink));border-left:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 22px calc(env(safe-area-inset-bottom,0px) + 22px);overflow-y:auto;transform:translateX(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);box-shadow:-30px 0 80px -40px #000}
+.emp.open{transform:none}
+.emp .x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px}
+.who{display:grid;justify-items:center;gap:6px;text-align:center;padding-top:16px}
+.ava{position:relative;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--mint) 14%,var(--ink)),var(--ink));border:1px solid var(--line)}
+.ava canvas{width:100%;height:100%;display:block}
+.pen{position:absolute;right:-2px;bottom:4px;width:34px;height:34px;border-radius:50%;background:var(--deep);border:1px solid var(--line);color:var(--mist);display:grid;place-items:center;cursor:pointer}
+.pen:hover{color:var(--mint)}
+.who h2{font-size:26px;font-weight:800;margin-top:8px}
+.live-status{display:flex;align-items:center;gap:8px;color:var(--mint);font:500 15px var(--body)}
+.live-status svg{width:16px;height:16px}
+.locknote{font-size:13px;color:var(--warm);min-height:18px;margin:0}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px;margin:18px 0 22px}
+.tabs button{border:0;background:none;color:var(--mist);border-radius:999px;padding:9px 0;cursor:pointer;display:grid;place-items:center}
+.tabs button svg{width:19px;height:19px}
+.tabs button[aria-selected="true"]{background:color-mix(in srgb,var(--mint) 18%,var(--deep));color:var(--cloud)}
+.tabpane h4{font:700 17px var(--display);margin:6px 0 12px}
+.feed{display:grid;gap:4px;margin-bottom:18px}
+.ev{display:grid;grid-template-columns:44px 1fr;gap:12px;padding:10px 6px;border-radius:12px;animation:rise .4s ease both}
+.ev .ic{width:44px;height:44px;border-radius:12px;background:var(--ink);border:1px solid var(--line);display:grid;place-items:center;color:var(--mist)}
+.ev .ic svg{width:20px;height:20px}
+.ev.running .ic{color:var(--mint);border-color:color-mix(in srgb,var(--mint) 50%,transparent)}
+.ev.running .ic svg{animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ev.ok .ic{color:var(--mint)}
+.ev b{font:600 15.5px var(--body);display:block;color:var(--cloud);line-height:1.35}
+.ev span{display:block;color:var(--mist);font-size:14px;line-height:1.4}
+.ev time{display:block;color:color-mix(in srgb,var(--mist) 70%,transparent);font:500 12.5px var(--mono);margin-top:3px}
+.ev .sample{display:inline;font:500 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--warm);margin-left:6px}
+.kv{display:grid;gap:10px}
+.kv div{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:14.5px}
+.kv div span:last-child{color:var(--mist);text-align:right}
+.on{color:var(--mint)!important}
+.empchip{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;z-index:20;display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:999px;
+  border:1px solid var(--line);background:color-mix(in srgb,var(--deep) 85%,transparent);color:var(--cloud);font:600 14px var(--body);cursor:pointer}
+.empchip:hover{border-color:var(--mint)}
+.empchip .dot{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--mint) 35%,var(--ink)),var(--ink));display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--mint) 40%,transparent)}
+.empchip .count{min-width:20px;height:20px;border-radius:999px;background:var(--mint);color:var(--ink);font:700 12px var(--mono);display:grid;place-items:center;padding:0 6px}
+@media (max-width:800px){.steps,.tiers,.trial{grid-template-columns:1fr}.pace{margin-left:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<!-- TOP NAV -->
-<nav class="topnav">
-  <div class="logo">AEW</div>
-  <div class="desknav">
-    <button class="dnav-btn on" onclick="gp(1)">AI Employee</button>
-    <button class="dnav-btn" onclick="gp(2)">Eduvolution</button>
-    <button class="dnav-btn" onclick="gp(3)">Pricing</button>
-  </div>
-  <button class="nav-cta" onclick="gp(1)">Deploy Now</button>
-</nav>
-
-<!-- MOBILE BOTTOM NAV -->
-<nav class="mobnav">
-  <div class="mobnav-inner">
-    <button class="mnav-btn on" id="mn1" onclick="gp(1)">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      AI Employee
-    </button>
-    <button class="mnav-btn" id="mn2" onclick="gp(2)">
-      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      Eduvolution
-    </button>
-    <button class="mnav-btn" id="mn3" onclick="gp(3)">
-      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-      Pricing
+<button class="iconbtn mobtoggle" id="mobToggle" aria-label="Open sidebar" aria-controls="side">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+</button>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="side" id="side" aria-label="Sidebar">
+  <div class="top">
+    <a class="brandname" href="#"><svg class="mark" viewBox="0 0 60 32" aria-hidden="true"><path d="M30 16c-6-8-12-12-18-12a12 12 0 0 0 0 24c6 0 12-4 18-12zm0 0c6 8 12 12 18 12a12 12 0 0 0 0-24c-6 0-12 4-18 12z" fill="none" stroke="#2ee8b5" stroke-width="3.4"/></svg><span>AI Employee Workflow</span></a>
+    <button class="iconbtn" id="sideToggle" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
     </button>
   </div>
-</nav>
+  <button class="item" id="newTask" title="New task"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span class="label">New task</span></button>
+  <button class="item" id="openEmp" title="Your AI Employee"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><rect x="8.6" y="9" width="1.8" height="4.4" rx=".9" fill="currentColor" stroke="none"/><rect x="13.6" y="9" width="1.8" height="4.4" rx=".9" fill="currentColor" stroke="none"/></svg><span class="label">Your AI Employee</span></button>
+  <button class="item" id="openSearch" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><span class="label">Search</span></button>
+  <div class="grouplabel">Your work</div>
+  <a class="item" href="#briefing" title="Briefing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="label">Briefing</span></a>
+  <a class="item" href="#ideas" title="Ideas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg><span class="label">Ideas</span></a>
+  <a class="item" href="#goals" title="Goals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/></svg><span class="label">Goals</span></a>
+  <a class="item" href="#library" title="Work library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="7.5" r="3"/><path d="M16.5 4.5l3 5h-6z"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><circle cx="16.5" cy="16.5" r="3"/></svg><span class="label">Work library</span></a>
+  <div class="grouplabel">Learn more</div>
+  <a class="item" href="#eduvolution" title="Eduvolution"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 18c3-8 13-8 16 0"/><path d="M12 4v6M9 7l3 3 3-3"/></svg><span class="label">Eduvolution</span></a>
+  <a class="item" href="#twin" title="Digital Twin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg><span class="label">Digital Twin</span></a>
+  <a class="item" href="#pricing" title="Pricing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><span class="label">Pricing</span></a>
+  <div class="grouplabel">Your handoffs</div>
+  <div class="recent" id="recent"><em>Tasks you hand off show up here.</em></div>
+  <div class="foot"><button class="item" id="openSettings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></button><a class="item" href="#pricing" title="Start free"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span class="label">Start 30 days free</span></a></div>
+</aside>
 
-<!-- PAGE 1 -->
-<div class="pg on" id="pg1">
-  <div class="scene">
-    <div class="gridbg"></div>
-    <div class="glow"></div>
-    <div class="sph-wrap">
-      <div class="sph-outer" id="sphOuter">
-        <div class="sph-hint">Tap to learn how to use</div>
-        <div class="orbit o1"><div class="odot"></div></div>
-        <div class="orbit o2"></div>
-        <div class="orbit o3"></div>
-        <div class="sph" id="sph">
-          <div class="sph-core">
-            <svg width="80" height="45" viewBox="0 0 90 50" fill="none">
-              <path d="M45 25 C45 25 38 10 25 10 C13 10 5 17 5 25 C5 33 13 40 25 40 C38 40 45 25 45 25 C45 25 52 10 65 10 C77 10 85 17 85 25 C85 33 77 40 65 40 C52 40 45 25 45 25 Z" stroke="#00ffcc" stroke-width="3" stroke-linecap="round" fill="none">
-                <animate attributeName="stroke-dasharray" values="0,300;300,0;0,300" dur="3s" repeatCount="indefinite"/>
-                <animate attributeName="stroke-dashoffset" values="0;-300;-600" dur="3s" repeatCount="indefinite"/>
-              </path>
-              <path d="M45 25 C45 25 38 10 25 10 C13 10 5 17 5 25 C5 33 13 40 25 40 C38 40 45 25 45 25 C45 25 52 10 65 10 C77 10 85 17 85 25 C85 33 77 40 65 40 C52 40 45 25 45 25 Z" stroke="rgba(0,255,204,0.15)" stroke-width="8" stroke-linecap="round" fill="none"/>
-            </svg>
-            <span class="sph-label">AI Employee</span>
-          </div>
-        </div>
-        <div class="waves" id="wv">
-          <div class="wave-row"><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div></div>
-        </div>
+<main id="home">
+  <button class="globe" id="globeBtn" aria-label="Tap to talk to your AI Employee" title="Tap to talk"><canvas id="globe"></canvas></button>
+  <p class="invite" id="invite">Tap to activate <span>your AI Employee.</span></p>
+  <p class="invite-sub" id="inviteSub">Your AI Employee starts working the moment you give it its first task.</p>
+  <div class="sheet" id="signin" hidden>
+    <h2>Activate your AI Employee</h2>
+    <p>Sign in with an account you already use. It takes a few seconds.</p>
+    <button class="sso" data-sso="LinkedIn"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0a66c2"/><path d="M7 10v7M7 7.2v.1M11 17v-4.2c0-1.6 1-2.6 2.4-2.6s2.1 1 2.1 2.6V17M11 10v7" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/></svg>Continue with LinkedIn</button>
+    <button class="sso" data-sso="Facebook"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1877f2"/><path d="M13.3 20v-6.4h2.2l.3-2.5h-2.5V9.5c0-.7.2-1.2 1.2-1.2h1.4V6.1a18 18 0 0 0-2-.1c-2 0-3.3 1.2-3.3 3.4v1.8H8.4v2.5h2.2V20z" fill="#fff"/></svg>Continue with Facebook</button>
+    <button class="sso" data-sso="Instagram"><svg viewBox="0 0 24 24"><defs><linearGradient id="igg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#feda75"/><stop offset=".5" stop-color="#d62976"/><stop offset="1" stop-color="#4f5bd5"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#igg)"/><rect x="6" y="6" width="12" height="12" rx="3.5" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="12" cy="12" r="2.8" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="15.6" cy="8.4" r=".9" fill="#fff"/></svg>Continue with Instagram</button>
+    <button class="sso" data-sso="Google"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#fff"/><path d="M18.6 12.2c0-.5 0-.9-.1-1.3H12v2.5h3.7a3.2 3.2 0 0 1-1.4 2v1.7h2.3c1.3-1.2 2-3 2-4.9z" fill="#4285f4"/><path d="M12 19c1.9 0 3.5-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.3.7-1.8 0-3.3-1.2-3.8-2.8H5.8v1.8A7 7 0 0 0 12 19z" fill="#34a853"/><path d="M8.2 13.5a4.2 4.2 0 0 1 0-2.7V9H5.8a7 7 0 0 0 0 6.3z" fill="#fbbc05"/><path d="M12 7.8c1 0 1.9.4 2.6 1l2-2A7 7 0 0 0 5.8 9l2.4 1.8C8.7 9.1 10.2 7.8 12 7.8z" fill="#ea4335"/></svg>Continue with Google</button>
+    <p class="fine" id="ssoNote">Preview: sign-in turns on at launch. Tapping one continues the preview.</p>
+    <button class="link" id="ssoCancel">Not now</button>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="panel" id="panel" hidden>
+    <div id="speak" hidden>
+      <div class="live" id="live" aria-live="polite"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn warm" id="doneTalking">I’m done</button>
+        <span class="note">Pauses are fine. Take all the time you need.</span>
+        <span class="timer" id="timer"></span>
       </div>
-      <div class="vtx" id="vtx"></div>
     </div>
 
-    <div class="hero">
-      <div class="hero-eye">AI Employee Workflow System</div>
-      <h1 class="hero-h">Delegate<br><span>Your Task.</span></h1>
-      <p class="hero-p">What's the one task you hate doing at work? Tell Your AI Employee what the task is and It executes to completion!</p>
-      <div class="btngroup">
-        <button class="sbtn" id="spkBtn" onclick="toggleVoice()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-          <span id="spkTxt">Speak to Your AI Employee</span>
-        </button>
-        <button class="sbtn sec" onclick="openForm()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span>Type Your Task</span>
-        </button>
-      </div>
-
-      <div class="platforms">
-        <div class="plat-lbl">Delegate from any platform you already use</div>
-        <div class="plat-grid">
-          <a href="https://t.me/AEWTWINBOT" target="_blank" class="plat live">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-            Telegram <span class="pbadge go">Live</span>
-          </a>
-          <a href="sms:?body=I want to delegate a task to my AEW AI Employee" class="plat live">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            SMS / Text <span class="pbadge go">Live</span>
-          </a>
-          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>WhatsApp <span class="pbadge soon">Soon</span></span>
-          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>FB Messenger <span class="pbadge soon">Soon</span></span>
-          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>Instagram DM <span class="pbadge soon">Soon</span></span>
-          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.114 18.1.136 18.115a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>Discord <span class="pbadge soon">Soon</span></span>
-          <span class="plat dim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>LinkedIn <span class="pbadge soon">Soon</span></span>
+    <div id="review" hidden>
+      <label class="eyebrow" for="task">Your task, in your words</label>
+      <textarea id="task" style="margin-top:10px" placeholder="Like: “Every Friday I chase down invoices that are past due. Send a friendly reminder to anyone over 14 days and give me a list of who paid.”"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn go" id="send" disabled>Hand it off</button>
+        <button class="link" id="more">Keep talking</button>
+        <button class="link" id="example">Try an example</button>
+        <div class="pace" role="group" aria-label="How fast it shows its thinking">
+          Show thinking
+          <button data-pace="450" aria-pressed="false">Brisk</button>
+          <button data-pace="1100" aria-pressed="true">Steady</button>
+          <button data-pace="2100" aria-pressed="false">Teach me</button>
         </div>
       </div>
     </div>
+
+    <div class="thread" id="thread"></div>
   </div>
+  <button class="link" id="typeInstead">Rather type it?</button>
+  <div class="composer" id="composer" hidden>
+    <div class="bar2">
+      <input id="cmsg" placeholder="Message your AI Employee" aria-label="Message your AI Employee">
+      <button type="button" class="cbtn" id="cmic" aria-label="Talk instead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button type="button" class="cbtn send" id="csend" aria-label="Send" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+    <p class="hint">Quick questions are free. Tasks use units, and it always tells you the size first.</p>
+  </div>
+</main>
+
+<article class="page" id="eduvolution" hidden>
+  <a class="back" href="#">← Back to the globe</a>
+  <div class="head">
+    <span class="eyebrow">Eduvolution</span>
+    <h1>It learns your work. You learn how it got done.</h1>
+    <p>Educate and evolve. Every task you hand off teaches your AI Employee how you work, and shows you the steps and sources behind the result. You both get sharper.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="n">STAGE 1 · STUDY</span><h3>Say what you need</h3><p>Describe the task the way you'd tell a new hire. It plays it back sharper so you know it understood.</p></div>
+    <div class="step"><span class="n">STAGE 2 · EXECUTE</span><h3>Watch it work</h3><p>See its reasoning and where it looked, at a pace you can follow. Then the relief of “it's done.”</p></div>
+    <div class="step"><span class="n">STAGE 3 · EVOLVE</span><h3>Hand off more</h3><p>Each task builds on the last. One handoff becomes a routine, and the routine becomes your edge.</p></div>
+  </div>
+  <p class="quote">The knowledge of an MBA, <span>not the credentials.</span> The skill set, <span>not the certificates.</span></p>
+</article>
+
+<article class="page" id="twin" hidden>
+  <a class="back" href="#">← Back to the globe</a>
+  <div class="head">
+    <span class="eyebrow">Digital Twin</span>
+    <h1>Split yourself in two. Earn it as you go.</h1>
+    <p>Your AI Employee starts simple. As you work together it grows into your Digital Twin: your know-how, your standards, your voice.</p>
+  </div>
+  <div class="ladder">
+    <div class="lvl"><div class="face"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" fill="#2ee8b5" opacity=".85"/></svg></div><div><span class="tag">Day one</span><b>Your AI Employee</b><span>Takes tasks, shows its work, hands it back.</span></div></div>
+    <div class="lvl locked"><div class="face"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" fill="none" stroke="#a9d9cc" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#ffd7a8"/></svg></div><div><span class="tag">Unlocks with use</span><b>Your persona</b><span>A few choices that shape how it looks and talks to you.</span></div></div>
+    <div class="lvl locked"><div class="face"><svg width="30" height="16" viewBox="0 0 60 32"><path d="M30 16c-6-8-12-12-18-12a12 12 0 0 0 0 24c6 0 12-4 18-12zm0 0c6 8 12 12 18 12a12 12 0 0 0 0-24c-6 0-12 4-18 12z" fill="none" stroke="#a9d9cc" stroke-width="3.5"/></svg></div><div><span class="tag">Earned</span><b>Your Digital Twin</b><span>The full you, working when you're not.</span></div></div>
+  </div>
+  <ul class="points">
+    <li>A few choices that matter, not a hundred settings.</li>
+    <li>Your information stays yours. You decide what it learns.</li>
+    <li>It meets you where you already are.</li>
+  </ul>
+  <div class="channels">
+    <span class="live-c">Text</span><span class="live-c">Email</span><span class="live-c">Telegram</span>
+    <span>Messenger · soon</span><span>Discord · soon</span><span>LinkedIn · soon</span>
+  </div>
+</article>
+
+<article class="page" id="pricing" hidden>
+  <a class="back" href="#">← Back to the globe</a>
+  <div class="head">
+    <span class="eyebrow">Pricing</span>
+    <h1>Start free. Stay because it works.</h1>
+  </div>
+  <div class="trial">
+    <div>
+      <h2>30 days on us.</h2>
+      <p>100 units of real work, about 30 everyday tasks, to see what it can do. No card needed. Video and image creation open up on paid plans.</p>
+    </div>
+    <div class="cta">
+      <button class="btn go" id="pricingActivate">Activate your AI Employee</button><span class="note">Questions? Email us.</span>
+      <div class="copy"><code id="mail">aew.workflow@gmail.com</code><button class="btn" id="copy">Copy</button></div>
+    </div>
+  </div>
+
+  <h2 class="secthead">Work is measured in units</h2>
+  <p class="sectsub">Every task has a size. Your AI Employee tells you the size before it starts, so you always know what something costs.</p>
+  <div class="sizes">
+    <div class="size"><span class="u">1<small>unit</small></span><b>Quick</b><p>Confirm an order, answer a question, draft a short reply.</p></div>
+    <div class="size"><span class="u">3<small>units</small></span><b>Standard</b><p>Invoice follow-ups, a weekly summary, a round of emails.</p></div>
+    <div class="size"><span class="u">10<small>units</small></span><b>Deep</b><p>Multi-step research, a proposal, a full report. Asks before it starts.</p></div>
+  </div>
+
+  <div class="tiers">
+    <div class="tier"><span class="price">Launch price TBA</span><h3>Study</h3><div class="cap">300<small>units a month</small></div><p>About 100 everyday tasks. For your first handoffs.</p><ul><li>Your AI Employee</li><li>Voice and text tasks</li><li>Visible steps and sources</li><li>Up to 3 recurring tasks</li><li>10 video clips a month</li></ul><span class="ot-rate">Overtime: about 12¢ a unit</span></div>
+    <div class="tier"><span class="price">Launch price TBA</span><h3>Execute</h3><div class="cap">1,000<small>units a month</small></div><p>About 330 everyday tasks. For a steady weekly load.</p><ul><li>Everything in Study</li><li>Up to 15 recurring tasks</li><li>Persona unlocks</li><li>30 video clips a month</li></ul><span class="ot-rate">Overtime: about 10¢ a unit</span></div>
+    <div class="tier"><span class="price">Launch price TBA</span><h3>Evolve</h3><div class="cap">3,000<small>units a month</small></div><p>About 1,000 everyday tasks. For handing off a whole role.</p><ul><li>Everything in Execute</li><li>Unlimited recurring tasks</li><li>Your Digital Twin</li><li>Always on, every channel</li><li>100 video clips a month</li></ul><span class="ot-rate">Overtime: about 8¢ a unit</span></div>
+  </div>
+
+  <h2 class="secthead">Overtime, only when you say so</h2>
+  <p class="sectsub">Your plan covers your AI Employee’s regular hours. On a busy month it can keep working, the same way a good employee stays late. It never charges you without asking.</p>
+  <div class="ot">
+    <div class="otmock" aria-label="Example overtime request">
+      <div class="msg aew"><small>Your AI Employee</small>I’ve used this month’s 300 units. This proposal is a deep task, 10 units, about $1.20 in overtime. Want me to keep going?</div>
+      <div class="row"><span class="btn go" aria-hidden="true">Yes, go ahead</span><span class="btn" aria-hidden="true">Wait until next month</span></div>
+      <span class="note">Example</span>
+    </div>
+    <div class="otrules">
+      <div><i>1</i><div><b>It asks first</b><p>When your units run out, it tells you the size and the cost before doing more.</p></div></div>
+      <div><i>2</i><div><b>You set the limit</b><p>Choose how much overtime is allowed each month: $0, $10, $25, or your own number. It never goes past it.</p></div></div>
+      <div><i>3</i><div><b>It finishes what it started</b><p>Work already in progress is always finished. Nothing gets dropped halfway.</p></div></div>
+      <div><i>4</i><div><b>It suggests a better plan</b><p>If overtime two months in a row costs more than the next plan up, it tells you. A bigger plan should save you money, not cost you more.</p></div></div>
+    </div>
+  </div>
+
+  <div class="limits">
+    <div><b>Heads up at 80%</b><p>You get a note when you’ve used most of your units, so the end of the month is never a surprise.</p></div>
+    <div><b>Units reset monthly</b><p>Your units refresh on your billing date. Unused units don’t carry over.</p></div>
+    <div><b>Change plans any time</b><p>Move up or down whenever your workload changes. Upgrades take effect right away.</p></div>
+  </div>
+</article>
+
+<article class="page" id="briefing" hidden>
+  <a class="back" href="#">← Back to the globe</a>
+  <div class="head"><span class="eyebrow">Briefing</span><h1>Briefing</h1><p>What matters in your industry, picked by your AI Employee and kept quick to skim.</p></div>
+  <div class="prompt"><span class="eyebrow">Your briefing prompt</span>
+    <textarea id="briefPrompt" aria-label="Your briefing prompt">Keep me current on my industry: rule changes, pricing shifts and tools other professionals are using. Keep it clear and direct, quick to skim, no clickbait.</textarea>
+    <div class="row"><button class="btn go" id="briefGen">Generate</button></div><p class="toast" id="briefNote" aria-live="polite"></p></div>
+  <div class="list">
+    <div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></div><div><b>Year-end checklist for small business books<span class="sample">sample</span></b><p>The five things professionals close out before December: open invoices, recurring charges, receipts, contractor forms and next year’s rates.</p></div><time>Example</time></div>
+    <div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>Clients answer texts faster than email<span class="sample">sample</span></b><p>Why more service businesses confirm appointments and orders by text, and what your AI Employee can take over.</p></div><time>Example</time></div>
+  </div>
+</article>
+<article class="page" id="ideas" hidden>
+  <a class="back" href="#">← Back to the globe</a>
+  <div class="head"><span class="eyebrow">Ideas</span><h1>Ideas</h1><p>I’m always looking for work I can take off your plate. I’ll put my best ideas here.</p></div>
+  <div class="list"><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>Every Friday, I can chase past-due invoices</b><p>Tell me who’s late and I’ll send a friendly reminder to anyone over 14 days, then hand you the list of who paid.</p></div><button class="btn" data-idea="Every Friday, send a friendly reminder to any client with an invoice over 14 days past due and give me a list of who paid.">Hand it off</button></div><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>I can confirm every order by text</b><p>When a customer texts an order, I’ll timestamp it, confirm it back to them, and keep a running list for the day.</p></div><button class="btn" data-idea="Confirm every customer order that comes in by text, timestamp it, and send me a daily list of orders.">Hand it off</button></div><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>I can catch commenters your DM automation missed</b><p>Each day I can check your recent posts for your trigger words and list anyone who should have gotten a DM but didn’t.</p></div><button class="btn" data-idea="Every day, check comments on my recent posts for my trigger keywords and list anyone who didn’t get the automatic DM.">Hand it off</button></div><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>I can turn your week into a one-page summary</b><p>Every Monday I’ll pull what got done, what’s waiting on you, and what’s next, in one page you can skim in a minute.</p></div><button class="btn" data-idea="Every Monday, give me a one-page summary of what got done last week, what is waiting on me, and what is next.">Hand it off</button></div></div>
+</article>
+<article class="page" id="goals" hidden>
+  <a class="back" href="#">← Back to the globe</a>
+  <div class="head"><span class="eyebrow">Goals</span><h1>Goals</h1></div>
+  <div class="tracking"><i></i>Tracking</div>
+  <div><div class="goal"><button class="check" role="checkbox" aria-checked="false" aria-label="Hand off my first task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><div><b>Hand off my first task</b><p>Your AI Employee is ready. Tap the orb and give it something real.</p></div></div><div class="goal"><button class="check" role="checkbox" aria-checked="false" aria-label="Reach Execute in Eduvolution"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><div><b>Reach Execute in Eduvolution</b><p>10 handoffs moves you from Study to Execute. Persona unlocks there.</p></div></div><div class="goal"><button class="check" role="checkbox" aria-checked="false" aria-label="Set up one recurring task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><div><b>Set up one recurring task</b><p>Say “every Friday…” or “each morning…” and it runs on its own.</p></div></div></div>
+  <div class="card" style="margin-top:20px;background:var(--deep)"><div class="top"><b>Eduvolution</b><span class="sub" id="eduStage">Study · 0 of 10 handoffs</span></div><div class="bar"><i id="eduBar"></i></div><span class="sub">Each handoff teaches it your work. Study, then Execute, then Evolve.</span></div>
+  <h2 class="sect">Create a goal</h2>
+  <div><button class="cat" data-goal="Revenue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M16.5 7.5c0-1.9-2-3-4.5-3s-4.5 1.1-4.5 3 2 2.7 4.5 3.3 4.5 1.5 4.5 3.5-2 3-4.5 3-4.5-1.1-4.5-3"/></svg>Revenue<span>›</span></button><button class="cat" data-goal="Clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.5 3.2-5 6-5s5.2 1.5 6 5M16 4.6a3.5 3.5 0 0 1 0 6.8M21 20c-.5-2.4-1.8-3.9-3.5-4.6"/></svg>Clients<span>›</span></button><button class="cat" data-goal="Time back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Time back<span>›</span></button><button class="cat" data-goal="Skills"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c3-8 13-8 16 0"/><path d="M12 4v6M9 7l3 3 3-3"/></svg>Skills<span>›</span></button></div>
+</article>
+<article class="page" id="library" hidden>
+  <a class="back" href="#">← Back to the globe</a>
+  <div class="head"><span class="eyebrow">Work library</span><h1>Work library</h1><p>Everything your AI Employee finishes for you, in one place.</p></div>
+  <div class="libwrap">
+    <nav class="libnav" aria-label="Filter"><small>FINISHED WORK</small>
+      <button data-lib="all" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="7.5" r="3"/><path d="M16.5 4.5l3 5h-6z"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><circle cx="16.5" cy="16.5" r="3"/></svg>All work</button><button data-lib="doc" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M10 12h5M10 16h5"/></svg>Documents</button><button data-lib="rep" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M10 20V4M15 20v-7M20 20v-11"/></svg>Reports</button>
+      <small>MEDIA</small><button data-lib="img" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 16l-5-5-8 8"/></svg>Images</button><button data-lib="vid" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="12" height="12" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3"/></svg>Videos</button></nav>
+    <div><div class="list" id="libList"></div>
+      <div class="empty" id="libEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="7.5" r="3"/><path d="M16.5 4.5l3 5h-6z"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><circle cx="16.5" cy="16.5" r="3"/></svg><b>Nothing here yet</b><span>When your AI Employee finishes a task, the result lands here.</span></div></div>
+  </div>
+</article>
+<div class="modal" id="searchModal" hidden><div class="searchbox" role="dialog" aria-label="Search">
+  <div class="q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input id="sq" placeholder="Search your work and pages" aria-label="Search"></div>
+  <div class="sres" id="sres"></div></div></div>
+<div class="modal" id="setModal" hidden><div class="settings" role="dialog" aria-label="Settings">
+  <nav class="snav" role="tablist"><h2>Settings</h2><button role="tab" data-spane="general" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>General</button><button role="tab" data-spane="connectors" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>Connectors</button><button role="tab" data-spane="billing" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg>Billing & overtime</button><button role="tab" data-spane="secure" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><circle cx="12" cy="11" r="2"/><path d="M12 13v3"/></svg>Secure store</button><button role="tab" data-spane="permissions" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V10M14 10.5V6a1.5 1.5 0 0 1 3 0v7a7 7 0 0 1-7 7 6 6 0 0 1-5.2-3l-2.3-4a1.5 1.5 0 0 1 2.6-1.5L8 13"/></svg>Permissions</button><button role="tab" data-spane="channels" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 1 3.3 6.5L4 20l1.2-3.6A8 8 0 0 1 4 12z"/></svg>Messaging channels</button><button role="tab" data-spane="devices" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/></svg>Devices</button><button role="tab" data-spane="data" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Data controls</button><button role="tab" data-spane="help" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.2v.1"/></svg>Help & support</button><button class="out" id="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>Log out</button></nav>
+  <div class="spane"><button class="iconbtn x" id="setClose" aria-label="Close settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+<div data-pane-s="general"><h3>General</h3>
+  <div class="card"><div class="top"><span><b>Account</b><br><span class="sub" id="acctLine">Not activated yet</span></span><button class="btn" id="acctBtn">Activate</button></div></div>
+  <div class="slabel">Usage</div>
+  <div class="card"><div class="top"><b>Free trial</b><span class="sub" id="setUse">0 of 100 units used</span></div><div class="bar"><i id="setBar"></i></div><span class="sub">Units reset monthly on your billing date.</span><div><a class="btn go" href="#pricing">See plans</a></div></div>
+  <div class="card"><b>Redeem invite code</b><div class="inline"><input id="invCode" placeholder="Enter code" aria-label="Invite code"><button class="btn" id="invApply">Apply</button></div><p class="toast" id="invNote" aria-live="polite"></p></div>
+  <div class="slabel">Preferences</div>
+  <div class="card"><div class="rowline"><span>Language</span><select id='lang' aria-label='Language'><option>English</option><option disabled>Español (soon)</option></select></div><div class="rowline"><span>Show thinking<small>How fast it shows its steps while it works</small></span><div class="pace" role="group" aria-label="Thinking pace"><button data-pace="450" aria-pressed="false">Brisk</button><button data-pace="1100" aria-pressed="true">Steady</button><button data-pace="2100" aria-pressed="false">Teach me</button></div></div><div class="rowline"><span>Calm motion<small>Slows the orb’s animation</small></span><button class="switch" id="calmSw" role="switch" aria-checked="false" aria-label="Calm motion"></button></div></div>
 </div>
-
-<!-- PAGE 2 -->
-<div class="pg" id="pg2">
-  <div class="pw">
-    <div class="stag">Eduvolution System</div>
-    <h2 class="stitle">Your AI Employee<br>Never Stops Learning.</h2>
-    <p class="ssub">Every delegated task feeds the loop. Your AI Employee studies, executes, and evolves — building a growing Digital Twin of how you work.</p>
-    <div class="edu-grid">
-      <div class="en" onclick="toggleEdu(this)"><span class="en-tog">+</span><span class="en-icon">📚</span><div class="en-name">Study</div><div class="en-desc">Absorbs your business knowledge from trusted sources and domain experts</div><div class="en-det"><ul class="en-list"><li><span class="edot-s">›</span>Website &amp; blog content</li><li><span class="edot-s">›</span>SOPs &amp; internal documentation</li><li><span class="edot-s">›</span>CRM &amp; client interaction data</li><li><span class="edot-s">›</span>Industry reports &amp; articles</li><li><span class="edot-s">›</span>Custom knowledge bases</li></ul><p class="en-quote">Study transforms raw business knowledge into working intelligence — specific to you.</p></div></div>
-      <div class="ea">→</div>
-      <div class="en" onclick="toggleEdu(this)"><span class="en-tog">+</span><span class="en-icon">⚡</span><div class="en-name">Execute</div><div class="en-desc">Applies learned skillsets to complete delegated tasks with precision</div><div class="en-det"><ul class="en-list"><li><span class="edot-e">›</span>Lead follow-up &amp; outreach</li><li><span class="edot-e">›</span>Client communication &amp; support</li><li><span class="edot-e">›</span>Content creation in your brand voice</li><li><span class="edot-e">›</span>Research &amp; intelligent summaries</li><li><span class="edot-e">›</span>Scheduling &amp; task coordination</li></ul><p class="en-quote">Execute turns intelligence into real output — completed work delivered with precision.</p></div></div>
-      <div class="ea">→</div>
-      <div class="en" onclick="toggleEdu(this)"><span class="en-tog">+</span><span class="en-icon">🔁</span><div class="en-name">Evolve</div><div class="en-desc">Every completed task feeds back — building your Digital Twin workforce intelligence</div><div class="en-det"><ul class="en-list"><li><span class="edot-v">›</span>Performance feedback refines responses</li><li><span class="edot-v">›</span>Digital Twin business profile builds</li><li><span class="edot-v">›</span>Pattern recognition per your clients</li><li><span class="edot-v">›</span>Contextual memory — nothing resets</li></ul><p class="en-quote">Evolve builds a Digital Twin intelligence unique to your business.</p></div></div>
-    </div>
-    <div class="hier">
-      <div class="hier-lbl">AI Workforce Hierarchy</div>
-      <div class="hr"><div class="h-lv">Level 01</div><div class="h-ti">AI Employee — Task Executor</div><div class="badge bt">Active</div></div>
-      <div class="hr"><div class="h-lv">Level 02</div><div class="h-ti">AI Supervisor — Quality Control</div><div class="badge bt">Active</div></div>
-      <div class="hr"><div class="h-lv">Level 03</div><div class="h-ti">AI Manager — Workflow Assignment</div><div class="badge bg2">Pro+</div></div>
-      <div class="hr"><div class="h-lv">Level 04</div><div class="h-ti">AI COO — Operations Optimization</div><div class="badge bg2">Pro+</div></div>
-      <div class="hr"><div class="h-lv">Level 05</div><div class="h-ti">AI CEO — Strategic Intelligence</div><div class="badge bp">Enterprise</div></div>
-    </div>
-    <div class="email-b">
-      <div class="eb-text"><h3>Stay Ahead of the Evolution.</h3><p>Early access updates sent directly to you.</p></div>
-      <div class="e-row"><input class="ei" type="email" placeholder="your@email.com" id="eemail"/><button class="eb2" onclick="capEmail()">Notify Me</button></div>
+<div data-pane-s="connectors" hidden><h3>Connectors</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">Connect the tools you already use so your AI Employee can work inside them.</p>
+  <div class="card"><div class="rowline"><span>Gmail<small>Read and draft emails</small></span><button class="btn" data-connect="Gmail">Connect</button></div><div class="rowline"><span>Google Calendar<small>Check and book time</small></span><button class="btn" data-connect="Google Calendar">Connect</button></div><div class="rowline"><span>Google Drive<small>Find and save files</small></span><button class="btn" data-connect="Google Drive">Connect</button></div><div class="rowline"><span>Stripe<small>See payments and invoices</small></span><button class="btn" data-connect="Stripe">Connect</button></div><div class="rowline"><span>ManyChat<small>Instagram and Facebook DMs</small></span><button class="btn" data-connect="ManyChat">Connect</button></div></div><p class="toast" id="conNote" aria-live="polite"></p></div>
+<div data-pane-s="billing" hidden><h3>Billing &amp; overtime</h3>
+  <div class="card"><div class="top"><span><b>Free trial</b><br><span class="sub">30 days · 100 units · no card needed</span></span><a class="btn go" href="#pricing">Upgrade</a></div></div>
+  <div class="card"><b>Overtime limit</b><span class="sub">When your units run out, it asks first, then works up to this amount. It never goes past it.</span>
+    <div class="otlimit" role="group" aria-label="Monthly overtime limit"><button data-ot="0" aria-pressed="true">$0</button><button data-ot="10" aria-pressed="false">$10</button><button data-ot="25" aria-pressed="false">$25</button><button data-ot="50" aria-pressed="false">$50</button></div></div>
+  <div class="card"><div class="rowline"><span>Heads-up at 80%<small>A note when most of your units are used</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Heads-up at 80%"></button></div><div class="rowline"><span>Suggest a better plan<small>When overtime costs more than the next plan up</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Suggest a better plan"></button></div><div class="rowline"><span>Payment method<small>Added when you choose a plan</small></span><span class="pill-s">None yet</span></div></div></div>
+<div data-pane-s="secure" hidden><h3>Secure store</h3>
+  <div class="card"><b>Keys and passwords</b><span class="sub">Logins your AI Employee needs are stored encrypted. They’re never shown in chats, feeds or reports, and you can remove them any time.</span><div class="rowline"><span>Stored items</span><span class="pill-s">0</span></div></div></div>
+<div data-pane-s="permissions" hidden><h3>Permissions</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">You set the boundaries. It never goes past them.</p>
+  <div class="card"><div class="rowline"><span>Draft emails<small>You approve before anything sends</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Draft emails"></button></div><div class="rowline"><span>Reply to business texts<small>Order confirmations and quick answers</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Reply to business texts"></button></div><div class="rowline"><span>Book on your calendar</span><button class="switch" role="switch" aria-checked="false" aria-label="Book on your calendar"></button></div><div class="rowline"><span>Search the web<small>To find sources and facts</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Search the web"></button></div><div class="rowline"><span>Spend money<small>Never without asking you each time</small></span><span class="pill-s">Always asks</span></div></div></div>
+<div data-pane-s="channels" hidden><h3>Messaging channels</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">Reach your AI Employee wherever you already are.</p>
+  <div class="card"><div class="rowline"><span>Text (SMS)</span><span class="pill-s live">Live</span></div><div class="rowline"><span>Email</span><span class="pill-s live">Live</span></div><div class="rowline"><span>Telegram</span><span class="pill-s live">Live</span></div><div class="rowline"><span>Facebook Messenger</span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>Discord</span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>LinkedIn</span><span class="pill-s">Coming soon</span></div></div></div>
+<div data-pane-s="devices" hidden><h3>Devices</h3>
+  <div class="card"><div class="rowline"><span>This browser<small>Signed in now</small></span><span class="pill-s live">Active</span></div><div class="rowline"><span>Apple Watch<small>Hand off tasks from your wrist with Shortcuts</small></span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>Phone<small>Text your AI Employee any time</small></span><span class="pill-s live">Live</span></div></div></div>
+<div data-pane-s="data" hidden><h3>Data controls</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">Your information stays yours. This is what grows into your Digital Twin.</p>
+  <div class="card"><div class="rowline"><span>Learn from my tasks<small>Helps it get better at your work</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Learn from my tasks"></button></div><div class="rowline"><span>Export my data<small>Everything it has learned and done</small></span><button class="btn" id="exportBtn">Export</button></div><div class="rowline"><span>Erase what it learned<small>Starts your AI Employee fresh</small></span><button class="btn danger" id="eraseBtn">Erase</button></div></div><p class="toast" id="dataNote" aria-live="polite"></p></div>
+<div data-pane-s="help" hidden><h3>Help &amp; support</h3>
+  <div class="card"><b>Talk to a person</b><span class="sub">Questions, feedback or a task it got wrong. Email us and a human answers.</span><div class="copy"><code id="mail2">aew.workflow@gmail.com</code><button class="btn" id="copy2">Copy</button></div></div>
+  <div class="card"><b>How it works</b><span class="sub">The basics of units, overtime and Eduvolution.</span><div class="inline"><a class="btn" href="#pricing">Pricing</a><a class="btn" href="#eduvolution">Eduvolution</a></div></div></div></div></div></div>
+<button class="empchip" id="empChip" aria-label="Open your AI Employee"><span class="dot"><svg width="16" height="12" viewBox="0 0 16 12"><rect x="3" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/><rect x="10" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/></svg></span>Your AI Employee<span class="count" id="empCount" hidden>0</span></button>
+<div class="scrim" id="empScrim" hidden></div>
+<aside class="emp" id="emp" aria-label="Your AI Employee" aria-hidden="true">
+  <button class="iconbtn x" id="empClose" aria-label="Close"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div class="who">
+    <div class="ava"><canvas id="mini"></canvas>
+      <button class="pen" id="pen" aria-label="Customize"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg></button></div>
+    <h2>Your AI Employee</h2>
+    <div class="live-status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg><span id="empStatus">Here and ready</span></div>
+    <p class="locknote" id="locknote" aria-live="polite"></p>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="act" aria-label="Activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg></button>
+    <button role="tab" aria-selected="false" data-tab="bound" aria-label="What it can touch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></button>
+    <button role="tab" aria-selected="false" data-tab="sched" aria-label="Schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+    <button role="tab" aria-selected="false" data-tab="you" aria-label="What it knows about you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6.5 8.5a7 7 0 0 1 11 0M5 13a7 7 0 0 1 7-7M12 10a3 3 0 0 1 3 3v2M9 13a3 3 0 0 1 3-3M12 13v4M9 16v-3M15 18v-1M6 17v-4M18 13v3"/></svg></button>
+  </div>
+  <div class="tabpane" data-pane="act">
+    <div class="meter"><div class="top"><span>Units this month</span><span id="useTxt">0 of 100 · Free trial</span></div><div class="bar"><i id="useBar"></i></div>
+      <span class="note" id="useNote">It tells you at 80%. Overtime only happens if you allow it.</span>
+      <div class="otlimit" role="group" aria-label="Monthly overtime limit">Overtime limit
+        <button data-ot="0" aria-pressed="true">$0</button><button data-ot="10" aria-pressed="false">$10</button><button data-ot="25" aria-pressed="false">$25</button></div></div>
+    <div id="todayWrap" hidden><h4>Today</h4><div class="feed" id="today"></div></div>
+    <h4>Yesterday</h4>
+    <div class="feed">
+      <div class="ev ok"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div><div><b>Follow up on past-due invoices<span class="sample">sample</span></b><span>Sent 4 friendly reminders, 2 already paid</span><time>4:12 pm</time></div></div>
+      <div class="ev ok"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg></div><div><b>Summarize this week’s orders<span class="sample">sample</span></b><span>Delivered a one-page summary to your inbox</span><time>9:40 am</time></div></div>
     </div>
   </div>
-</div>
-
-<!-- PAGE 3 -->
-<div class="pg" id="pg3">
-  <div class="pw">
-    <div class="stag">Pricing</div>
-    <h2 class="stitle">Choose Your<br>AI Workforce.</h2>
-    <p class="ssub">Start free. Scale as you grow. Every tier includes the Eduvolution engine.</p>
-    <div class="pgrid">
-      <div class="pc t1"><div class="pt">Starter</div><div class="pn">AI Employee</div><div class="pp2"><span class="pa">Free</span><span class="ppe">&nbsp;/ 30 days</span></div><div class="pd">One AI Employee. One task you hate. Handled.</div><ul class="pf2"><li><div class="pd2"></div>1 dedicated AI Employee</li><li><div class="pd2"></div>1 task — unlimited executions</li><li><div class="pd2"></div>Eduvolution skillset building</li><li><div class="pd2"></div>Telegram bot access</li><li><div class="pd2"></div>30-day access — no credit card</li></ul><button class="pbtn" onclick="gp(1)">Start Free →</button></div>
-      <div class="pc t2 pf"><div class="pop">Most Popular</div><div class="pt">Professional</div><div class="pn">AI Team</div><div class="pp2"><span class="pa">$99</span><span class="ppe">.99 / mo</span></div><div class="pd">5 AI Employees with advanced Eduvolution and voice + text delegation.</div><ul class="pf2"><li><div class="pd2"></div>5 dedicated AI Employees</li><li><div class="pd2"></div>Unlimited task types</li><li><div class="pd2"></div>Advanced Eduvolution</li><li><div class="pd2"></div>Voice and text delegation</li><li><div class="pd2"></div>AI Supervisor layer</li></ul><button class="pbtn" onclick="openTG()">Get Started →</button></div>
-      <div class="pc t3 pp"><div class="pt">Enterprise</div><div class="pn">Digital Twin</div><div class="pp2"><span class="pa">$199</span><span class="ppe">.99 / mo</span></div><div class="pd">10 AI Employees, full Digital Twin activation, complete hierarchy.</div><ul class="pf2"><li><div class="pd2"></div>10 dedicated AI Employees</li><li><div class="pd2"></div>Full Digital Twin workflow</li><li><div class="pd2"></div>Complete Eduvolution</li><li><div class="pd2"></div>AI Manager &amp; COO access</li><li><div class="pd2"></div>White-glove onboarding</li></ul><button class="pbtn" onclick="openTG()">Unlock Everything →</button></div>
-    </div>
-    <div class="con">
-      <div class="stag g">AEW Launch Contest</div>
-      <h3 class="con-t">Win Your Digital Twin — Free.</h3>
-      <p class="con-s">Enterprise subscribers get automatic entry. Win 3 months of Digital Twin access.</p>
-      <div class="con-ms">
-        <span class="cm" style="cursor:pointer">✉️ Email Entry</span>
-        <a href="sms:?body=AEW Contest Entry" class="cm" style="text-decoration:none;cursor:pointer">💬 Text Entry</a>
-        <a href="https://t.me/AEWTWINBOT" target="_blank" class="cm" style="text-decoration:none;cursor:pointer">📲 Telegram Entry</a>
-      </div>
-      <div class="con-e"><input class="ci" type="text" placeholder="Email, phone, or @Telegram" id="ci"/><button class="cb" onclick="enterC()">Enter Contest</button></div>
-    </div>
+  <div class="tabpane" data-pane="bound" hidden>
+    <h4>What it can touch</h4>
+    <div class="kv"><div><span>Your email</span><span class="on">Drafts only, you approve</span></div><div><span>Business texts</span><span class="on">Read and reply</span></div><div><span>Calendar</span><span>Off</span></div><div><span>Payments</span><span>Never without you</span></div></div>
+    <p class="note" style="margin-top:12px">You set the boundaries. It never goes past them.</p>
   </div>
-</div>
-
-<footer>
-  <div class="fl">AEW SYSTEM</div>
-  <div class="ft">AI Employee Workflow · Digital Twin · Eduvolution</div>
-  <a href="https://t.me/AEWTWINBOT" class="ftg" target="_blank">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-    @AEWTWINBOT
-  </a>
-</footer>
-
-<!-- TUTORIAL -->
-<div class="tut-ov" id="tutOv">
-  <div class="tut-box">
-    <div class="tut-sphere"><svg width="54" height="30" viewBox="0 0 90 50" fill="none"><path d="M45 25 C45 25 38 10 25 10 C13 10 5 17 5 25 C5 33 13 40 25 40 C38 40 45 25 45 25 C45 25 52 10 65 10 C77 10 85 17 85 25 C85 33 77 40 65 40 C52 40 45 25 45 25 Z" stroke="#00ffcc" stroke-width="3" stroke-linecap="round" fill="none"><animate attributeName="stroke-dasharray" values="0,300;300,0;0,300" dur="3s" repeatCount="indefinite"/></path></svg></div>
-    <div class="tut-h">Your AI Employee is ready.</div>
-    <div class="tut-s">Delegate your first task in under 60 seconds.</div>
-    <div class="tut-step"><div class="tut-snum">Step 01</div><div class="tut-stit">🎙️ Tap "Speak to Your AI Employee"</div><div class="tut-sdesc">Talk naturally. Stumble, pause, restart — the AI understands you regardless. It listens until you stop for 2.5 seconds, then processes.</div></div>
-    <div class="tut-step"><div class="tut-snum">Step 02</div><div class="tut-stit">📋 Describe the task you hate doing</div><div class="tut-sdesc">Be specific. "Follow up with leads daily and send personalised emails" beats "handle my emails." The AI cleans up your speech automatically.</div></div>
-    <div class="tut-step"><div class="tut-snum">Step 03</div><div class="tut-stit">⚡ Your AI Employee gets deployed</div><div class="tut-sdesc">You'll see confirmation on screen and receive a Telegram message. Your AI Employee goes to work immediately.</div></div>
-    <div class="tut-step"><div class="tut-snum">Prefer typing?</div><div class="tut-stit">✍️ Use "Type Your Task"</div><div class="tut-sdesc">Fill in the form with your name, role, task, frequency and contact. Same result — just typed.</div></div>
-    <button class="tut-go" onclick="closeTut()">Got It — Let's Go →</button>
+  <div class="tabpane" data-pane="sched" hidden>
+    <h4>On the schedule</h4>
+    <div class="kv" id="schedList"><div><span>Nothing recurring yet</span><span>Say “every Friday…” and it lands here</span></div></div>
   </div>
-</div>
-
-<!-- TASK FORM -->
-<div class="form-ov" id="formOv">
-  <div class="form-box">
-    <div class="form-head">
-      <div><div class="form-title">Delegate Your Task</div><div class="form-sub">Your AI Employee receives this directly.</div></div>
-      <button class="form-close" onclick="closeForm()">×</button>
-    </div>
-    <div class="form-body">
-      <div class="field"><label>Your Name</label><input id="fn" type="text" placeholder="First name"/></div>
-      <div class="field"><label>Role or Business</label><input id="fr" type="text" placeholder="e.g. Sales Manager, Agency Owner..."/></div>
-      <div class="field"><label>Task to Delegate</label><textarea id="ft" placeholder="What do you hate doing at work? Be specific."></textarea></div>
-      <div class="field"><label>How Often?</label><select id="ff"><option value="" disabled selected>Select frequency...</option><option>Multiple times daily</option><option>Daily</option><option>Several times a week</option><option>Weekly</option><option>Monthly</option></select></div>
-      <div class="field"><label>Contact (Email or @Telegram)</label><input id="fc" type="text" placeholder="email@domain.com or @YourHandle"/></div>
-      <button class="form-submit" onclick="submitForm()">Deploy My AI Employee →</button>
-    </div>
+  <div class="tabpane" data-pane="you" hidden>
+    <h4>What it knows about you</h4>
+    <div class="kv"><div><span>How you like things done</span><span>Learning</span></div><div><span>Your industry playbook</span><span>Learning</span></div><div><span>Your voice</span><span>Unlocks with use</span></div></div>
+    <p class="note" style="margin-top:12px">Your information stays yours. See it, change it, or erase it any time. This is what grows into your Digital Twin.</p>
   </div>
-</div>
-
-<!-- CONFIRM -->
-<div class="conf-ov" id="confOv">
-  <div class="phone">
-    <div class="ph-top"><div class="ph-av" style="font-size:16px;font-family:serif;">∞</div><div><div class="ph-n">AEW System Portal</div><div class="ph-s">● online now</div></div></div>
-    <div class="ph-msgs" id="phm"></div>
-  </div>
-  <div class="conf-h">Task Received.</div>
-  <div class="conf-s">Your AI Employee is ready.<br>Open Telegram with <strong>@AEWTWINBOT</strong></div>
-  <div class="conf-acts">
-    <button class="conf-btn" onclick="openTG()">Open Telegram →</button>
-    <button class="conf-sec" onclick="closeConf()">Close</button>
-  </div>
-</div>
-
+</aside>
 <script>
-function gp(n){
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.dnav-btn').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('on'));
-  document.getElementById('pg'+n).classList.add('on');
-  document.querySelectorAll('.dnav-btn')[n-1].classList.add('on');
-  document.getElementById('mn'+n).classList.add('on');
-  window.scrollTo(0,0);
+(()=>{
+const $=id=>document.getElementById(id);
+
+/* ---------- Routing: home, or one of three quiet pages ---------- */
+const PAGES=['eduvolution','twin','pricing','briefing','ideas','goals','library'];
+let current='';
+function go(h){current=PAGES.includes(h)?h:'';try{history.replaceState(null,'',current?'#'+current:location.pathname+location.search)}catch(_){}route()}
+document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;e.preventDefault();go(a.getAttribute('href').slice(1))});
+try{current=location.hash.slice(1)}catch(_){}
+function route(){
+  const h=current;
+  PAGES.forEach(p=>$(p).hidden=p!==h);
+  $('home').hidden=PAGES.includes(h);
+  document.querySelectorAll('.side a.item').forEach(a=>a.toggleAttribute('aria-current',a.getAttribute('href')==='#'+h&&!!h));
+  document.querySelectorAll('.side a.item[aria-current]').forEach(a=>a.setAttribute('aria-current','page'));
+  if(matchMedia('(max-width:700px)').matches)setSide(false);
+  scrollTo(0,0);
 }
-
-function openTG(){window.open('https://t.me/AEWTWINBOT','_blank')}
-function openForm(){document.getElementById('formOv').classList.add('on')}
-function closeForm(){document.getElementById('formOv').classList.remove('on')}
-function closeConf(){document.getElementById('confOv').classList.remove('on');resetSph()}
-function closeTut(){document.getElementById('tutOv').classList.remove('on');tutDone=true}
-
-let tutDone=false;
-document.getElementById('sphOuter').addEventListener('click',()=>{
-  if(!tutDone){document.getElementById('tutOv').classList.add('on')}
-  else{toggleVoice()}
-});
-
-function setSph(s){
-  const el=document.getElementById('sph'),w=document.getElementById('wv');
-  el.className='sph';w.className='waves';
-  if(s==='listen'){el.classList.add('listen');w.classList.add('gold')}
-  else if(s==='think'){el.classList.add('think');w.classList.add('purple')}
+const side=$('side');
+function setSide(open){side.classList.toggle('open',open);$('scrim').hidden=!(open&&matchMedia('(max-width:700px)').matches);
+  $('sideToggle').setAttribute('aria-expanded',String(open));$('sideToggle').setAttribute('aria-label',open?'Close sidebar':'Open sidebar')}
+$('sideToggle').addEventListener('click',()=>setSide(!side.classList.contains('open')));
+$('mobToggle').addEventListener('click',()=>setSide(true));
+$('scrim').addEventListener('click',()=>setSide(false));
+addEventListener('hashchange',()=>{try{current=location.hash.slice(1)}catch(_){}route()});route();
+const emp=$('emp');
+function setEmp(open){emp.classList.toggle('open',open);emp.setAttribute('aria-hidden',String(!open));$('empScrim').hidden=!open;if(open){setSide(false)}}
+$('openEmp').addEventListener('click',()=>setEmp(true));
+$('empChip').addEventListener('click',()=>{setEmp(true);$('empCount').hidden=true;$('empCount').textContent='0'});
+$('empClose').addEventListener('click',()=>setEmp(false));
+$('empScrim').addEventListener('click',()=>setEmp(false));
+addEventListener('keydown',e=>{if(e.key==='Escape')setEmp(false)});
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
+  document.querySelectorAll('.tabpane').forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab)}));
+$('pen').addEventListener('click',()=>{$('locknote').textContent='Your persona unlocks as you work together.';setTimeout(()=>$('locknote').textContent='',3200)});
+const ICON_RUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>';
+const ICON_OK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/></svg>';
+const clockTime=()=>new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}).toLowerCase();
+function feedItem(title){
+  $('todayWrap').hidden=false;
+  const d=document.createElement('div');d.className='ev running';
+  d.innerHTML=`<div class="ic">${ICON_RUN}</div><div><b></b><span>Reading your task</span><time>${clockTime()}</time></div>`;
+  d.querySelector('b').textContent=title;$('today').prepend(d);{const c=$('empCount');c.textContent=String(+c.textContent+1);c.hidden=emp.classList.contains('open')}
+  return {sub:t=>d.querySelector('span').textContent=t,done:t=>{d.className='ev ok';d.querySelector('.ic').innerHTML=ICON_OK;d.querySelector('span').textContent=t}};
 }
-function resetSph(){setSph('');capturedTask='';fullT=''}
-function showConf(task){document.getElementById('confOv').classList.add('on');animPhone(task);sendToBackend({type:'voice',task})}
+const titleOf=t=>{let x=t.split(/[.;!?]/)[0];if(x.length>52)x=x.slice(0,50).replace(/\s\S*$/,'')+'…';return x};
+const recent=[];
+function addRecent(t){recent.unshift(t);const box=$('recent');box.innerHTML='';
+  recent.slice(0,8).forEach(r=>{const s=document.createElement('span');s.textContent=r;s.title=r;box.appendChild(s)})}
 
-async function submitForm(){
-  const n=document.getElementById('fn').value,r=document.getElementById('fr').value,
-        t=document.getElementById('ft').value,f=document.getElementById('ff').value,
-        c=document.getElementById('fc').value;
-  if(!n||!t||!c){alert('Please fill in your name, task, and contact.');return}
-  await sendToBackend({type:'task',name:n,role:r,task:t,freq:f,contact:c});
-  closeForm();
-  document.getElementById('confOv').classList.add('on');
-  animPhone(t);
+/* ---------- The orb: a dotted thought-orb with a friendly face. Tap it to talk. ---------- */
+const cv=$('globe'),ctx=cv.getContext('2d');
+const slow=matchMedia('(prefers-reduced-motion: reduce)').matches?.35:1;
+const N=560,pts=[];
+for(let i=0;i<N;i++){
+  const y=1-2*(i+.5)/N,r=Math.sqrt(1-y*y),th=i*2.39996,u=i/N*Math.PI*2,d=1+Math.sin(u)**2;
+  pts.push({x:Math.cos(th)*r,y,z:Math.sin(th)*r,lat:Math.asin(y),band:i%4,
+    lx:Math.cos(u)/d*1.35,ly:Math.sin(u)*Math.cos(u)/d*1.35,seed:Math.random()});
 }
+let W=0,R=0;
+function size(){const b=cv.getBoundingClientRect(),dp=Math.min(devicePixelRatio||1,2);cv.width=b.width*dp;cv.height=b.height*dp;ctx.setTransform(dp,0,0,dp,0,0);W=b.width;R=W*.36}
+new ResizeObserver(size).observe(cv);size();
 
-// Sends task data to the secure Cloudflare relay Worker, which holds the
-// Telegram bot token privately as an encrypted secret. No credentials
-// ever live in this public file.
-const RELAY_URL = 'https://aew-task-relay.aew-workflow.workers.dev';
-async function sendToBackend(data){
-  try{
-    const res = await fetch(RELAY_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-    if(!res.ok){
-      console.error('Relay request failed:', res.status);
-    }
-  }catch(e){
-    console.error('Relay request error:', e);
+const G={state:'idle',amp:0,wake:0,morph:0,blink:1,nextBlink:2,look:{x:0,y:0},want:{x:0,y:0},happy:0,
+  near:0,nearT:0,eyeH:1,eyeW:1,eyeX:1,tilt:0,lift:0,sq:0,sqV:0,poke:0,pokeX:0,pokeY:0,
+  lastMove:0,glance:0,glanceT:0,nextGlance:6,doneAt:-1,level:0,prevState:'idle'};
+window.aewOrb=G;
+let lastP=null;
+addEventListener('pointermove',e=>{const b=cv.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2;
+  G.want.x=Math.max(-1,Math.min(1,(e.clientX-cx)/400));
+  G.want.y=Math.max(-1,Math.min(1,(e.clientY-cy)/400));
+  const d=Math.hypot(e.clientX-cx,e.clientY-cy)/(b.width/2);
+  G.nearT=Math.max(0,Math.min(1,(1.9-d)/1.1));          /* perks up as you come close */
+  const now=performance.now();
+  if(lastP){const v=Math.hypot(e.clientX-lastP.x,e.clientY-lastP.y)/Math.max(1,now-lastP.t);
+    if(d<1&&v>1.2&&G.poke<.5){G.poke=Math.min(1,v/3);G.pokeX=(e.clientX-b.left)/b.width;G.pokeY=(e.clientY-b.top)/b.height}}  /* a quick flick ruffles the dots */
+  lastP={x:e.clientX,y:e.clientY,t:now};
+  if(now-G.lastMove>5000)G.sqV-=.012;                   /* waking from rest: a tiny hop */
+  G.lastMove=now;});
+cv.addEventListener('pointerdown',e=>{const b=cv.getBoundingClientRect();G.sqV+=.05;G.poke=.8;G.pokeX=(e.clientX-b.left)/b.width;G.pokeY=(e.clientY-b.top)/b.height});
+const MINT='46,232,181';
+const ease=(cur,to,k)=>cur+(to-cur)*k;
+function frame(ms){
+  const t=ms/1000*slow*(window.__calm?.4:1),c=W/2,s=G.state,now=performance.now();
+  ctx.clearRect(0,0,W,W);
+  if(s!==G.prevState){
+    if(s==='listening')G.sqV+=.02;                        /* curious little perk */
+    if(s==='done'){G.doneAt=t;G.happy=1;G.sqV+=.045}      /* pleased beat before the infinity */
+    if(s==='working'&&G.prevState!=='searching')G.sqV-=.015;
+    G.prevState=s;}
+  const resting=s==='idle'&&now-G.lastMove>6000&&G.happy<.2;
+  G.near=ease(G.near,G.nearT*(resting?.4:1),.08);G.nearT*=.995;
+  G.level=ease(G.level,0,.08);G.amp=Math.max(G.amp,G.level);
+  /* springy squash and stretch */
+  G.sqV+=-G.sq*.12;G.sqV*=.84;G.sq+=G.sqV;
+  const sx=1+G.sq,sy=1-G.sq*.9;
+  const morphOn=s==='done'&&G.doneAt>=0&&t-G.doneAt>.75;
+  G.morph+=((morphOn?1:0)-G.morph)*.05;G.amp*=.94;G.wake*=.95;G.happy*=.975;G.poke*=.9;
+  const glow=.2+G.wake*.25+G.near*.08+G.amp*.06;
+  const g=ctx.createRadialGradient(c,c,R*.2,c,c,R*1.5);
+  g.addColorStop(0,`rgba(${MINT},${glow})`);g.addColorStop(1,`rgba(${MINT},0)`);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
+  const spin=s==='working'?.9:s==='searching'?.5:resting?.1:.18;
+  const breathe=(1+Math.sin(t*(resting?.9:1.3))*.025)*(1+G.wake*.06+G.near*.025);
+  const scan=(t*2.2)%(Math.PI*2);
+  G.look.x+=(G.want.x-G.look.x)*.08;G.look.y+=(G.want.y-G.look.y)*.08;
+  const leanX=G.look.x*R*.04*(1-G.morph),leanY=G.look.y*R*.03*(1-G.morph)-G.near*R*.015;  /* leans toward you */
+  const pkx=G.pokeX*W,pky=G.pokeY*W,pr=R*.55;
+  for(const p of pts){
+    const a=t*spin*(s==='working'?(1+p.band*.35):1);
+    let x=p.x*Math.cos(a)-p.z*Math.sin(a),z=p.x*Math.sin(a)+p.z*Math.cos(a),y=p.y;
+    if(s==='working'){const tl=.5*(p.band-1.5),yy=y*Math.cos(tl)-z*Math.sin(tl);z=y*Math.sin(tl)+z*Math.cos(tl);y=yy}
+    let rr=breathe;
+    if(s==='listening')rr+=(.035+G.amp*.075)*Math.sin(p.lat*7-t*7);
+    let px=c+leanX+x*R*rr*sx,py=c+leanY+y*R*rr*sy;const m=G.morph;
+    if(G.poke>.02){const dx=px-pkx,dy=py-pky,d=Math.hypot(dx,dy)||1;
+      if(d<pr){const f=G.poke*(1-d/pr)*R*.14*(.6+p.seed*.8);px+=dx/d*f;py+=dy/d*f}}
+    if(m>.001){px=px*(1-m)+(c+p.lx*R)*m;py=py*(1-m)+(c+p.ly*R+Math.sin(t*2+p.seed*6)*2)*m;z=z*(1-m)+.6*m}
+    const depth=(z+1)/2;let alpha=.12+depth*.78+G.near*.05,sz=.6+depth*1.9;
+    if(s==='searching'){const ang=Math.atan2(p.z,p.x)+a;if(Math.abs(Math.sin((ang-scan)/2))<.12){alpha=1;sz+=1.1}}
+    ctx.fillStyle=`rgba(${MINT},${Math.min(1,alpha)})`;ctx.beginPath();ctx.arc(px,py,sz,0,6.283);ctx.fill();
   }
-}
-
-function animPhone(task){
-  const c=document.getElementById('phm');c.innerHTML='';
-  const ty=document.createElement('div');ty.className='msg msg-ty';
-  ty.innerHTML='<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-  c.appendChild(ty);
-  setTimeout(()=>{
-    c.innerHTML='';
-    addMsg(c,'b','👋 Welcome to AEW System. What task do you want your AI Employee to handle?',0);
-    addMsg(c,'u',task||'Handle my repetitive daily tasks.',600);
-    addMsg(c,'b','⚡ Task received. Entering the AEW Intelligence Loop...',1200);
-    addMsg(c,'b','✅ Deployed. You supervise. It executes.',2200);
-  },800);
-}
-function addMsg(c,t,txt,d){
-  setTimeout(()=>{
-    const m=document.createElement('div');
-    m.className='msg '+(t==='b'?'msg-b':'msg-u');m.textContent=txt;
-    c.appendChild(m);setTimeout(()=>m.classList.add('show'),40);
-    c.scrollTop=c.scrollHeight;
-  },d);
-}
-
-// VOICE — WisprFlow style
-let recog=null,listening=false,capturedTask='',silT=null,fullT='';
-function toggleVoice(){listening?stopV():startV()}
-let maxTimer=null;
-
-function startV(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){document.getElementById('vtx').textContent='Voice unavailable — use Type Your Task.';return}
-  recog=new SR();recog.continuous=true;recog.interimResults=true;recog.lang='en-US';recog.maxAlternatives=3;
-  fullT='';silT=null;
-  recog.onstart=()=>{
-    listening=true;setSph('listen');
-    document.getElementById('spkBtn').classList.add('rec');
-    document.getElementById('spkTxt').textContent='Tap "Deploy Now" when done';
-    document.getElementById('vtx').textContent='Speak freely — take all the time you need.';
-    maxTimer=setTimeout(()=>{
-      if(listening){
-        document.getElementById('vtx').textContent='5-minute limit reached — deploying now...';
-        finishV();
-      }
-    },300000);
-  };
-  recog.onresult=(e)=>{
-    clearTimeout(silT);
-    let interim='',finalC='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal){
-        let b=e.results[i][0].transcript,bc=e.results[i][0].confidence;
-        for(let j=1;j<e.results[i].length;j++){if(e.results[i][j].confidence>bc){b=e.results[i][j].transcript;bc=e.results[i][j].confidence}}
-        finalC+=b+' ';
-      } else interim+=e.results[i][0].transcript;
+  /* small signs of life: an occasional glance away when it's idle */
+  if(s==='idle'&&t>G.nextGlance){G.glanceT=(Math.random()<.5?-1:1)*(.45+Math.random()*.35);G.nextGlance=t+7+Math.random()*6;setTimeout(()=>G.glanceT=0,900)}
+  G.glance=ease(G.glance,G.glanceT,.12);
+  const busy=s==='working'||s==='searching';
+  const lookX=busy?Math.sin(t*1.5)*.6:G.look.x+G.glance,lookY=busy?-.5:G.look.y;
+  if(t>G.nextBlink){G.blink=0;G.nextBlink=t+(Math.random()<.18?.25:2.5+Math.random()*3)}   /* sometimes a double blink */
+  G.blink+=(1-G.blink)*.18;
+  /* moods: curious when listening, focused when working, soft when resting, bright when you're close */
+  const tH=busy?.62:resting?.5:s==='listening'?1.08:1+G.near*.12;
+  const tW=busy?1.06:1;const tX=busy?.9:1;
+  const tTilt=s==='listening'?.09:G.look.x*.06;
+  G.eyeH=ease(G.eyeH,tH,.12);G.eyeW=ease(G.eyeW,tW,.12);G.eyeX=ease(G.eyeX,tX,.12);G.tilt=ease(G.tilt,tTilt,.08);G.lift=ease(G.lift,G.near*.6+(s==='listening'?.4:0),.1);
+  const face=1-G.morph;
+  if(face>.05){
+    ctx.save();ctx.globalAlpha=face;ctx.shadowColor='#2ee8b5';ctx.shadowBlur=18+G.near*6;ctx.fillStyle='#effcf8';ctx.strokeStyle='#effcf8';
+    const fx=c+leanX*1.6,fy=c+leanY*1.6;
+    ctx.translate(fx,fy);ctx.rotate(G.tilt);ctx.scale(sx,sy);
+    const ex=R*.27*G.eyeX,ey=-R*.04-G.lift*R*.03,ew=R*.1*G.eyeW,eh=R*.24;
+    for(const side of[-1,1]){
+      const cx=side*ex+lookX*R*.1,cy=ey+lookY*R*.08;
+      if(G.happy>.3){ctx.lineWidth=R*.055;ctx.lineCap='round';ctx.beginPath();ctx.arc(cx,cy+eh*.2,ew*.9,Math.PI*1.1,Math.PI*1.9);ctx.stroke()}
+      else{const curious=s==='listening'?(side<0?1.06:.96):1;
+        const h=Math.max(eh*.08,eh*G.blink*G.eyeH*curious);ctx.beginPath();ctx.roundRect(cx-ew/2,cy-h/2,ew,h,ew/2);ctx.fill()}
     }
-    if(finalC)fullT+=finalC;
-    const d=(fullT+interim).trim();capturedTask=d;
-    const shown=d.length>120?'...'+d.slice(-120):d;
-    document.getElementById('vtx').textContent='"'+shown+'"';
-    setSph('think');
-    silT=setTimeout(()=>{
-      if(fullT.trim().length>3){
-        document.getElementById('vtx').textContent='No speech detected for 5 minutes — deploying...';
-        finishV();
-      }
-    },300000);
-  };
-  recog.onerror=(e)=>{
-    if(e.error==='no-speech')return;
-    listening=false;clearTimeout(maxTimer);resetSph();
-    document.getElementById('spkBtn').classList.remove('rec');
-    document.getElementById('spkTxt').textContent='Speak to Your AI Employee';
-    document.getElementById('vtx').textContent='Mic error — try again.';
-  };
-  recog.onend=()=>{
-    if(listening){try{recog.start()}catch(e){}}
-  };
-  recog.start();
+    ctx.restore();
+  }
+  if(emp.classList.contains('open'))drawMini(t);
+  requestAnimationFrame(frame);
 }
-function finishV(){
-  listening=false;clearTimeout(silT);clearTimeout(maxTimer);
-  try{recog.stop()}catch(e){}
-  document.getElementById('spkBtn').classList.remove('rec');
-  document.getElementById('spkTxt').textContent='Speak to Your AI Employee';
-  const t=clean(fullT.trim());
-  if(t&&t.length>3){
-    document.getElementById('vtx').textContent='Deploying your task...';
-    setTimeout(()=>{document.getElementById('vtx').textContent='';showConf(t)},1200);
-  } else resetSph();
+/* live voice level (where the browser allows the mic): livelier when you're louder */
+let meter=null;
+async function startMeter(){try{if(meter||!navigator.mediaDevices)return;const st=await navigator.mediaDevices.getUserMedia({audio:true});
+  const ac=new (window.AudioContext||window.webkitAudioContext)(),an=ac.createAnalyser();an.fftSize=512;ac.createMediaStreamSource(st).connect(an);
+  const buf=new Uint8Array(an.fftSize);meter={st,ac,raf:0};
+  const tick=()=>{if(!meter)return;an.getByteTimeDomainData(buf);let sum=0;for(const v of buf){const d=(v-128)/128;sum+=d*d}
+    G.level=Math.max(G.level,Math.min(1,Math.sqrt(sum/buf.length)*5));meter.raf=requestAnimationFrame(tick)};tick()}catch(_){meter=null}}
+function stopMeter(){if(!meter)return;try{cancelAnimationFrame(meter.raf);meter.st.getTracks().forEach(t=>t.stop());meter.ac.close()}catch(_){}meter=null}
+const mc=$('mini'),mx=mc.getContext('2d');
+function drawMini(t){
+  const b=mc.getBoundingClientRect(),dp=Math.min(devicePixelRatio||1,2),w=b.width;if(!w)return;
+  if(mc.width!==Math.round(w*dp)){mc.width=w*dp;mc.height=w*dp}
+  mx.setTransform(dp,0,0,dp,0,0);mx.clearRect(0,0,w,w);
+  const c=w/2,r=w*.34,s=G.state,spin=s==='working'?.9:s==='searching'?.5:.18;
+  for(let i=0;i<N;i+=2){const p=pts[i],a=t*spin;
+    const x=p.x*Math.cos(a)-p.z*Math.sin(a),z=p.x*Math.sin(a)+p.z*Math.cos(a);
+    const rr=1+Math.sin(t*1.3)*.025+(s==='listening'?.06*Math.sin(p.lat*7-t*7):0),dep=(z+1)/2;
+    mx.fillStyle=`rgba(${MINT},${.15+dep*.75})`;mx.beginPath();mx.arc(c+x*r*rr,c+p.y*r*rr,.5+dep*1.1,0,6.283);mx.fill()}
+  const busy=s==='working'||s==='searching',lx=busy?Math.sin(t*1.5)*.6:0;
+  mx.save();mx.shadowColor='#2ee8b5';mx.shadowBlur=10;mx.fillStyle='#effcf8';
+  for(const sx of[-1,1]){const h=Math.max(1.5,r*.24*G.blink);mx.beginPath();mx.roundRect(c+sx*r*.27+lx*r*.1-r*.05,c-r*.04-(busy?r*.04:0)-h/2,r*.1,h,r*.05);mx.fill()}
+  mx.restore();
 }
-function stopV(){
-  listening=false;clearTimeout(silT);clearTimeout(maxTimer);
-  try{recog.stop()}catch(e){}
-  document.getElementById('spkBtn').classList.remove('rec');
-  document.getElementById('spkTxt').textContent='Speak to Your AI Employee';
-  if(fullT.trim().length>3) finishV();
-  else{resetSph();document.getElementById('vtx').textContent='';}
+requestAnimationFrame(frame);
+
+/* ---------- Talking: no time limit, filler words cleaned up ---------- */
+const home=$('home'),panel=$('panel'),speak=$('speak'),review=$('review'),live=$('live'),task=$('task'),send=$('send'),thread=$('thread'),statusEl=$('status'),timer=$('timer');
+const setStatus=(txt,state)=>{statusEl.textContent=txt;if(state)G.state=state;const e=document.getElementById('empStatus');if(e)e.textContent=txt||'Here and ready'};
+const FILL=/\b(um+|uh+|erm|you know|i mean)\b,?\s*/gi;
+const clean=s=>{let o=s.replace(FILL,'').replace(/\s{2,}/g,' ').replace(/\s+([,.!?])/g,'$1').trim();
+  if(o)o=o[0].toUpperCase()+o.slice(1);if(o&&!/[.!?]$/.test(o))o+='.';return o};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const markFill=s=>esc(s).replace(FILL,m=>`<span class="filler">${m.trim()}</span> `);
+
+function openPanel(mode){
+  home.classList.add('talking');panel.hidden=false;$('invite').hidden=true;$('inviteSub').hidden=true;$('typeInstead').hidden=true;
+  speak.hidden=mode!=='speak';review.hidden=mode!=='review';
 }
-function clean(r){
-  if(!r)return r;
-  let t=r.charAt(0).toUpperCase()+r.slice(1);
-  t=t.replace(/\b(\w+)\s+\1\b/gi,'$1').replace(/\bi\b/g,'I').replace(/\bcant\b/g,"can't").replace(/\bdont\b/g,"don't").replace(/\bwont\b/g,"won't").replace(/\bim\b/g,"I'm").replace(/\ba i\b/gi,'AI').replace(/\bcrm\b/gi,'CRM');
-  return t.replace(/\s{2,}/g,' ').trim();
+function toReview(msg){
+  openPanel('review');send.disabled=!task.value.trim();
+  setStatus(msg||(task.value?'Read it over. Edit anything.':'Type it however it comes out.'),'idle');
+  task.focus();
 }
 
-function capEmail(){
-  const v=document.getElementById('eemail').value;if(!v)return;
-  sendToBackend({text:'📧 Email Signup: '+v});
-  alert('Confirmed — AEW updates coming to '+v);
-  document.getElementById('eemail').value='';
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,listening=false,finalText='',startAt=0,tick=null,quiet=null;
+function startListen(){
+  G.wake=1;G.happy=1;
+  if(!SR){toReview('Voice isn’t available in this browser. Type it instead, same result.');return}
+  try{
+    rec=new SR();rec.continuous=true;rec.interimResults=true;rec.lang='en-US';
+    finalText=task.value?task.value+' ':'';
+    rec.onresult=e=>{let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)finalText+=r[0].transcript+' ';else interim+=r[0].transcript}
+      live.innerHTML=markFill(finalText)+`<span class="interim">${markFill(interim)}</span>`;
+      G.amp=1;setStatus('Listening…','listening');
+      clearTimeout(quiet);quiet=setTimeout(()=>{if(listening)setStatus('Still here. Take your time…')},2600)};
+    rec.onend=()=>{if(listening){try{rec.start()}catch(_){}}};   /* keeps going through long pauses */
+    rec.onerror=e=>{if(/not-allowed|service-not-allowed|audio-capture/.test(e.error)){listening=false;stopListen();toReview('I can’t hear you here. Type it instead, same result.')}};
+    rec.start();listening=true;startMeter();
+    openPanel('speak');live.innerHTML='<span class="interim">Go ahead, I’m listening…</span>';
+    setStatus('Listening…','listening');startAt=Date.now();
+    tick=setInterval(()=>{const s=Math.floor((Date.now()-startAt)/1000);timer.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`},500);
+  }catch(_){toReview('Type it instead, same result.')}
 }
-function toggleEdu(card){
-  document.querySelectorAll('.en').forEach(c=>{if(c!==card)c.classList.remove('open')});
-  card.classList.toggle('open');
+function stopListen(){
+  listening=false;clearInterval(tick);clearTimeout(quiet);timer.textContent='';stopMeter();
+  try{rec&&rec.stop()}catch(_){}
+  task.value=clean(finalText);
 }
-function enterC(){
-  const v=document.getElementById('ci').value;if(!v)return;
-  sendToBackend({text:'🏆 Contest Entry: '+v});
-  alert('Entry confirmed: '+v);
-  document.getElementById('ci').value='';
+let activated=false;const CAP=100;let used=0;let otLimit=0;
+function showSignin(){$('invite').hidden=true;$('inviteSub').hidden=true;$('typeInstead').hidden=true;$('signin').hidden=false;G.wake=1;setStatus('Almost yours','idle');}
+let activatedVia='';
+function activate(via){
+  activated=true;activatedVia=via||'';syncAcct();if(pendingTask){const t=pendingTask;pendingTask='';setTimeout(()=>{task.value=t;toReview('Here’s the task. Edit anything, then hand it off.')},350)}$('signin').hidden=true;G.happy=1;G.wake=1;
+  $('invite').innerHTML='I’m yours. <span>What should I take off your plate?</span>';$('invite').hidden=false;
+  $('inviteSub').textContent='Tap me and talk. Take all the time you need.';$('inviteSub').hidden=false;$('typeInstead').hidden=false;
+  setStatus(via?`Activated with ${via}`:'Activated','idle');showComposer();
 }
+document.querySelectorAll('[data-sso]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.sso)));
+$('ssoCancel').addEventListener('click',()=>{$('signin').hidden=true;$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle')});
+$('pricingActivate').addEventListener('click',()=>{go('');setTimeout(showSignin,50)});
+function sizeOf(text){const w=text.split(/\s+/).length;
+  if(/\b(research|proposal|report|analy[sz]e|plan|strategy|compare|audit)\b/i.test(text)&&w>12)return{name:'Deep',u:10};
+  if(w<=14)return{name:'Quick',u:1};return{name:'Standard',u:3}}
+function useTask(u){used+=u;$('useTxt').textContent=`${used} of ${CAP} · Free trial`;$('useBar').style.width=Math.min(100,used/CAP*100)+'%';
+  if(used>=CAP*.8)$('useNote').textContent=used>=CAP?(otLimit?`Units used up. Overtime allowed up to $${otLimit} this month.`:'Units used up. New tasks wait until you allow overtime or the month resets.'):`Heads up: ${CAP-used} units left this month.`}
+document.querySelectorAll('[data-ot]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-ot]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.ot===b.dataset.ot)));otLimit=+b.dataset.ot;
+  $('useNote').textContent=otLimit?`Overtime allowed up to $${otLimit} this month. It still asks first.`:'Overtime is off. It pauses when your units run out.'}));
+$('globeBtn').addEventListener('click',()=>{
+  if(!activated){showSignin();return}
+  if(listening){stopListen();toReview();return}
+  if(G.state==='working'||G.state==='searching')return;
+  thread.innerHTML='';startListen();
+});
+$('doneTalking').addEventListener('click',()=>{stopListen();toReview()});
+$('more').addEventListener('click',startListen);
+$('typeInstead').addEventListener('click',()=>{if(!activated){showSignin();return}G.wake=1;toReview()});
+task.addEventListener('input',()=>{send.disabled=!task.value.trim();G.amp=Math.min(1,G.amp+.2)});
+$('example').addEventListener('click',()=>{task.value=clean('um so every Friday I chase down invoices that are past due, uh, I want a friendly reminder sent to anybody over 14 days and then give me a list of who paid');send.disabled=false;G.amp=1});
+
+let pace=1100;
+document.querySelectorAll('.pace button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.pace button').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.pace===b.dataset.pace)));pace=+b.dataset.pace}));
+
+/* ---------- The magic: it lands, it's on it, it shows its work, it's done ---------- */
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function add(cls,html){const d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;thread.appendChild(d);d.scrollIntoView({block:'nearest',behavior:'smooth'});return d}
+function sharpen(s){
+  let t=s.replace(/^(so,?\s+)?((i need you to|i want you to|can you|could you|please|i'd like you to)\s*)?/i,'');
+  t=t.charAt(0).toUpperCase()+t.slice(1);
+  const when=(s.match(/\b(every\s+\w+|daily|weekly|monthly|each\s+\w+)\b/i)||[])[0];
+  return {t,when};
+}
+send.addEventListener('click',()=>{const t=clean(task.value);if(!t)return;task.value='';if(awaiting){const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}runTask(t)});
+let busy=false,lastTask='',awaiting=null;
+const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
+async function runTask(text,opts={}){
+  if(busy)return;busy=true;
+  openPanel('none');review.hidden=true;speak.hidden=true;
+  if(!opts.silent)add('you',esc(text));addRecent(text);const sz=sizeOf(text);useTask(sz.u);const fi=feedItem(titleOf(sharpen(text).t));
+  const typing=add('aew','<span class="dots" aria-label="Typing"><i></i><i></i><i></i></span>');
+  setStatus('Got it','working');
+  await wait(900);
+  typing.innerHTML='<small>Your AI Employee</small>On it.';
+  await wait(pace*.8);
+  if(text.split(/\s+/).length<7&&!sharpen(text).when){
+    const ans=await askUser('So I get this right: who is it for, and when do you need it done?');
+    text=clean(text.replace(/[.!?]$/,'')+', '+ans.replace(/^[A-Z]/,c=>c.toLowerCase()));
+    add('aew','<small>Your AI Employee</small>Perfect, that’s what I needed.');await wait(pace*.6);setStatus('Got it','working');
+  }
+  lastTask=text;
+  const {t,when}=sharpen(text);
+  add('aew',`<small>Here’s what I heard</small>${esc(t)}${when?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="sizechip">${sz.name} · ${sz.u} unit${sz.u>1?'s':''}</span><br><span class="note">If that’s off, just tell me in your own words.</span>`);
+  await wait(pace);
+  setStatus('Working it through','working');
+  /* the working line: dots, what it's doing right now, a running clock, tap to see the steps */
+  const card=add('aew work','<button class="workline" aria-expanded="false"><span class="spark" aria-hidden="true"><i></i><i></i><i></i></span><span class="doing">Reading your task</span><span class="secs">0s</span><span class="chev" aria-hidden="true">›</span></button><div class="detail" hidden><ul class="trail"></ul><button class="link" data-go="eduvolution">How does this work?</button></div>');
+  const wl=card.querySelector('.workline'),det=card.querySelector('.detail'),doing=card.querySelector('.doing'),secs=card.querySelector('.secs');
+  wl.addEventListener('click',()=>{det.hidden=!det.hidden;wl.setAttribute('aria-expanded',String(!det.hidden))});
+  card.querySelector('[data-go]').addEventListener('click',()=>go('eduvolution'));
+  const t0=Date.now(),clock=setInterval(()=>secs.textContent=Math.floor((Date.now()-t0)/1000)+'s',250);
+  const trail=card.querySelector('.trail');
+  for(const [now,step,chips] of [
+    ['Reading your task','Pinned down what “done” means for you','<span>your words</span>'],
+    ['Checking the playbook','Pulled the standard playbook for this kind of task','<span>industry rulebooks</span><span>public data</span>'],
+    ['Drafting it','Drafted it and checked it against what you asked',''],
+    ['Packaging it for you','Packaged it so you can approve in one look','']]){
+    doing.textContent=now;fi.sub(now);G.state=now==='Checking the playbook'?'searching':'working';
+    const li=document.createElement('li');li.innerHTML=`<div>${step}${chips?`<div class="chips">${chips}</div>`:''}</div>`;trail.appendChild(li);
+    await wait(pace*1.6);li.classList.add('done');
+  }
+  clearInterval(clock);card.classList.add('finished');doing.textContent='Worked through it';fi.done('Done. Ready for your OK');recordDone(titleOf(sharpen(text).t),text);{const w=sharpen(text).when;if(w){const l=$('schedList');if(l.textContent.includes('Nothing recurring'))l.innerHTML='';const r=document.createElement('div');r.innerHTML='<span></span><span class="on"></span>';r.children[0].textContent=titleOf(sharpen(text).t);r.children[1].textContent=w[0].toUpperCase()+w.slice(1).toLowerCase();l.appendChild(r)}}
+  setStatus('Done','done');
+  const h=add('aew handoff',`<b>It’s done. Next?</b>That was a preview of how your AI Employee works. Your free trial includes 100 units of real work, and it hands each task back just like this.
+    <p class="tease">The more we work together, the more I become you.</p>
+    <div class="row" style="margin-top:12px"><a class="btn go" href="#pricing">Start your 30 free days</a><button class="link" id="again">Tell me another task</button><button class="link" data-feed>See it in your feed</button><a class="link" href="#twin">What’s a Digital Twin?</a></div>`);
+  h.querySelector('[data-feed]').addEventListener('click',()=>setEmp(true));
+  h.querySelector('#again').addEventListener('click',()=>{$('cmsg').focus()});
+  busy=false;showComposer();
+}
+/* ---------- Agent flow: keep the conversation going ---------- */
+function showComposer(){if(!activated)return;$('composer').hidden=false;home.classList.add('chatting')}
+const cmsg=$('cmsg');
+cmsg.addEventListener('input',()=>$('csend').disabled=!cmsg.value.trim());
+$('cmic').addEventListener('click',()=>{if(busy&&!awaiting)return;startListen()});
+const REPLIES=[
+  [/\b(unit|units|cost|price|pricing|how much|charge)\b/i,'Each task has a size: quick is 1 unit, standard is 3, deep is 10. I tell you the size before I start, and overtime only happens if you allow it.','pricing'],
+  [/\b(overtime|limit|run out)\b/i,'When your units run out I ask first. You set a monthly overtime limit in Settings, and I never go past it.','pricing'],
+  [/\b(twin|digital twin)\b/i,'Your Digital Twin is what I grow into as we work together: your know-how, your standards, your voice. You earn it over time.','twin'],
+  [/\b(eduvolution|learn|teach)\b/i,'Every task teaches me how you work, and shows you how it got done. Study, then Execute, then Evolve.','eduvolution'],
+  [/\b(data|privacy|private|my information)\b/i,'Your information stays yours. You can see it, export it, or erase it any time in Settings, under Data controls.',null]];
+function reply(html,choices){const m=add('aew',`<small>Your AI Employee</small>${html}`);
+  if(choices){const c=document.createElement('div');c.className='choices';choices.forEach(([label,fn,primary])=>{const b=document.createElement('button');b.type='button';b.className='btn'+(primary?' go':'');b.textContent=label;b.addEventListener('click',()=>{c.remove();fn()});c.appendChild(b)});m.appendChild(c)}
+  return m}
+async function converse(msg){
+  openPanel('none');add('you',esc(msg));
+  const typing=add('aew','<span class="dots" aria-label="Typing"><i></i><i></i><i></i></span>');G.amp=1;
+  await wait(700);typing.remove();
+  const low=msg.toLowerCase();
+  if(/\b(status|done yet|finished|how('?s| is) it going|update me|where are we)\b/.test(low)){
+    reply(lastTask?`Your last task is done and waiting for your OK: “${esc(titleOf(sharpen(lastTask).t))}”. You can see everything in your feed.`:'Nothing in progress yet. Tell me what to take off your plate.',lastTask?[['Open my feed',()=>setEmp(true)]]:null);return}
+  if(/^(thanks|thank you|thx|appreciate|great|perfect|nice)\b/.test(low)){reply('Anytime. What’s next?');return}
+  if(lastTask&&/\b(actually|instead|change|also|add|make it|but|switch|update)\b/.test(low)){
+    const merged=clean(lastTask.replace(/[.!?]$/,'')+'. Change: '+msg);
+    reply(`Got it. I’ll update the last task with that. <span class="sizechip">${sizeOf(merged).name} · ${sizeOf(merged).u} units</span>`,[['Run the update',()=>runTask(merged,{silent:true}),true],['Leave it as is',()=>reply('No problem, it stays as it was.')]]);return}
+  for(const [re,ans,page] of REPLIES)if(re.test(low)){reply(ans,page?[['Tell me more',()=>go(page)]]:null);return}
+  if(msg.split(/\s+/).length>=3&&!/\?\s*$/.test(msg)){
+    const sz=sizeOf(msg);
+    reply(`Want me to take that on as a task? It looks like a ${sz.name.toLowerCase()} task, ${sz.u} unit${sz.u>1?'s':''}.`,[['Yes, take it on',()=>runTask(clean(msg),{silent:true}),true],['Just talking',()=>reply('Got it, just talking. I’m here whenever you need something done.')]]);return}
+  if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work at launch, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
+  reply('I’m here. Tell me what you need done, or ask me about any task.');
+}
+function sendMsg(){const m=cmsg.value.trim();if(!m)return;cmsg.value='';$('csend').disabled=true;
+  if(awaiting){const r=awaiting;awaiting=null;add('you',esc(m));r(m);return}
+  if(busy){add('you',esc(m));reply('Noted. I’ll finish this one first, then get to that.');return}
+  converse(m)}
+$('csend').addEventListener('click',sendMsg);
+cmsg.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();sendMsg()}});
+
+$('newTask').addEventListener('click',()=>{awaiting=null;busy=false;go('');thread.innerHTML='';task.value='';
+  panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle');
+  if(matchMedia('(max-width:700px)').matches)setSide(false);G.happy=1});
+let pendingTask='';let handoffs=0;const libItems=[];
+function syncAcct(){$('acctLine').textContent=activated?`Signed in with ${activatedVia||'your account'}`:'Not activated yet';$('acctBtn').textContent=activated?'Manage':'Activate'}
+function startTask(t){go('');setModal('setModal',false);if(!activated){pendingTask=t;showSignin();return}task.value=t;toReview('Here’s the task. Edit anything, then hand it off.')}
+document.querySelectorAll('[data-idea]').forEach(b=>b.addEventListener('click',()=>startTask(b.dataset.idea)));
+document.querySelectorAll('[data-goal]').forEach(b=>b.addEventListener('click',()=>startTask(`Help me set a ${b.dataset.goal.toLowerCase()} goal for the next 90 days and check in with me on it every week.`)));
+document.querySelectorAll('.goal .check').forEach(c=>c.addEventListener('click',()=>c.setAttribute('aria-checked',String(c.getAttribute('aria-checked')!=='true'))));
+document.querySelectorAll('.switch').forEach(sw=>sw.addEventListener('click',()=>sw.setAttribute('aria-checked',String(sw.getAttribute('aria-checked')!=='true'))));
+$('calmSw').addEventListener('click',()=>{window.__calm=$('calmSw').getAttribute('aria-checked')==='true'});
+$('briefGen').addEventListener('click',()=>{$('briefNote').textContent=activated?'Saved. Your first briefing arrives tomorrow morning.':'Activate your AI Employee and your first briefing arrives the next morning.'});
+/* library */
+let libFilter='all';
+function drawLib(){const L=$('libList');L.innerHTML='';const items=libItems.filter(i=>libFilter==='all'||i.kind===libFilter);
+  items.forEach(i=>{const d=document.createElement('div');d.className='li';d.innerHTML=`<div class="ic">${i.kind==='rep'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M10 20V4M15 20v-7M20 20v-11"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M10 12h5M10 16h5"/></svg>'}</div><div><b></b><p></p></div><time></time>`;
+    d.querySelector('b').textContent=i.title;d.querySelector('p').textContent=i.sub;d.querySelector('time').textContent=i.time;L.appendChild(d)});
+  $('libEmpty').hidden=items.length>0}
+document.querySelectorAll('[data-lib]').forEach(b=>b.addEventListener('click',()=>{libFilter=b.dataset.lib;document.querySelectorAll('[data-lib]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawLib()}));
+drawLib();
+function recordDone(title,text){handoffs++;
+  libItems.unshift({title,sub:/summary|report|list/i.test(text)?'Report · ready for your OK':'Document · ready for your OK',kind:/summary|report|list/i.test(text)?'rep':'doc',time:clockTime()});drawLib();
+  const st=handoffs>=25?'Evolve':handoffs>=10?'Execute':'Study',goal=st==='Study'?10:st==='Execute'?25:25;
+  $('eduStage').textContent=`${st} · ${handoffs} of ${goal} handoffs`;$('eduBar').style.width=Math.min(100,handoffs/goal*100)+'%';
+  const first=document.querySelector('.goal .check');if(first)first.setAttribute('aria-checked','true');}
+/* modals */
+function setModal(id,open){$(id).hidden=!open;if(open){setSide(false);setEmp(false)}}
+['searchModal','setModal'].forEach(id=>$(id).addEventListener('click',e=>{if(e.target.id===id)setModal(id,false)}));
+addEventListener('keydown',e=>{if(e.key==='Escape'){setModal('searchModal',false);setModal('setModal',false)}});
+const NAV=[['Briefing','briefing'],['Ideas','ideas'],['Goals','goals'],['Work library','library'],['Eduvolution','eduvolution'],['Digital Twin','twin'],['Pricing','pricing']];
+function drawSearch(){const q=$('sq').value.trim().toLowerCase(),R=$('sres');R.innerHTML='';
+  const add=(label,svg,fn)=>{const b=document.createElement('button');b.innerHTML=svg+'<span></span>';b.querySelector('span').textContent=label;b.addEventListener('click',()=>{setModal('searchModal',false);fn()});R.appendChild(b)};
+  const rec=recent.filter(r=>!q||r.toLowerCase().includes(q));
+  const h=document.createElement('small');h.textContent='RECENT HANDOFFS';R.appendChild(h);
+  if(rec.length)rec.slice(0,6).forEach(r=>add(r,'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 1 3.3 6.5L4 20l1.2-3.6A8 8 0 0 1 4 12z"/></svg>',()=>setEmp(true)));
+  else{const e=document.createElement('small');e.style.letterSpacing='0';e.textContent=q?'No handoffs match.':'Tasks you hand off show up here.';R.appendChild(e)}
+  const h2=document.createElement('small');h2.textContent='PAGES';R.appendChild(h2);
+  NAV.filter(([n])=>!q||n.toLowerCase().includes(q)).forEach(([n,k])=>add(n,'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',()=>go(k)));
+  if(!q||'settings'.includes(q))add('Settings','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',()=>setModal('setModal',true));}
+$('openSearch').addEventListener('click',()=>{setModal('searchModal',true);$('sq').value='';drawSearch();setTimeout(()=>$('sq').focus(),30)});
+$('sq').addEventListener('input',drawSearch);
+$('openSettings').addEventListener('click',()=>{syncAcct();setModal('setModal',true)});
+$('setClose').addEventListener('click',()=>setModal('setModal',false));
+document.querySelectorAll('[data-spane]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-spane]').forEach(x=>x.setAttribute('aria-selected',String(x===b)));
+  document.querySelectorAll('[data-pane-s]').forEach(p=>p.hidden=p.dataset.paneS!==b.dataset.spane)}));
+document.querySelectorAll('#setModal a[href^="#"]').forEach(a=>a.addEventListener('click',()=>setModal('setModal',false)));
+$('acctBtn').addEventListener('click',()=>{if(!activated){setModal('setModal',false);go('');showSignin()}});
+$('invApply').addEventListener('click',()=>{$('invNote').textContent=$('invCode').value.trim()?'Invite codes turn on at launch. We saved yours for then.':'Enter a code first.'});
+document.querySelectorAll('[data-connect]').forEach(b=>b.addEventListener('click',()=>{$('conNote').textContent=`${b.dataset.connect} connects at launch. Your AI Employee will ask before using it.`}));
+$('exportBtn').addEventListener('click',()=>{$('dataNote').textContent='Exports turn on at launch. You’ll get everything in one file.'});
+let eraseArm=false;$('eraseBtn').addEventListener('click',()=>{if(!eraseArm){eraseArm=true;$('eraseBtn').textContent='Tap again to erase';$('dataNote').textContent='This clears what it learned about you. Your plan stays.';setTimeout(()=>{eraseArm=false;$('eraseBtn').textContent='Erase'},4000);return}
+  eraseArm=false;$('eraseBtn').textContent='Erase';libItems.length=0;drawLib();$('dataNote').textContent='Erased. Your AI Employee starts fresh.'});
+$('logout').addEventListener('click',()=>{activated=false;activatedVia='';syncAcct();setModal('setModal',false);go('');
+  $('invite').innerHTML='Tap to activate <span>your AI Employee.</span>';$('inviteSub').textContent='Your AI Employee starts working the moment you give it its first task.';
+  panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;$('signin').hidden=true;$('composer').hidden=true;home.classList.remove('chatting');thread.innerHTML='';setStatus('Signed out','idle')});
+$('copy2').addEventListener('click',async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText($('mail2').textContent);b.textContent='Copied'}catch(_){const r=document.createRange();r.selectNodeContents($('mail2'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}setTimeout(()=>b.textContent='Copy',1800)});
+const _useTask=useTask;useTask=function(u){_useTask(u);$('setUse').textContent=`${used} of ${CAP} units used`;$('setBar').style.width=Math.min(100,used/CAP*100)+'%'};
+$('copy').addEventListener('click',async e=>{
+  const b=e.currentTarget;
+  try{await navigator.clipboard.writeText($('mail').textContent);b.textContent='Copied'}
+  catch(_){const r=document.createRange();r.selectNodeContents($('mail'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}
+  setTimeout(()=>b.textContent='Copy',1800);
+});
+})();
 </script>
 </body>
 </html>
