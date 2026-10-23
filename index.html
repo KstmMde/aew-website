@@ -320,6 +320,10 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .trial h2{font-size:clamp(28px,4vw,40px)}
 .trial p{color:var(--mist);margin:8px 0 0}
 .cta{display:grid;gap:10px;justify-items:start}
+.waitlist{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 22px;border-radius:18px;border:1px solid var(--line);background:var(--deep);margin-bottom:22px}
+.waitlist p{color:var(--mist);margin:4px 0 0}
+.waitlist form{display:flex;gap:8px;flex-wrap:wrap}
+.waitlist input{min-width:0;flex:1 1 200px}
 .copy{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .copy code{font:500 14px var(--mono);background:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:10px;user-select:all}
 .tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
@@ -468,7 +472,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <button type="button" class="cbtn" id="cmic" aria-label="Talk instead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button type="button" class="cbtn send" id="csend" aria-label="Send" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
     </div>
-    <p class="hint">Quick questions are free. Tasks use units, and it always tells you the size first.</p>
+    <p class="hint">Quick questions are free. It always plays your task back before it starts.</p>
   </div>
 </main>
 
@@ -515,53 +519,39 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <div class="head">
     <span class="eyebrow">Pricing</span>
     <h1>Start free. Stay because it works.</h1>
+    <p>Founding spots are open now. Full plans are coming soon.</p>
   </div>
   <div class="trial">
     <div>
-      <h2>30 days on us.</h2>
-      <p>100 units of real work, about 30 everyday tasks, to see what it can do. No card needed. Video and image creation open up on paid plans.</p>
+      <span class="eyebrow">Only 10 spots</span>
+      <h2>The Founding AI Employee Workflow Program</h2>
+      <p>A 4-week program where we build your AI Employee around the work you hand it. The first 3 weeks are free, no card needed.</p>
+      <p><b>To keep going after week 3, add your card.</b> From then on it’s $100 per completed job.</p>
     </div>
     <div class="cta">
-      <button class="btn go" id="pricingActivate">Activate your AI Employee</button><span class="note">Questions? Email us.</span>
+      <button class="btn go" id="pricingActivate">Claim a founding spot</button><span class="note">Questions? Email us.</span>
       <div class="copy"><code id="mail">aew.workflow@gmail.com</code><button class="btn" id="copy">Copy</button></div>
     </div>
   </div>
 
-  <h2 class="secthead">Work is measured in units</h2>
-  <p class="sectsub">Every task has a size. Your AI Employee tells you the size before it starts, so you always know what something costs.</p>
-  <div class="sizes">
-    <div class="size"><span class="u">1<small>unit</small></span><b>Quick</b><p>Confirm an order, answer a question, draft a short reply.</p></div>
-    <div class="size"><span class="u">3<small>units</small></span><b>Standard</b><p>Invoice follow-ups, a weekly summary, a round of emails.</p></div>
-    <div class="size"><span class="u">10<small>units</small></span><b>Deep</b><p>Multi-step research, a proposal, a full report. Asks before it starts.</p></div>
+  <div class="waitlist">
+    <div><b>Spots gone? Join the waiting list.</b><p>The first 50 people on the list get 15% off when full plans open.</p></div>
+    <form class="inline" id="waitForm" action="mailto:aew.workflow@gmail.com" method="get" enctype="text/plain">
+      <input type="hidden" name="subject" value="AEW waiting list">
+      <input type="email" name="body" id="waitEmail" placeholder="Your email" aria-label="Your email" required>
+      <button class="btn go" type="submit">Join the list</button>
+    </form>
   </div>
+
+  <h2 class="secthead">Full plans · coming soon</h2>
+  <p class="sectsub">Here’s how plans will work once they open. Founding members and the waiting list hear first.</p>
 
   <div class="tiers">
-    <div class="tier"><span class="price">Launch price TBA</span><h3>Study</h3><div class="cap">300<small>units a month</small></div><p>About 100 everyday tasks. For your first handoffs.</p><ul><li>Your AI Employee</li><li>Voice and text tasks</li><li>Visible steps and sources</li><li>Up to 3 recurring tasks</li><li>10 video clips a month</li></ul><span class="ot-rate">Overtime: about 12¢ a unit</span></div>
-    <div class="tier"><span class="price">Launch price TBA</span><h3>Execute</h3><div class="cap">1,000<small>units a month</small></div><p>About 330 everyday tasks. For a steady weekly load.</p><ul><li>Everything in Study</li><li>Up to 15 recurring tasks</li><li>Persona unlocks</li><li>30 video clips a month</li></ul><span class="ot-rate">Overtime: about 10¢ a unit</span></div>
-    <div class="tier"><span class="price">Launch price TBA</span><h3>Evolve</h3><div class="cap">3,000<small>units a month</small></div><p>About 1,000 everyday tasks. For handing off a whole role.</p><ul><li>Everything in Execute</li><li>Unlimited recurring tasks</li><li>Your Digital Twin</li><li>Always on, every channel</li><li>100 video clips a month</li></ul><span class="ot-rate">Overtime: about 8¢ a unit</span></div>
+    <div class="tier"><span class="price">Coming soon</span><h3>Study</h3><p>For your first handoffs.</p><ul><li>Your AI Employee</li><li>Voice and text tasks</li><li>Visible steps and sources</li><li>Up to 3 recurring tasks</li><li>10 video clips a month</li></ul></div>
+    <div class="tier"><span class="price">Coming soon</span><h3>Execute</h3><p>For a steady weekly load.</p><ul><li>Everything in Study</li><li>Up to 15 recurring tasks</li><li>Persona unlocks</li><li>30 video clips a month</li></ul></div>
+    <div class="tier"><span class="price">Coming soon</span><h3>Evolve</h3><p>For handing off a whole role.</p><ul><li>Everything in Execute</li><li>Unlimited recurring tasks</li><li>Your Digital Twin</li><li>Always on, every channel</li><li>100 video clips a month</li></ul></div>
   </div>
 
-  <h2 class="secthead">Overtime, only when you say so</h2>
-  <p class="sectsub">Your plan covers your AI Employee’s regular hours. On a busy month it can keep working, the same way a good employee stays late. It never charges you without asking.</p>
-  <div class="ot">
-    <div class="otmock" aria-label="Example overtime request">
-      <div class="msg aew"><small>Your AI Employee</small>I’ve used this month’s 300 units. This proposal is a deep task, 10 units, about $1.20 in overtime. Want me to keep going?</div>
-      <div class="row"><span class="btn go" aria-hidden="true">Yes, go ahead</span><span class="btn" aria-hidden="true">Wait until next month</span></div>
-      <span class="note">Example</span>
-    </div>
-    <div class="otrules">
-      <div><i>1</i><div><b>It asks first</b><p>When your units run out, it tells you the size and the cost before doing more.</p></div></div>
-      <div><i>2</i><div><b>You set the limit</b><p>Choose how much overtime is allowed each month: $0, $10, $25, or your own number. It never goes past it.</p></div></div>
-      <div><i>3</i><div><b>It finishes what it started</b><p>Work already in progress is always finished. Nothing gets dropped halfway.</p></div></div>
-      <div><i>4</i><div><b>It suggests a better plan</b><p>If overtime two months in a row costs more than the next plan up, it tells you. A bigger plan should save you money, not cost you more.</p></div></div>
-    </div>
-  </div>
-
-  <div class="limits">
-    <div><b>Heads up at 80%</b><p>You get a note when you’ve used most of your units, so the end of the month is never a surprise.</p></div>
-    <div><b>Units reset monthly</b><p>Your units refresh on your billing date. Unused units don’t carry over.</p></div>
-    <div><b>Change plans any time</b><p>Move up or down whenever your workload changes. Upgrades take effect right away.</p></div>
-  </div>
 </article>
 
 <article class="page" id="briefing" hidden>
@@ -604,23 +594,23 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <div class="q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input id="sq" placeholder="Search your work and pages" aria-label="Search"></div>
   <div class="sres" id="sres"></div></div></div>
 <div class="modal" id="setModal" hidden><div class="settings" role="dialog" aria-label="Settings">
-  <nav class="snav" role="tablist"><h2>Settings</h2><button role="tab" data-spane="general" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>General</button><button role="tab" data-spane="connectors" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>Connectors</button><button role="tab" data-spane="billing" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg>Billing & overtime</button><button role="tab" data-spane="secure" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><circle cx="12" cy="11" r="2"/><path d="M12 13v3"/></svg>Secure store</button><button role="tab" data-spane="permissions" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V10M14 10.5V6a1.5 1.5 0 0 1 3 0v7a7 7 0 0 1-7 7 6 6 0 0 1-5.2-3l-2.3-4a1.5 1.5 0 0 1 2.6-1.5L8 13"/></svg>Permissions</button><button role="tab" data-spane="channels" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 1 3.3 6.5L4 20l1.2-3.6A8 8 0 0 1 4 12z"/></svg>Messaging channels</button><button role="tab" data-spane="devices" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/></svg>Devices</button><button role="tab" data-spane="data" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Data controls</button><button role="tab" data-spane="help" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.2v.1"/></svg>Help & support</button><button class="out" id="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>Log out</button></nav>
+  <nav class="snav" role="tablist"><h2>Settings</h2><button role="tab" data-spane="general" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>General</button><button role="tab" data-spane="connectors" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>Connectors</button><button role="tab" data-spane="billing" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg>Billing</button><button role="tab" data-spane="secure" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><circle cx="12" cy="11" r="2"/><path d="M12 13v3"/></svg>Secure store</button><button role="tab" data-spane="permissions" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V10M14 10.5V6a1.5 1.5 0 0 1 3 0v7a7 7 0 0 1-7 7 6 6 0 0 1-5.2-3l-2.3-4a1.5 1.5 0 0 1 2.6-1.5L8 13"/></svg>Permissions</button><button role="tab" data-spane="channels" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 1 3.3 6.5L4 20l1.2-3.6A8 8 0 0 1 4 12z"/></svg>Messaging channels</button><button role="tab" data-spane="devices" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/></svg>Devices</button><button role="tab" data-spane="data" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Data controls</button><button role="tab" data-spane="help" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.2v.1"/></svg>Help & support</button><button class="out" id="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg>Log out</button></nav>
   <div class="spane"><button class="iconbtn x" id="setClose" aria-label="Close settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 <div data-pane-s="general"><h3>General</h3>
   <div class="card"><div class="top"><span><b>Account</b><br><span class="sub" id="acctLine">Not activated yet</span></span><button class="btn" id="acctBtn">Activate</button></div></div>
-  <div class="slabel">Usage</div>
-  <div class="card"><div class="top"><b>Free trial</b><span class="sub" id="setUse">0 of 100 units used</span></div><div class="bar"><i id="setBar"></i></div><span class="sub">Units reset monthly on your billing date.</span><div><a class="btn go" href="#pricing">See plans</a></div></div>
+  <div class="slabel" hidden>Usage</div>
+  <div class="card" hidden><div class="top"><b>Founding program</b><span class="sub" id="setUse"></span></div><div class="bar"><i id="setBar"></i></div><div><a class="btn go" href="#pricing">See plans</a></div></div>
   <div class="card"><b>Redeem invite code</b><div class="inline"><input id="invCode" placeholder="Enter code" aria-label="Invite code"><button class="btn" id="invApply">Apply</button></div><p class="toast" id="invNote" aria-live="polite"></p></div>
   <div class="slabel">Preferences</div>
   <div class="card"><div class="rowline"><span>Language</span><select id='lang' aria-label='Language'><option>English</option><option disabled>Español (soon)</option></select></div><div class="rowline"><span>Show thinking<small>How fast it shows its steps while it works</small></span><div class="pace" role="group" aria-label="Thinking pace"><button data-pace="450" aria-pressed="false">Brisk</button><button data-pace="1100" aria-pressed="true">Steady</button><button data-pace="2100" aria-pressed="false">Teach me</button></div></div><div class="rowline"><span>Calm motion<small>Slows the orb’s animation</small></span><button class="switch" id="calmSw" role="switch" aria-checked="false" aria-label="Calm motion"></button></div></div>
 </div>
 <div data-pane-s="connectors" hidden><h3>Connectors</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">Connect the tools you already use so your AI Employee can work inside them.</p>
   <div class="card"><div class="rowline"><span>Gmail<small>Read and draft emails</small></span><button class="btn" data-connect="Gmail">Connect</button></div><div class="rowline"><span>Google Calendar<small>Check and book time</small></span><button class="btn" data-connect="Google Calendar">Connect</button></div><div class="rowline"><span>Google Drive<small>Find and save files</small></span><button class="btn" data-connect="Google Drive">Connect</button></div><div class="rowline"><span>Stripe<small>See payments and invoices</small></span><button class="btn" data-connect="Stripe">Connect</button></div><div class="rowline"><span>ManyChat<small>Instagram and Facebook DMs</small></span><button class="btn" data-connect="ManyChat">Connect</button></div></div><p class="toast" id="conNote" aria-live="polite"></p></div>
-<div data-pane-s="billing" hidden><h3>Billing &amp; overtime</h3>
-  <div class="card"><div class="top"><span><b>Free trial</b><br><span class="sub">30 days · 100 units · no card needed</span></span><a class="btn go" href="#pricing">Upgrade</a></div></div>
-  <div class="card"><b>Overtime limit</b><span class="sub">When your units run out, it asks first, then works up to this amount. It never goes past it.</span>
+<div data-pane-s="billing" hidden><h3>Billing</h3>
+  <div class="card"><div class="top"><span><b>Founding program</b><br><span class="sub">4 weeks · first 3 free · add a card to keep going</span></span><a class="btn go" href="#pricing">Details</a></div></div>
+  <div class="card" hidden><b>Overtime limit</b>
     <div class="otlimit" role="group" aria-label="Monthly overtime limit"><button data-ot="0" aria-pressed="true">$0</button><button data-ot="10" aria-pressed="false">$10</button><button data-ot="25" aria-pressed="false">$25</button><button data-ot="50" aria-pressed="false">$50</button></div></div>
-  <div class="card"><div class="rowline"><span>Heads-up at 80%<small>A note when most of your units are used</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Heads-up at 80%"></button></div><div class="rowline"><span>Suggest a better plan<small>When overtime costs more than the next plan up</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Suggest a better plan"></button></div><div class="rowline"><span>Payment method<small>Added when you choose a plan</small></span><span class="pill-s">None yet</span></div></div></div>
+  <div class="card" hidden><div class="rowline"><span>Heads-up at 80%<small></small></span><button class="switch" role="switch" aria-checked="true" aria-label="Heads-up at 80%"></button></div><div class="rowline"><span>Suggest a better plan<small>When overtime costs more than the next plan up</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Suggest a better plan"></button></div><div class="rowline"><span>Payment method<small>Added when you choose a plan</small></span><span class="pill-s">None yet</span></div></div></div>
 <div data-pane-s="secure" hidden><h3>Secure store</h3>
   <div class="card"><b>Keys and passwords</b><span class="sub">Logins your AI Employee needs are stored encrypted. They’re never shown in chats, feeds or reports, and you can remove them any time.</span><div class="rowline"><span>Stored items</span><span class="pill-s">0</span></div></div></div>
 <div data-pane-s="permissions" hidden><h3>Permissions</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">You set the boundaries. It never goes past them.</p>
@@ -633,7 +623,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <div class="card"><div class="rowline"><span>Learn from my tasks<small>Helps it get better at your work</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Learn from my tasks"></button></div><div class="rowline"><span>Export my data<small>Everything it has learned and done</small></span><button class="btn" id="exportBtn">Export</button></div><div class="rowline"><span>Erase what it learned<small>Starts your AI Employee fresh</small></span><button class="btn danger" id="eraseBtn">Erase</button></div></div><p class="toast" id="dataNote" aria-live="polite"></p></div>
 <div data-pane-s="help" hidden><h3>Help &amp; support</h3>
   <div class="card"><b>Talk to a person</b><span class="sub">Questions, feedback or a task it got wrong. Email us and a human answers.</span><div class="copy"><code id="mail2">aew.workflow@gmail.com</code><button class="btn" id="copy2">Copy</button></div></div>
-  <div class="card"><b>How it works</b><span class="sub">The basics of units, overtime and Eduvolution.</span><div class="inline"><a class="btn" href="#pricing">Pricing</a><a class="btn" href="#eduvolution">Eduvolution</a></div></div></div></div></div></div>
+  <div class="card"><b>How it works</b><span class="sub">The basics of pricing and Eduvolution.</span><div class="inline"><a class="btn" href="#pricing">Pricing</a><a class="btn" href="#eduvolution">Eduvolution</a></div></div></div></div></div></div>
 <button class="empchip" id="empChip" aria-label="Open your AI Employee"><span class="dot"><svg width="16" height="12" viewBox="0 0 16 12"><rect x="3" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/><rect x="10" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/></svg></span>Your AI Employee<span class="count" id="empCount" hidden>0</span></button>
 <div class="scrim" id="empScrim" hidden></div>
 <aside class="emp" id="emp" aria-label="Your AI Employee" aria-hidden="true">
@@ -652,8 +642,8 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     <button role="tab" aria-selected="false" data-tab="you" aria-label="What it knows about you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6.5 8.5a7 7 0 0 1 11 0M5 13a7 7 0 0 1 7-7M12 10a3 3 0 0 1 3 3v2M9 13a3 3 0 0 1 3-3M12 13v4M9 16v-3M15 18v-1M6 17v-4M18 13v3"/></svg></button>
   </div>
   <div class="tabpane" data-pane="act">
-    <div class="meter"><div class="top"><span>Units this month</span><span id="useTxt">0 of 100 · Free trial</span></div><div class="bar"><i id="useBar"></i></div>
-      <span class="note" id="useNote">It tells you at 80%. Overtime only happens if you allow it.</span>
+    <div class="meter" hidden><div class="top"><span></span><span id="useTxt"></span></div><div class="bar"><i id="useBar"></i></div>
+      <span class="note" id="useNote"></span>
       <div class="otlimit" role="group" aria-label="Monthly overtime limit">Overtime limit
         <button data-ot="0" aria-pressed="true">$0</button><button data-ot="10" aria-pressed="false">$10</button><button data-ot="25" aria-pressed="false">$25</button></div></div>
     <div id="todayWrap" hidden><h4>Today</h4><div class="feed" id="today"></div></div>
@@ -916,11 +906,11 @@ $('pricingActivate').addEventListener('click',()=>{go('');setTimeout(showSignin,
 function sizeOf(text){const w=text.split(/\s+/).length;
   if(/\b(research|proposal|report|analy[sz]e|plan|strategy|compare|audit)\b/i.test(text)&&w>12)return{name:'Deep',u:10};
   if(w<=14)return{name:'Quick',u:1};return{name:'Standard',u:3}}
-function useTask(u){used+=u;$('useTxt').textContent=`${used} of ${CAP} · Free trial`;$('useBar').style.width=Math.min(100,used/CAP*100)+'%';
-  if(used>=CAP*.8)$('useNote').textContent=used>=CAP?(otLimit?`Units used up. Overtime allowed up to $${otLimit} this month.`:'Units used up. New tasks wait until you allow overtime or the month resets.'):`Heads up: ${CAP-used} units left this month.`}
+function useTask(u){used+=u;$('useTxt').textContent='';$('useBar').style.width=Math.min(100,used/CAP*100)+'%';
+  if(used>=CAP*.8)$('useNote').textContent=''}
 document.querySelectorAll('[data-ot]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('[data-ot]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.ot===b.dataset.ot)));otLimit=+b.dataset.ot;
-  $('useNote').textContent=otLimit?`Overtime allowed up to $${otLimit} this month. It still asks first.`:'Overtime is off. It pauses when your units run out.'}));
+  $('useNote').textContent=''}));
 $('globeBtn').addEventListener('click',()=>{
   if(!activated){showSignin();return}
   if(listening){stopListen();toReview();return}
@@ -992,7 +982,7 @@ async function runTask(text,opts={}){
   }
   lastTask=text;
   const {t,when}=sharpen(text);
-  add('aew',`<small>Here’s what I heard</small>${esc(t)}${when?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="sizechip">${sz.name} · ${sz.u} unit${sz.u>1?'s':''}</span><br><span class="note">If that’s off, just tell me in your own words.</span>`);
+  add('aew',`<small>Here’s what I heard</small>${esc(t)}${when?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="note">If that’s off, just tell me in your own words.</span>`);
   await wait(pace);
   if(AEW_API){await runReal(text,files,sz,fi);busy=false;showComposer();return}
   setStatus('Working it through','working');
@@ -1014,9 +1004,9 @@ async function runTask(text,opts={}){
   }
   clearInterval(clock);card.classList.add('finished');doing.textContent='Worked through it';fi.done('Done. Ready for your OK');recordDone(titleOf(sharpen(text).t),text);{const w=sharpen(text).when;if(w){const l=$('schedList');if(l.textContent.includes('Nothing recurring'))l.innerHTML='';const r=document.createElement('div');r.innerHTML='<span></span><span class="on"></span>';r.children[0].textContent=titleOf(sharpen(text).t);r.children[1].textContent=w[0].toUpperCase()+w.slice(1).toLowerCase();l.appendChild(r)}}
   setStatus('Done','done');
-  const h=add('aew handoff',`<b>It’s done. Next?</b>That was a preview of how your AI Employee works. Your free trial includes 100 units of real work, and it hands each task back just like this.
+  const h=add('aew handoff',`<b>It’s done. Next?</b>That was a preview of how your AI Employee works. Founding members get 3 weeks free, and it hands each task back just like this.
     <p class="tease">The more we work together, the more I understand how you work.</p>
-    <div class="row" style="margin-top:12px"><a class="btn go" href="#pricing">Start your 30 free days</a><button class="link" id="again">Tell me another task</button><button class="link" data-feed>See it in your feed</button><a class="link" href="#twin">What’s a Digital Twin?</a></div>`);
+    <div class="row" style="margin-top:12px"><a class="btn go" href="#pricing">Claim a founding spot</a><button class="link" id="again">Tell me another task</button><button class="link" data-feed>See it in your feed</button><a class="link" href="#twin">What’s a Digital Twin?</a></div>`);
   h.querySelector('[data-feed]').addEventListener('click',()=>setEmp(true));
   h.querySelector('#again').addEventListener('click',()=>{$('cmsg').focus()});
   busy=false;showComposer();
@@ -1033,9 +1023,9 @@ async function runReal(text,files,sz,fi){
   const t0=Date.now(),clock=setInterval(()=>secs.textContent=Math.floor((Date.now()-t0)/1000)+'s',250);
   const step=t=>{trail.querySelectorAll('li').forEach(l=>l.classList.add('done'));const li=document.createElement('li');li.innerHTML='<div></div>';li.firstChild.textContent=t;trail.appendChild(li);doing.textContent=t;fi.sub(t)};
   const stop=()=>{clearInterval(clock);trail.querySelectorAll('li').forEach(l=>l.classList.add('done'))};
-  const fail=msg=>{stop();card.classList.add('finished');doing.textContent='Didn’t finish';fi.sub('Didn’t finish. Units returned');
+  const fail=msg=>{stop();card.classList.add('finished');doing.textContent='Didn’t finish';fi.sub('Didn’t finish');
     used=Math.max(0,used-sz.u);useTask(0);setStatus('Needs another try','idle');
-    add('aew','<small>Your AI Employee</small>'+esc(msg||'I couldn’t finish this one.')+' Your units weren’t used.')};
+    add('aew','<small>Your AI Employee</small>'+esc(msg||'I couldn’t finish this one.')+' You won’t be charged for it.')};
   step('Sending it over');
   let id,token;
   try{const fd=new FormData();fd.append('text',text);files.forEach(f=>fd.append('files',f,f.name));
@@ -1068,8 +1058,7 @@ const cmsg=$('cmsg');
 cmsg.addEventListener('input',()=>$('csend').disabled=!cmsg.value.trim());
 $('cmic').addEventListener('click',()=>{if(busy&&!awaiting)return;startListen()});
 const REPLIES=[
-  [/\b(unit|units|cost|price|pricing|how much|charge)\b/i,'Each task has a size: quick is 1 unit, standard is 3, deep is 10. I tell you the size before I start, and overtime only happens if you allow it.','pricing'],
-  [/\b(overtime|limit|run out)\b/i,'When your units run out I ask first. You set a monthly overtime limit in Settings, and I never go past it.','pricing'],
+  [/\b(cost|price|pricing|how much|charge)\b/i,'Right now there are 10 founding spots: 4 weeks, the first 3 free, then $100 per completed job. Full plans are coming soon.','pricing'],
   [/\b(twin|digital twin)\b/i,'Your Digital Twin is what I grow into as we work together: your know-how, your standards, your voice. You earn it over time.','twin'],
   [/\b(eduvolution|learn|teach)\b/i,'Every task teaches me how you work, and shows you how it got done. Study, then Execute, then Evolve.','eduvolution'],
   [/\b(data|privacy|private|my information)\b/i,'Your information stays yours. You can see it, export it, or erase it any time in Settings, under Data controls.',null]];
@@ -1086,11 +1075,11 @@ async function converse(msg){
   if(/^(thanks|thank you|thx|appreciate|great|perfect|nice)\b/.test(low)){reply('Anytime. What’s next?');return}
   if(lastTask&&/\b(actually|instead|change|also|add|make it|but|switch|update)\b/.test(low)){
     const merged=clean(lastTask.replace(/[.!?]$/,'')+'. Change: '+msg);
-    reply(`Got it. I’ll update the last task with that. <span class="sizechip">${sizeOf(merged).name} · ${sizeOf(merged).u} units</span>`,[['Run the update',()=>runTask(merged,{silent:true}),true],['Leave it as is',()=>reply('No problem, it stays as it was.')]]);return}
+    reply(`Got it. I’ll update the last task with that.`,[['Run the update',()=>runTask(merged,{silent:true}),true],['Leave it as is',()=>reply('No problem, it stays as it was.')]]);return}
   for(const [re,ans,page] of REPLIES)if(re.test(low)){reply(ans,page?[['Tell me more',()=>go(page)]]:null);return}
   if(msg.split(/\s+/).length>=3&&!/\?\s*$/.test(msg)){
     const sz=sizeOf(msg);
-    reply(`Want me to take that on as a task? It looks like a ${sz.name.toLowerCase()} task, ${sz.u} unit${sz.u>1?'s':''}.`,[['Yes, take it on',()=>runTask(clean(msg),{silent:true}),true],['Just talking',()=>reply('Got it, just talking. I’m here whenever you need something done.')]]);return}
+    reply(`Want me to take that on as a task?`,[['Yes, take it on',()=>runTask(clean(msg),{silent:true}),true],['Just talking',()=>reply('Got it, just talking. I’m here whenever you need something done.')]]);return}
   if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work at launch, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
   reply('I’m here. Tell me what you need done, or ask me about any task.');
 }
@@ -1158,7 +1147,7 @@ $('logout').addEventListener('click',()=>{activated=false;activatedVia='';syncAc
   $('invite').innerHTML='Tap to activate <span>your AI Employee.</span>';$('inviteSub').textContent='Your AI Employee starts working the moment you give it its first task.';
   panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;$('signin').hidden=true;$('composer').hidden=true;home.classList.remove('chatting');thread.innerHTML='';setStatus('Signed out','idle')});
 $('copy2').addEventListener('click',async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText($('mail2').textContent);b.textContent='Copied'}catch(_){const r=document.createRange();r.selectNodeContents($('mail2'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}setTimeout(()=>b.textContent='Copy',1800)});
-const _useTask=useTask;useTask=function(u){_useTask(u);$('setUse').textContent=`${used} of ${CAP} units used`;$('setBar').style.width=Math.min(100,used/CAP*100)+'%'};
+const _useTask=useTask;useTask=function(u){_useTask(u);$('setUse').textContent='';$('setBar').style.width=Math.min(100,used/CAP*100)+'%'};
 $('copy').addEventListener('click',async e=>{
   const b=e.currentTarget;
   try{await navigator.clipboard.writeText($('mail').textContent);b.textContent='Copied'}
