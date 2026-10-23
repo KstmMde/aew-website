@@ -324,6 +324,13 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .waitlist p{color:var(--mist);margin:4px 0 0}
 .waitlist form{display:flex;gap:8px;flex-wrap:wrap}
 .waitlist input{min-width:0;flex:1 1 200px}
+.waitlist .toast{flex-basis:100%;margin:0}
+.claim{display:grid;gap:12px;padding:22px;border-radius:18px;border:1px solid color-mix(in srgb,var(--mint) 40%,transparent);background:var(--deep);margin-bottom:22px}
+.claim p{color:var(--mist);margin:0}
+.claim .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.claim input,.claim textarea,.waitlist input{background:var(--ink);border:1px solid var(--line);color:var(--cloud);border-radius:12px;padding:10px 12px;font:15px var(--body);min-width:0;width:100%}
+.claim .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.privacy{color:var(--mist);font-size:13px;line-height:1.5;max-width:70ch;margin:0 0 28px}
 .copy{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .copy code{font:500 14px var(--mono);background:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:10px;user-select:all}
 .tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
@@ -420,7 +427,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     <button class="sso" data-sso="LinkedIn"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0a66c2"/><path d="M7 10v7M7 7.2v.1M11 17v-4.2c0-1.6 1-2.6 2.4-2.6s2.1 1 2.1 2.6V17M11 10v7" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/></svg>Continue with LinkedIn</button>
     <button class="sso" data-sso="Facebook"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1877f2"/><path d="M13.3 20v-6.4h2.2l.3-2.5h-2.5V9.5c0-.7.2-1.2 1.2-1.2h1.4V6.1a18 18 0 0 0-2-.1c-2 0-3.3 1.2-3.3 3.4v1.8H8.4v2.5h2.2V20z" fill="#fff"/></svg>Continue with Facebook</button>
     <button class="sso" data-sso="Google"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#fff"/><path d="M18.6 12.2c0-.5 0-.9-.1-1.3H12v2.5h3.7a3.2 3.2 0 0 1-1.4 2v1.7h2.3c1.3-1.2 2-3 2-4.9z" fill="#4285f4"/><path d="M12 19c1.9 0 3.5-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.3.7-1.8 0-3.3-1.2-3.8-2.8H5.8v1.8A7 7 0 0 0 12 19z" fill="#34a853"/><path d="M8.2 13.5a4.2 4.2 0 0 1 0-2.7V9H5.8a7 7 0 0 0 0 6.3z" fill="#fbbc05"/><path d="M12 7.8c1 0 1.9.4 2.6 1l2-2A7 7 0 0 0 5.8 9l2.4 1.8C8.7 9.1 10.2 7.8 12 7.8z" fill="#ea4335"/></svg>Continue with Google</button>
-    <p class="fine" id="ssoNote">Preview: sign-in turns on at launch. Tapping one continues the preview.</p>
+    <p class="fine" id="ssoNote">Preview: sign-in opens to founding members first. Tapping one continues the preview.</p>
     <button class="link" id="ssoCancel">Not now</button>
   </div>
   <div class="status" id="status" aria-live="polite"></div>
@@ -509,7 +516,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     <li>It meets you where you already are.</li>
   </ul>
   <div class="channels">
-    <span class="live-c">Text</span><span class="live-c">Email</span><span class="live-c">Telegram</span>
+    <span class="live-c">Text · founding members</span><span class="live-c">Email · founding members</span><span class="live-c">Telegram · founding members</span>
     <span>Messenger · soon</span><span>Discord · soon</span><span>LinkedIn · soon</span>
   </div>
 </article>
@@ -529,19 +536,34 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <p><b>To keep going after week 3, add your card.</b> Pricing is shared before you’re charged.</p>
     </div>
     <div class="cta">
-      <button class="btn go" id="pricingActivate">Claim a founding spot</button><span class="note">Questions? Email us.</span>
+      <button class="btn go" id="pricingActivate" aria-expanded="false" aria-controls="claimForm">Claim a founding spot</button><span class="note">Questions? Email us.</span>
       <div class="copy"><code id="mail">aew.workflow@gmail.com</code><button class="btn" id="copy">Copy</button></div>
     </div>
   </div>
 
+  <form class="claim" id="claimForm" hidden>
+    <b>Claim your founding spot</b>
+    <p>Tell us a little about you. You’ll hear back from a real person, usually within a day.</p>
+    <div class="grid2">
+      <input id="clName" placeholder="Your name" aria-label="Your name" required autocomplete="name">
+      <input id="clEmail" type="email" placeholder="Your email" aria-label="Your email" required autocomplete="email">
+      <input id="clBiz" placeholder="What you do (business or role)" aria-label="What you do">
+      <input id="clPhone" type="tel" placeholder="Phone (optional)" aria-label="Phone, optional" autocomplete="tel">
+    </div>
+    <textarea id="clTask" rows="3" placeholder="The task you’d hand off first, in your own words" aria-label="The task you would hand off first"></textarea>
+    <div class="row"><button class="btn go" type="submit">Send my request</button><button class="link" type="button" id="claimCancel">Not now</button></div>
+    <p class="toast" id="claimNote" aria-live="polite"></p>
+  </form>
+
   <div class="waitlist">
     <div><b>Spots gone? Join the waiting list.</b><p>The first 100 people on the list get 15% off when full plans open.</p></div>
-    <form class="inline" id="waitForm" action="mailto:aew.workflow@gmail.com" method="get" enctype="text/plain">
-      <input type="hidden" name="subject" value="AEW waiting list">
-      <input type="email" name="body" id="waitEmail" placeholder="Your email" aria-label="Your email" required>
+    <form class="inline" id="waitForm">
+      <input type="email" id="waitEmail" placeholder="Your email" aria-label="Your email" required autocomplete="email">
       <button class="btn go" type="submit">Join the list</button>
     </form>
+    <p class="toast" id="waitNote" aria-live="polite"></p>
   </div>
+  <p class="privacy" id="privacy"><b>Your privacy.</b> We only collect what you send us, like your name, email and the task you describe, and use it to run your AI Employee and reply to you. We never sell your information. Card details are only asked for after week 3, through a secure payment provider, and we don’t store them ourselves. Want something deleted? Email aew.workflow@gmail.com.</p>
 
   <h2 class="secthead">Full plans · coming soon</h2>
   <p class="sectsub">Here’s how plans will work once they open. Founding members and the waiting list hear first.</p>
@@ -616,13 +638,14 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 <div data-pane-s="permissions" hidden><h3>Permissions</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">You set the boundaries. It never goes past them.</p>
   <div class="card"><div class="rowline"><span>Draft emails<small>You approve before anything sends</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Draft emails"></button></div><div class="rowline"><span>Reply to business texts<small>Order confirmations and quick answers</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Reply to business texts"></button></div><div class="rowline"><span>Book on your calendar</span><button class="switch" role="switch" aria-checked="false" aria-label="Book on your calendar"></button></div><div class="rowline"><span>Search the web<small>To find sources and facts</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Search the web"></button></div><div class="rowline"><span>Spend money<small>Never without asking you each time</small></span><span class="pill-s">Always asks</span></div></div></div>
 <div data-pane-s="channels" hidden><h3>Messaging channels</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">Reach your AI Employee wherever you already are.</p>
-  <div class="card"><div class="rowline"><span>Text (SMS)</span><span class="pill-s live">Live</span></div><div class="rowline"><span>Email</span><span class="pill-s live">Live</span></div><div class="rowline"><span>Telegram</span><span class="pill-s live">Live</span></div><div class="rowline"><span>Facebook Messenger</span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>Discord</span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>LinkedIn</span><span class="pill-s">Coming soon</span></div></div></div>
+  <div class="card"><div class="rowline"><span>Text (SMS)</span><span class="pill-s">Founding members</span></div><div class="rowline"><span>Email</span><span class="pill-s">Founding members</span></div><div class="rowline"><span>Telegram</span><span class="pill-s">Founding members</span></div><div class="rowline"><span>Facebook Messenger</span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>Discord</span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>LinkedIn</span><span class="pill-s">Coming soon</span></div></div></div>
 <div data-pane-s="devices" hidden><h3>Devices</h3>
-  <div class="card"><div class="rowline"><span>This browser<small>Signed in now</small></span><span class="pill-s live">Active</span></div><div class="rowline"><span>Apple Watch<small>Hand off tasks from your wrist with Shortcuts</small></span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>Phone<small>Text your AI Employee any time</small></span><span class="pill-s live">Live</span></div></div></div>
+  <div class="card"><div class="rowline"><span>This browser<small>Signed in now</small></span><span class="pill-s live">Active</span></div><div class="rowline"><span>Apple Watch<small>Hand off tasks from your wrist with Shortcuts</small></span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>Phone<small>Text your AI Employee any time</small></span><span class="pill-s">Founding members</span></div></div></div>
 <div data-pane-s="data" hidden><h3>Data controls</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">Your information stays yours. This is what grows into your Digital Twin.</p>
   <div class="card"><div class="rowline"><span>Learn from my tasks<small>Helps it get better at your work</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Learn from my tasks"></button></div><div class="rowline"><span>Export my data<small>Everything it has learned and done</small></span><button class="btn" id="exportBtn">Export</button></div><div class="rowline"><span>Erase what it learned<small>Starts your AI Employee fresh</small></span><button class="btn danger" id="eraseBtn">Erase</button></div></div><p class="toast" id="dataNote" aria-live="polite"></p></div>
 <div data-pane-s="help" hidden><h3>Help &amp; support</h3>
   <div class="card"><b>Talk to a person</b><span class="sub">Questions, feedback or a task it got wrong. Email us and a human answers.</span><div class="copy"><code id="mail2">aew.workflow@gmail.com</code><button class="btn" id="copy2">Copy</button></div></div>
+  <div class="card"><b>Privacy</b><span class="sub">We only use what you send us to run your AI Employee and reply to you. We never sell it. Email us any time to have it deleted.</span><div class="inline"><a class="btn" href="#pricing">Read more</a></div></div>
   <div class="card"><b>How it works</b><span class="sub">The basics of pricing and Eduvolution.</span><div class="inline"><a class="btn" href="#pricing">Pricing</a><a class="btn" href="#eduvolution">Eduvolution</a></div></div></div></div></div></div>
 <button class="empchip" id="empChip" aria-label="Open your AI Employee"><span class="dot"><svg width="16" height="12" viewBox="0 0 16 12"><rect x="3" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/><rect x="10" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/></svg></span>Your AI Employee<span class="count" id="empCount" hidden>0</span></button>
 <div class="scrim" id="empScrim" hidden></div>
@@ -902,7 +925,16 @@ function activate(via){
 }
 document.querySelectorAll('[data-sso]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.sso)));
 $('ssoCancel').addEventListener('click',()=>{$('signin').hidden=true;$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle')});
-$('pricingActivate').addEventListener('click',()=>{go('');setTimeout(showSignin,50)});
+$('pricingActivate').addEventListener('click',()=>{const f=$('claimForm');f.hidden=false;$('pricingActivate').setAttribute('aria-expanded','true');f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('clName').focus(),300)});
+$('claimCancel').addEventListener('click',()=>{$('claimForm').hidden=true;$('pricingActivate').setAttribute('aria-expanded','false')});
+const AEW_MAIL='aew.workflow@gmail.com';
+const mailto=(subj,body)=>{location.href=`mailto:${AEW_MAIL}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`};
+$('claimForm').addEventListener('submit',e=>{e.preventDefault();const v=id=>$(id).value.trim();
+  mailto('Founding spot request: '+v('clName'),`Name: ${v('clName')}\nEmail: ${v('clEmail')}\nWhat I do: ${v('clBiz')||'-'}\nPhone: ${v('clPhone')||'-'}\n\nThe task I'd hand off first:\n${v('clTask')||'-'}`);
+  $('claimNote').textContent=`Your email app should open with your request ready to send. If it didn’t, email ${AEW_MAIL} and we’ll save your spot.`});
+$('waitForm').addEventListener('submit',e=>{e.preventDefault();const em=$('waitEmail').value.trim();
+  mailto('AEW waiting list',`Please add me to the waiting list.\nEmail: ${em}`);
+  $('waitNote').textContent=`Your email app should open with your sign-up ready to send. If it didn’t, email ${AEW_MAIL} with “waiting list”.`});
 function sizeOf(text){const w=text.split(/\s+/).length;
   if(/\b(research|proposal|report|analy[sz]e|plan|strategy|compare|audit)\b/i.test(text)&&w>12)return{name:'Deep',u:10};
   if(w<=14)return{name:'Quick',u:1};return{name:'Standard',u:3}}
@@ -1080,7 +1112,7 @@ async function converse(msg){
   if(msg.split(/\s+/).length>=3&&!/\?\s*$/.test(msg)){
     const sz=sizeOf(msg);
     reply(`Want me to take that on as a task?`,[['Yes, take it on',()=>runTask(clean(msg),{silent:true}),true],['Just talking',()=>reply('Got it, just talking. I’m here whenever you need something done.')]]);return}
-  if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work at launch, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
+  if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
   reply('I’m here. Tell me what you need done, or ask me about any task.');
 }
 function sendMsg(){const m=cmsg.value.trim();if(!m)return;cmsg.value='';$('csend').disabled=true;
@@ -1138,9 +1170,9 @@ document.querySelectorAll('[data-spane]').forEach(b=>b.addEventListener('click',
   document.querySelectorAll('[data-pane-s]').forEach(p=>p.hidden=p.dataset.paneS!==b.dataset.spane)}));
 document.querySelectorAll('#setModal a[href^="#"]').forEach(a=>a.addEventListener('click',()=>setModal('setModal',false)));
 $('acctBtn').addEventListener('click',()=>{if(!activated){setModal('setModal',false);go('');showSignin()}});
-$('invApply').addEventListener('click',()=>{$('invNote').textContent=$('invCode').value.trim()?'Invite codes turn on at launch. We saved yours for then.':'Enter a code first.'});
-document.querySelectorAll('[data-connect]').forEach(b=>b.addEventListener('click',()=>{$('conNote').textContent=`${b.dataset.connect} connects at launch. Your AI Employee will ask before using it.`}));
-$('exportBtn').addEventListener('click',()=>{$('dataNote').textContent='Exports turn on at launch. You’ll get everything in one file.'});
+$('invApply').addEventListener('click',()=>{$('invNote').textContent=$('invCode').value.trim()?'Invite codes open to founding members soon. We saved yours.':'Enter a code first.'});
+document.querySelectorAll('[data-connect]').forEach(b=>b.addEventListener('click',()=>{$('conNote').textContent=`${b.dataset.connect} is coming soon. Your AI Employee will ask before using it.`}));
+$('exportBtn').addEventListener('click',()=>{$('dataNote').textContent='Exports are coming soon. You’ll get everything in one file.'});
 let eraseArm=false;$('eraseBtn').addEventListener('click',()=>{if(!eraseArm){eraseArm=true;$('eraseBtn').textContent='Tap again to erase';$('dataNote').textContent='This clears what it learned about you. Your plan stays.';setTimeout(()=>{eraseArm=false;$('eraseBtn').textContent='Erase'},4000);return}
   eraseArm=false;$('eraseBtn').textContent='Erase';libItems.length=0;drawLib();$('dataNote').textContent='Erased. Your AI Employee starts fresh.'});
 $('logout').addEventListener('click',()=>{activated=false;activatedVia='';syncAcct();setModal('setModal',false);go('');
