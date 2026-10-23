@@ -1056,6 +1056,7 @@ async function runTask(text,opts={}){
 const AEW_API=(()=>{let a=(document.querySelector('meta[name="aew-api"]')?.content||'').trim();
   try{const q=new URLSearchParams(location.search).get('api');if(q&&/^(localhost|127\.0\.0\.1|)$/.test(location.hostname))a=q}catch(_){}
   return a.replace(/\/$/,'')})();
+const AEW_VID=(()=>{try{let v=localStorage.getItem('aew_vid');if(!/^[a-f0-9]{32}$/.test(v||'')){v=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');localStorage.setItem('aew_vid',v)}return v}catch(_){return ''}})();
 async function runReal(text,files,sz,fi){
   setStatus('Handing it over','working');
   const card=add('aew work','<button class="workline" aria-expanded="false"><span class="spark" aria-hidden="true"><i></i><i></i><i></i></span><span class="doing">Sending it over</span><span class="secs">0s</span><span class="chev" aria-hidden="true">›</span></button><div class="detail" hidden><ul class="trail"></ul></div>');
@@ -1069,12 +1070,12 @@ async function runReal(text,files,sz,fi){
     add('aew','<small>Your AI Employee</small>'+esc(msg||'I couldn’t finish this one.')+' You won’t be charged for it.')};
   step('Sending it over');
   let id,token;
-  try{const fd=new FormData();fd.append('text',text);files.forEach(f=>fd.append('files',f,f.name));
+  try{const fd=new FormData();fd.append('text',text);if(AEW_VID)fd.append('visitor',AEW_VID);files.forEach(f=>fd.append('files',f,f.name));
     const r=await fetch(AEW_API+'/api/tasks',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
     if(!r.ok||!d.id)throw new Error(d.error||'I couldn’t reach your AI Employee.');id=d.id;token=d.token}
   catch(e){fail(e.message==='Failed to fetch'?'I couldn’t reach your AI Employee.':e.message);return}
   step('Waiting its turn');let last='queued',misses=0;
-  for(const end=Date.now()+15*60*1000;Date.now()<end;){
+  for(const end=Date.now()+12*60*1000;Date.now()<end;){
     await wait(2500);
     let d;try{const r=await fetch(`${AEW_API}/api/tasks/${id}`,{headers:{Authorization:'Bearer '+token}});d=await r.json();if(!r.ok)throw 0;misses=0}
     catch(_){if(++misses>=6){fail('I lost the connection while working.');return}continue}
