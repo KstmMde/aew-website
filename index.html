@@ -330,6 +330,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .claim .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 .claim input,.claim textarea,.waitlist input{background:var(--ink);border:1px solid var(--line);color:var(--cloud);border-radius:12px;padding:10px 12px;font:15px var(--body);min-width:0;width:100%}
 .claim .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hp{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0}
 .privacy{color:var(--mist);font-size:13px;line-height:1.5;max-width:70ch;margin:0 0 28px}
 .copy{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .copy code{font:500 14px var(--mono);background:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:10px;user-select:all}
@@ -550,6 +551,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <input id="clBiz" placeholder="What you do (business or role)" aria-label="What you do">
       <input id="clPhone" type="tel" placeholder="Phone (optional)" aria-label="Phone, optional" autocomplete="tel">
     </div>
+    <input id="clWeb" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" placeholder="Website">
     <textarea id="clTask" rows="3" placeholder="The task you’d hand off first, in your own words" aria-label="The task you would hand off first"></textarea>
     <div class="row"><button class="btn go" type="submit">Send my request</button><button class="link" type="button" id="claimCancel">Not now</button></div>
     <p class="toast" id="claimNote" aria-live="polite"></p>
@@ -558,6 +560,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <div class="waitlist">
     <div><b>Spots gone? Join the waiting list.</b><p>The first 100 people on the list get 15% off when full plans open.</p></div>
     <form class="inline" id="waitForm">
+      <input id="waitWeb" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" placeholder="Website">
       <input type="email" id="waitEmail" placeholder="Your email" aria-label="Your email" required autocomplete="email">
       <button class="btn go" type="submit">Join the list</button>
     </form>
@@ -928,13 +931,19 @@ $('ssoCancel').addEventListener('click',()=>{$('signin').hidden=true;$('invite')
 $('pricingActivate').addEventListener('click',()=>{const f=$('claimForm');f.hidden=false;$('pricingActivate').setAttribute('aria-expanded','true');f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('clName').focus(),300)});
 $('claimCancel').addEventListener('click',()=>{$('claimForm').hidden=true;$('pricingActivate').setAttribute('aria-expanded','false')});
 const AEW_MAIL='aew.workflow@gmail.com';
-const mailto=(subj,body)=>{location.href=`mailto:${AEW_MAIL}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`};
-$('claimForm').addEventListener('submit',e=>{e.preventDefault();const v=id=>$(id).value.trim();
-  mailto('Founding spot request: '+v('clName'),`Name: ${v('clName')}\nEmail: ${v('clEmail')}\nWhat I do: ${v('clBiz')||'-'}\nPhone: ${v('clPhone')||'-'}\n\nThe task I'd hand off first:\n${v('clTask')||'-'}`);
-  $('claimNote').textContent=`Your email app should open with your request ready to send. If it didn’t, email ${AEW_MAIL} and we’ll save your spot.`});
-$('waitForm').addEventListener('submit',e=>{e.preventDefault();const em=$('waitEmail').value.trim();
-  mailto('AEW waiting list',`Please add me to the waiting list.\nEmail: ${em}`);
-  $('waitNote').textContent=`Your email app should open with your sign-up ready to send. If it didn’t, email ${AEW_MAIL} with “waiting list”.`});
+const FORMS_API='https://aew-forms.aew-workflow.workers.dev/signup';
+async function saveSignup(data,btn){btn.disabled=true;const t=btn.textContent;btn.textContent='Sending…';
+  try{const r=await fetch(FORMS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,page:location.pathname+location.hash})});
+    const d=await r.json().catch(()=>({}));if(r.ok&&d.ok)return {ok:true};return {ok:false,msg:d.error}}
+  catch(_){return {ok:false}}finally{btn.disabled=false;btn.textContent=t}}
+$('claimForm').addEventListener('submit',async e=>{e.preventDefault();const v=id=>$(id).value.trim();const btn=e.submitter||$('claimForm').querySelector('[type=submit]');
+  const res=await saveSignup({kind:'claim',name:v('clName'),email:v('clEmail'),business:v('clBiz'),phone:v('clPhone'),task:v('clTask'),website:v('clWeb')},btn);
+  if(res.ok){$('claimForm').reset();$('claimNote').textContent='Got it, you’re in line for a founding spot. A real person will reach out within a day.'}
+  else $('claimNote').textContent=res.msg||`That didn’t go through. Try again, or email ${AEW_MAIL} and we’ll save your spot.`});
+$('waitForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.submitter||$('waitForm').querySelector('[type=submit]');
+  const res=await saveSignup({kind:'waitlist',email:$('waitEmail').value.trim(),website:$('waitWeb').value.trim()},btn);
+  if(res.ok){$('waitForm').reset();$('waitNote').textContent='You’re on the list. We’ll email you when full plans open.'}
+  else $('waitNote').textContent=res.msg||`That didn’t go through. Try again, or email ${AEW_MAIL} with “waiting list”.`});
 function sizeOf(text){const w=text.split(/\s+/).length;
   if(/\b(research|proposal|report|analy[sz]e|plan|strategy|compare|audit)\b/i.test(text)&&w>12)return{name:'Deep',u:10};
   if(w<=14)return{name:'Quick',u:1};return{name:'Standard',u:3}}
