@@ -467,9 +467,9 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     <textarea id="tbText" rows="1" placeholder="Or type the task you want off your plate…"></textarea>
     <div class="tbfiles" id="tbFiles" aria-live="polite"></div>
     <div class="tbrow">
-      <input type="file" id="tbFile" multiple hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.ppt,.pptx,.png,.jpg,.jpeg,.heic,.webp,.m4a,.mp3,.wav">
-      <button type="button" class="cbtn" id="tbAttach" aria-label="Upload a file" title="Upload a file (up to 5, 10 MB each)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg></button>
-      <span class="tbhint" id="tbHint">Upload a file if it helps explain the job.</span>
+      <input type="file" id="tbFile" multiple hidden accept=".pdf,.docx,.txt,.csv,.md">
+      <button type="button" class="cbtn" id="tbAttach" aria-label="Upload a file" title="Upload a file (1 per task, up to 1.5 MB)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg></button>
+      <span class="tbhint" id="tbHint">Upload one file (PDF, Word, TXT or CSV) if it helps explain the job.</span>
       <button type="submit" class="btn go tbgo" id="tbSend" disabled>Hand it off</button>
     </div>
   </form>
@@ -962,7 +962,7 @@ $('doneTalking').addEventListener('click',()=>{stopListen();toReview()});
 $('more').addEventListener('click',startListen);
 /* ---------- Type-or-upload task box ---------- */
 const tbText=$('tbText'),tbSend=$('tbSend'),tbFile=$('tbFile'),tbHint=$('tbHint'),TB_HINT=tbHint.textContent;
-const MAXF=5,MAXB=10*1024*1024;let attached=[];
+const MAXF=1,MAXB=1500000,OKX=['pdf','docx','txt','csv','md'];let attached=[];
 const kb=n=>n<1024*1024?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
 function hint(msg,err){tbHint.textContent=msg||TB_HINT;tbHint.classList.toggle('err',!!err)}
 function renderFiles(){
@@ -972,9 +972,9 @@ function renderFiles(){
       c.querySelector('button').addEventListener('click',()=>{attached.splice(i,1);renderFiles();hint()});box.appendChild(c)})});
   tbSend.disabled=!tbText.value.trim()&&!attached.length}
 function addFiles(list){let skipped=0;
-  for(const f of list){if(attached.length>=MAXF){skipped++;continue}if(f.size>MAXB){hint(`${f.name} is over 10 MB.`,true);continue}
+  for(const f of list){if(attached.length>=MAXF){skipped++;continue}if(!OKX.includes((f.name.split('.').pop()||'').toLowerCase())){hint('For now I can read PDF, Word (.docx), TXT, CSV or MD files.',true);continue}if(f.size>MAXB){hint(`${f.name} is over 1.5 MB. Try a smaller one.`,true);continue}
     if(!attached.some(a=>a.name===f.name&&a.size===f.size))attached.push(f)}
-  if(skipped)hint(`Up to ${MAXF} files per task.`,true);renderFiles();G.wake=1;G.amp=1}
+  if(skipped)hint('One file per task while you’re trying it out.',true);renderFiles();G.wake=1;G.amp=1}
 const filesHTML=()=>attached.map(f=>`<span class="chip"><span class="nm">${esc(f.name)}</span><span class="sz">${kb(f.size)}</span></span>`).join('');
 function growTB(){tbText.style.height='auto';tbText.style.height=Math.min(tbText.scrollHeight,220)+'px'}
 tbText.addEventListener('input',()=>{growTB();tbSend.disabled=!tbText.value.trim()&&!attached.length;G.amp=Math.min(1,G.amp+.15)});
