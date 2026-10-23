@@ -112,9 +112,6 @@ body{padding-left:60px}
 .otrules b{display:block;font:600 16px var(--display)}
 .otrules p{margin:2px 0 0;color:var(--mist);font-size:14.5px}
 .tier .ot-rate{font:500 13px var(--mono);color:var(--mist);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
-.otlimit{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13.5px;color:var(--mist)}
-.otlimit button{font:500 12.5px var(--mono);background:none;border:1px solid var(--line);color:var(--mist);border-radius:999px;padding:4px 10px;cursor:pointer}
-.otlimit button[aria-pressed="true"]{border-color:var(--mint);color:var(--mint)}
 .sizechip{display:inline-block;font:500 11.5px var(--mono);border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-top:6px;color:var(--cloud)}
 @media (max-width:800px){.limits,.sizes,.ot{grid-template-columns:1fr}}
 /* feed, ideas, goals, library */
@@ -415,7 +412,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <a class="item" href="#pricing" title="Pricing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><span class="label">Pricing</span></a>
   <div class="grouplabel">Your handoffs</div>
   <div class="recent" id="recent"><em>Tasks you hand off show up here.</em></div>
-  <div class="foot"><button class="item" id="openSettings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></button><a class="item" href="#pricing" title="Start free"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span class="label">Start 30 days free</span></a></div>
+  <div class="foot"><button class="item" id="openSettings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></button><a class="item" href="#pricing" title="Start your 4-week founding program"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span class="label">4-week founding program</span></a></div>
 </aside>
 
 <main id="home">
@@ -633,9 +630,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <div class="card"><div class="rowline"><span>Gmail<small>Read and draft emails</small></span><button class="btn" data-connect="Gmail">Connect</button></div><div class="rowline"><span>Google Calendar<small>Check and book time</small></span><button class="btn" data-connect="Google Calendar">Connect</button></div><div class="rowline"><span>Google Drive<small>Find and save files</small></span><button class="btn" data-connect="Google Drive">Connect</button></div><div class="rowline"><span>Stripe<small>See payments and invoices</small></span><button class="btn" data-connect="Stripe">Connect</button></div><div class="rowline"><span>ManyChat<small>Instagram and Facebook DMs</small></span><button class="btn" data-connect="ManyChat">Connect</button></div></div><p class="toast" id="conNote" aria-live="polite"></p></div>
 <div data-pane-s="billing" hidden><h3>Billing</h3>
   <div class="card"><div class="top"><span><b>Founding program</b><br><span class="sub">4 weeks · first 3 free · add a card to keep going</span></span><a class="btn go" href="#pricing">Details</a></div></div>
-  <div class="card" hidden><b>Overtime limit</b>
-    <div class="otlimit" role="group" aria-label="Monthly overtime limit"><button data-ot="0" aria-pressed="true">$0</button><button data-ot="10" aria-pressed="false">$10</button><button data-ot="25" aria-pressed="false">$25</button><button data-ot="50" aria-pressed="false">$50</button></div></div>
-  <div class="card" hidden><div class="rowline"><span>Heads-up at 80%<small></small></span><button class="switch" role="switch" aria-checked="true" aria-label="Heads-up at 80%"></button></div><div class="rowline"><span>Suggest a better plan<small>When overtime costs more than the next plan up</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Suggest a better plan"></button></div><div class="rowline"><span>Payment method<small>Added when you choose a plan</small></span><span class="pill-s">None yet</span></div></div></div>
+  <div class="card"><div class="rowline"><span>Payment method<small>Added after week 3 of the founding program</small></span><span class="pill-s">None yet</span></div></div></div>
 <div data-pane-s="secure" hidden><h3>Secure store</h3>
   <div class="card"><b>Keys and passwords</b><span class="sub">Logins your AI Employee needs are stored encrypted. They’re never shown in chats, feeds or reports, and you can remove them any time.</span><div class="rowline"><span>Stored items</span><span class="pill-s">0</span></div></div></div>
 <div data-pane-s="permissions" hidden><h3>Permissions</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">You set the boundaries. It never goes past them.</p>
@@ -669,9 +664,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   </div>
   <div class="tabpane" data-pane="act">
     <div class="meter" hidden><div class="top"><span></span><span id="useTxt"></span></div><div class="bar"><i id="useBar"></i></div>
-      <span class="note" id="useNote"></span>
-      <div class="otlimit" role="group" aria-label="Monthly overtime limit">Overtime limit
-        <button data-ot="0" aria-pressed="true">$0</button><button data-ot="10" aria-pressed="false">$10</button><button data-ot="25" aria-pressed="false">$25</button></div></div>
+      <span class="note" id="useNote"></span></div>
     <div id="todayWrap" hidden><h4>Today</h4><div class="feed" id="today"></div></div>
     <h4>Yesterday</h4>
     <div class="feed">
@@ -917,7 +910,7 @@ function stopListen(){
   try{rec&&rec.stop()}catch(_){}
   task.value=clean(finalText);
 }
-let activated=false;const CAP=100;let used=0;let otLimit=0;
+let activated=false;const CAP=100;let used=0;
 function showSignin(){$('invite').hidden=true;$('inviteSub').hidden=true;$('typeInstead').hidden=true;$('signin').hidden=false;G.wake=1;setStatus('Almost yours','idle');}
 let activatedVia='';
 function activate(via){
@@ -949,9 +942,6 @@ function sizeOf(text){const w=text.split(/\s+/).length;
   if(w<=14)return{name:'Quick',u:1};return{name:'Standard',u:3}}
 function useTask(u){used+=u;$('useTxt').textContent='';$('useBar').style.width=Math.min(100,used/CAP*100)+'%';
   if(used>=CAP*.8)$('useNote').textContent=''}
-document.querySelectorAll('[data-ot]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-ot]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.ot===b.dataset.ot)));otLimit=+b.dataset.ot;
-  $('useNote').textContent=''}));
 $('globeBtn').addEventListener('click',()=>{
   if(!activated){showSignin();return}
   if(listening){stopListen();toReview();return}
