@@ -526,7 +526,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <span class="eyebrow">Only 10 spots</span>
       <h2>The Founding AI Employee Workflow Program</h2>
       <p>A 4-week program where we build your AI Employee around the work you hand it. The first 3 weeks are free, no card needed.</p>
-      <p><b>To keep going after week 3, add your card.</b> From then on it’s $100 per completed job.</p>
+      <p><b>To keep going after week 3, add your card.</b> Pricing is shared before you’re charged.</p>
     </div>
     <div class="cta">
       <button class="btn go" id="pricingActivate">Claim a founding spot</button><span class="note">Questions? Email us.</span>
@@ -535,7 +535,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   </div>
 
   <div class="waitlist">
-    <div><b>Spots gone? Join the waiting list.</b><p>The first 50 people on the list get 15% off when full plans open.</p></div>
+    <div><b>Spots gone? Join the waiting list.</b><p>The first 100 people on the list get 15% off when full plans open.</p></div>
     <form class="inline" id="waitForm" action="mailto:aew.workflow@gmail.com" method="get" enctype="text/plain">
       <input type="hidden" name="subject" value="AEW waiting list">
       <input type="email" name="body" id="waitEmail" placeholder="Your email" aria-label="Your email" required>
@@ -1058,7 +1058,7 @@ const cmsg=$('cmsg');
 cmsg.addEventListener('input',()=>$('csend').disabled=!cmsg.value.trim());
 $('cmic').addEventListener('click',()=>{if(busy&&!awaiting)return;startListen()});
 const REPLIES=[
-  [/\b(cost|price|pricing|how much|charge)\b/i,'Right now there are 10 founding spots: 4 weeks, the first 3 free, then $100 per completed job. Full plans are coming soon.','pricing'],
+  [/\b(cost|price|pricing|how much|charge)\b/i,'Right now there are 10 founding spots: 4 weeks, the first 3 free. Full plans are coming soon.','pricing'],
   [/\b(twin|digital twin)\b/i,'Your Digital Twin is what I grow into as we work together: your know-how, your standards, your voice. You earn it over time.','twin'],
   [/\b(eduvolution|learn|teach)\b/i,'Every task teaches me how you work, and shows you how it got done. Study, then Execute, then Evolve.','eduvolution'],
   [/\b(data|privacy|private|my information)\b/i,'Your information stays yours. You can see it, export it, or erase it any time in Settings, under Data controls.',null]];
