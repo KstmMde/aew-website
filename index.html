@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Address of the AEW buffer service. Empty = demo mode (nothing is sent anywhere). -->
-<meta name="aew-api" content="">
+<meta name="aew-api" content="https://aew-forms.aew-workflow.workers.dev">
 <title>AI Employee Workflow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1023,7 +1023,7 @@ async function runTask(text,opts={}){
   }
   lastTask=text;
   const {t,when}=sharpen(text);
-  add('aew',`<small>Here’s what I heard</small>${esc(t)}${when?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="note">If that’s off, just tell me in your own words.</span>`);
+  add('aew',`<small>Here’s what I heard</small>${esc(t)}${when&&!AEW_API?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="note">If that’s off, just tell me in your own words.</span>`);
   await wait(pace);
   if(AEW_API){await runReal(text,files,sz,fi);busy=false;showComposer();return}
   setStatus('Working it through','working');
