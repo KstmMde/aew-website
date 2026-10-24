@@ -256,7 +256,11 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .msg{max-width:90%;padding:12px 16px;border-radius:18px;animation:rise .45s ease both}
 .msg.you{justify-self:end;background:color-mix(in srgb,var(--warm) 13%,var(--deep));border:1px solid color-mix(in srgb,var(--warm) 30%,transparent);border-bottom-right-radius:6px}
 .msg.result{max-width:100%;width:100%}
-.msg.result .out{white-space:pre-wrap;line-height:1.55;margin-top:6px;font-size:16px;color:var(--cloud);overflow-wrap:anywhere}
+.msg.result .out{line-height:1.55;margin-top:6px;font-size:16px;color:var(--cloud);overflow-wrap:anywhere}
+.msg.result .out p{margin:0 0 10px;white-space:pre-wrap}.msg.result .out h4{margin:14px 0 6px;font-size:16px;color:var(--mint)}.msg.result .out h4:first-child{margin-top:0}
+.msg.result .out ul,.msg.result .out ol{margin:0 0 10px;padding-left:22px}.msg.result .out li{margin:2px 0}.msg.result .out hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+.msg.result .out code{font-family:var(--mono);font-size:.9em;background:color-mix(in srgb,var(--line) 50%,transparent);padding:1px 5px;border-radius:5px}.msg.result .out pre{white-space:pre-wrap;font-family:var(--mono);font-size:14px;background:color-mix(in srgb,var(--line) 40%,transparent);padding:10px 12px;border-radius:10px;margin:0 0 10px}
+.msg.result .out a{color:var(--mint)}
 .msg.aew{justify-self:start;background:var(--deep);border:1px solid var(--line);border-bottom-left-radius:6px}
 .msg small{display:block;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mint);margin-bottom:4px}
 .dots{display:inline-flex;gap:5px;padding:4px 2px}
@@ -872,6 +876,21 @@ const FILL=/\b(um+|uh+|erm|you know|i mean)\b,?\s*/gi;
 const clean=s=>{let o=s.trim().replace(/^["“”'‘’\s]+|["“”'‘’,;:\s\-–—]+$/g,'').replace(FILL,'').replace(/\s{2,}/g,' ').replace(/\s+([,.!?])/g,'$1').trim();
   if(o)o=o[0].toUpperCase()+o.slice(1);if(o&&!/[.!?]$/.test(o))o+='.';return o};
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* Finished work arrives as Markdown: render it safely (escape first, then a small subset). */
+const mdInline=t=>esc(t).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*|__([^_]+)__/g,(_,a,b)=>'<b>'+(a||b)+'</b>').replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>').replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+function mdRender(src){const L=String(src||'').replace(/\r\n?/g,'\n').split('\n'),o=[];let para=[],list=null,code=null;
+  const flushP=()=>{if(para.length){o.push('<p>'+para.map(mdInline).join('<br>')+'</p>');para=[]}},flushL=()=>{if(list){o.push(`<${list.t}>`+list.i.map(x=>'<li>'+mdInline(x)+'</li>').join('')+`</${list.t}>`);list=null}};
+  for(const l of L){
+    if(code!==null){if(/^\s*```/.test(l)){o.push('<pre>'+esc(code.join('\n'))+'</pre>');code=null}else code.push(l);continue}
+    if(/^\s*```/.test(l)){flushP();flushL();code=[];continue}
+    let m;
+    if(!l.trim()){flushP();flushL();continue}
+    if(/^\s*([-*_])(\s*\1){2,}\s*$/.test(l)){flushP();flushL();o.push('<hr>');continue}
+    if(m=l.match(/^\s*#{1,6}\s+(.*?)\s*#*\s*$/)){flushP();flushL();o.push('<h4>'+mdInline(m[1])+'</h4>');continue}
+    if(m=l.match(/^\s*[-*•]\s+(.*)$/)){flushP();if(!list||list.t!=='ul'){flushL();list={t:'ul',i:[]}}list.i.push(m[1]);continue}
+    if(m=l.match(/^\s*\d+[.)]\s+(.*)$/)){flushP();if(!list||list.t!=='ol'){flushL();list={t:'ol',i:[]}}list.i.push(m[1]);continue}
+    flushL();para.push(l)}
+  if(code!==null)o.push('<pre>'+esc(code.join('\n'))+'</pre>');flushP();flushL();return o.join('')}
 const markFill=s=>esc(s).replace(FILL,m=>`<span class="filler">${m.trim()}</span> `);
 
 function openPanel(mode){
@@ -1075,8 +1094,8 @@ async function runReal(text,files,sz,fi){
     if(d.status==='done'){
       step('Packaging it for you');stop();card.classList.add('finished');doing.textContent='Worked through it';
       const m=add('aew result','<small>Your finished work</small><div class="out"></div><div class="row" style="margin-top:12px"><button class="btn" type="button" data-copy>Copy</button></div>');
-      m.querySelector('.out').textContent=d.result;
-      m.querySelector('[data-copy]').addEventListener('click',async e=>{try{await navigator.clipboard.writeText(d.result);e.target.textContent='Copied'}catch(_){e.target.textContent='Select and copy'}});
+      const out=m.querySelector('.out');out.innerHTML=mdRender(d.result);
+      m.querySelector('[data-copy]').addEventListener('click',async e=>{try{await navigator.clipboard.writeText(out.innerText.trim());e.target.textContent='Copied'}catch(_){e.target.textContent='Select and copy'}});
       fi.done('Done. Ready for your OK');recordDone(titleOf(sharpen(text).t),text);setStatus('Done','done');G.happy=1;
       const h=add('aew handoff','<b>It’s done. Next?</b>It’s saved in your feed too.<div class="row" style="margin-top:12px"><button class="link" id="again">Tell me another task</button><button class="link" data-feed>See it in your feed</button></div>');
       h.querySelector('[data-feed]').addEventListener('click',()=>setEmp(true));h.querySelector('#again').addEventListener('click',()=>$('cmsg').focus());
