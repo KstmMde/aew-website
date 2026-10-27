@@ -6,6 +6,19 @@
 <!-- Address of the AEW buffer service. Empty = demo mode (nothing is sent anywhere). -->
 <meta name="aew-api" content="https://aew-forms.aew-workflow.workers.dev">
 <title>AI Employee Workflow</title>
+<meta name="description" content="AI Employee Workflow gives small business owners and professionals an AI Employee you hand work to by voice. Say the task, watch it work, and get it done.">
+<link rel="canonical" href="https://aiemployeeworkflow.com/">
+<meta name="theme-color" content="#03100f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AI Employee Workflow">
+<meta property="og:title" content="AI Employee Workflow">
+<meta property="og:description" content="AI Employee Workflow gives small business owners and professionals an AI Employee you hand work to by voice. Say the task, watch it work, and get it done.">
+<meta property="og:url" content="https://aiemployeeworkflow.com/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AI Employee Workflow">
+<meta name="twitter:description" content="AI Employee Workflow gives small business owners and professionals an AI Employee you hand work to by voice. Say the task, watch it work, and get it done.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"AI Employee Workflow","url":"https://aiemployeeworkflow.com/","email":"aew.workflow@gmail.com","logo":"https://aiemployeeworkflow.com/favicon.svg"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -295,7 +308,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .back{display:inline-flex;gap:8px;align-items:center;color:var(--mist);text-decoration:none;font-size:14.5px;margin-bottom:34px}
 .back:hover{color:var(--cloud)}
 .head{display:grid;gap:12px;max-width:660px;margin-bottom:36px}
-.head h1{font-size:clamp(34px,6vw,60px);font-weight:800}
+.head h1,.head h2{font-size:clamp(34px,6vw,60px);font-weight:800}
 .head p{color:var(--mist);margin:0;font-size:18px}
 .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .step{border-top:2px solid var(--line);padding-top:18px;display:grid;gap:8px;align-content:start}
@@ -387,6 +400,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .empchip .count{min-width:20px;height:20px;border-radius:999px;background:var(--mint);color:var(--ink);font:700 12px var(--mono);display:grid;place-items:center;padding:0 6px}
 @media (max-width:800px){.steps,.tiers,.trial{grid-template-columns:1fr}.pace{margin-left:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style>
 </head>
 <body>
@@ -420,6 +434,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 </aside>
 
 <main id="home">
+  <h1 class="sr-only">AI Employee Workflow: an AI Employee you hand work to by voice</h1>
   <button class="globe" id="globeBtn" aria-label="Tap to talk to your AI Employee" title="Tap to talk"><canvas id="globe"></canvas></button>
   <p class="invite" id="invite">Tap to activate <span>your AI Employee.</span></p>
   <p class="invite-sub" id="inviteSub">Your AI Employee starts working the moment you give it its first task.</p>
@@ -468,7 +483,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     <textarea id="tbText" rows="1" placeholder="Or type the task you want off your plate…"></textarea>
     <div class="tbfiles" id="tbFiles" aria-live="polite"></div>
     <div class="tbrow">
-      <input type="file" id="tbFile" multiple hidden accept=".pdf,.docx,.txt,.csv,.md">
+      <input type="file" id="tbFile" aria-label="Attach a file to your task" hidden accept=".pdf,.docx,.txt,.csv,.md">
       <button type="button" class="cbtn" id="tbAttach" aria-label="Upload a file" title="Upload a file (1 per task, up to 1.5 MB)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg></button>
       <span class="tbhint" id="tbHint">Upload one file (PDF, Word, TXT or CSV) if it helps explain the job.</span>
       <button type="submit" class="btn go tbgo" id="tbSend" disabled>Hand it off</button>
@@ -489,7 +504,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <a class="back" href="#">← Back to the globe</a>
   <div class="head">
     <span class="eyebrow">Eduvolution (education + evolution)</span>
-    <h1>It learns your work. You learn how it got done.</h1>
+    <h2>It learns your work. You learn how it got done.</h2>
     <p>Eduvolution means education + evolution. Every task you hand off teaches your AI Employee how you work, and shows you the steps and sources behind the result. You both get sharper.</p>
   </div>
   <div class="steps">
@@ -504,7 +519,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <a class="back" href="#">← Back to the globe</a>
   <div class="head">
     <span class="eyebrow">Digital Twin</span>
-    <h1>Split yourself in two. Earn it as you go.</h1>
+    <h2>Split yourself in two. Earn it as you go.</h2>
     <p>Your AI Employee starts simple. As you work together it grows into your Digital Twin: your know-how, your standards, your voice.</p>
   </div>
   <div class="ladder">
@@ -527,7 +542,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <a class="back" href="#">← Back to the globe</a>
   <div class="head">
     <span class="eyebrow">Pricing</span>
-    <h1>Start free. Stay because it works.</h1>
+    <h2>Start free. Stay because it works.</h2>
     <p>Founding spots are open now. Full plans are coming soon.</p>
   </div>
   <div class="trial">
@@ -582,7 +597,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 
 <article class="page" id="briefing" hidden>
   <a class="back" href="#">← Back to the globe</a>
-  <div class="head"><span class="eyebrow">Briefing</span><h1>Briefing</h1><p>What matters in your industry, picked by your AI Employee and kept quick to skim.</p></div>
+  <div class="head"><span class="eyebrow">Briefing</span><h2>Briefing</h2><p>What matters in your industry, picked by your AI Employee and kept quick to skim.</p></div>
   <div class="prompt"><span class="eyebrow">Your briefing prompt</span>
     <textarea id="briefPrompt" aria-label="Your briefing prompt">Keep me current on my industry: rule changes, pricing shifts and tools other professionals are using. Keep it clear and direct, quick to skim, no clickbait.</textarea>
     <div class="row"><button class="btn go" id="briefGen">Generate</button></div><p class="toast" id="briefNote" aria-live="polite"></p></div>
@@ -593,12 +608,12 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 </article>
 <article class="page" id="ideas" hidden>
   <a class="back" href="#">← Back to the globe</a>
-  <div class="head"><span class="eyebrow">Ideas</span><h1>Ideas</h1><p>I’m always looking for work I can take off your plate. I’ll put my best ideas here.</p></div>
+  <div class="head"><span class="eyebrow">Ideas</span><h2>Ideas</h2><p>I’m always looking for work I can take off your plate. I’ll put my best ideas here.</p></div>
   <div class="list"><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>Every Friday, I can chase past-due invoices</b><p>Tell me who’s late and I’ll send a friendly reminder to anyone over 14 days, then hand you the list of who paid.</p></div><button class="btn" data-idea="Every Friday, send a friendly reminder to any client with an invoice over 14 days past due and give me a list of who paid.">Hand it off</button></div><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>I can confirm every order by text</b><p>When a customer texts an order, I’ll timestamp it, confirm it back to them, and keep a running list for the day.</p></div><button class="btn" data-idea="Confirm every customer order that comes in by text, timestamp it, and send me a daily list of orders.">Hand it off</button></div><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>I can catch commenters your DM automation missed</b><p>Each day I can check your recent posts for your trigger words and list anyone who should have gotten a DM but didn’t.</p></div><button class="btn" data-idea="Every day, check comments on my recent posts for my trigger keywords and list anyone who didn’t get the automatic DM.">Hand it off</button></div><div class="li"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></div><div><b>I can turn your week into a one-page summary</b><p>Every Monday I’ll pull what got done, what’s waiting on you, and what’s next, in one page you can skim in a minute.</p></div><button class="btn" data-idea="Every Monday, give me a one-page summary of what got done last week, what is waiting on me, and what is next.">Hand it off</button></div></div>
 </article>
 <article class="page" id="goals" hidden>
   <a class="back" href="#">← Back to the globe</a>
-  <div class="head"><span class="eyebrow">Goals</span><h1>Goals</h1></div>
+  <div class="head"><span class="eyebrow">Goals</span><h2>Goals</h2></div>
   <div class="tracking"><i></i>Tracking</div>
   <div><div class="goal"><button class="check" role="checkbox" aria-checked="false" aria-label="Hand off my first task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><div><b>Hand off my first task</b><p>Your AI Employee is ready. Tap the orb and give it something real.</p></div></div><div class="goal"><button class="check" role="checkbox" aria-checked="false" aria-label="Reach Execute in Eduvolution"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><div><b>Reach Execute in Eduvolution</b><p>10 handoffs moves you from Study to Execute. Persona unlocks there.</p></div></div><div class="goal"><button class="check" role="checkbox" aria-checked="false" aria-label="Set up one recurring task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><div><b>Set up one recurring task</b><p>Say “every Friday…” or “each morning…” and it runs on its own.</p></div></div></div>
   <div class="card" style="margin-top:20px;background:var(--deep)"><div class="top"><b>Eduvolution <span class="sub">(education + evolution)</span></b><span class="sub" id="eduStage">Study · 0 of 10 handoffs</span></div><div class="bar"><i id="eduBar"></i></div><span class="sub">Each handoff teaches it your work. Study, then Execute, then Evolve.</span></div>
@@ -607,7 +622,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 </article>
 <article class="page" id="library" hidden>
   <a class="back" href="#">← Back to the globe</a>
-  <div class="head"><span class="eyebrow">Work library</span><h1>Work library</h1><p>Everything your AI Employee finishes for you, in one place.</p></div>
+  <div class="head"><span class="eyebrow">Work library</span><h2>Work library</h2><p>Everything your AI Employee finishes for you, in one place.</p></div>
   <div class="libwrap">
     <nav class="libnav" aria-label="Filter"><small>FINISHED WORK</small>
       <button data-lib="all" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="7.5" r="3"/><path d="M16.5 4.5l3 5h-6z"/><rect x="4.5" y="13.5" width="6" height="6" rx="1.5"/><circle cx="16.5" cy="16.5" r="3"/></svg>All work</button><button data-lib="doc" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M10 12h5M10 16h5"/></svg>Documents</button><button data-lib="rep" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M10 20V4M15 20v-7M20 20v-11"/></svg>Reports</button>
