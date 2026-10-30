@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Address of the AEW buffer service. Empty = demo mode (nothing is sent anywhere). -->
 <meta name="aew-api" content="https://aew-forms.aew-workflow.workers.dev">
+<meta name="aew-turnstile" content="0x4AAAAAAFs829_Xa-ysoAu-">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <title>AI Employee Workflow</title>
 <meta name="description" content="AI Employee Workflow gives small business owners and professionals an AI Employee you hand work to by voice. Say the task, watch it work, and get it done.">
 <link rel="canonical" href="https://aiemployeeworkflow.com/">
@@ -433,6 +435,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <div class="foot"><button class="item" id="openSettings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></button><a class="item" href="#pricing" title="Start your 4-week founding program"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span class="label">4-week founding program</span></a></div>
 </aside>
 
+<div id="tsBox" style="position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999"></div>
 <main id="home">
   <h1 class="sr-only">AI Employee Workflow: an AI Employee you hand work to by voice</h1>
   <button class="globe" id="globeBtn" aria-label="Tap to talk to your AI Employee" title="Tap to talk"><canvas id="globe"></canvas></button>
@@ -707,6 +710,23 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   </div>
 </aside>
 <script>
+/* ---------- Turnstile: bot check before sign-ups and orb tasks ---------- */
+const TS_KEY=(document.querySelector('meta[name="aew-turnstile"]')?.content||'').trim();
+let tsId=null,tsWait=null;
+function tsReady(){return new Promise((ok,no)=>{const t0=Date.now();(function chk(){if(window.turnstile)return ok();if(Date.now()-t0>15000)return no(new Error('ts-load'));setTimeout(chk,150)})()})}
+async function getHumanToken(){
+  if(!TS_KEY)return '';
+  await tsReady();
+  return new Promise((ok,no)=>{
+    tsWait={ok,no};
+    const done=(fn,v)=>{const w=tsWait;tsWait=null;if(w)w[fn](v)};
+    if(tsId===null){
+      tsId=turnstile.render('#tsBox',{sitekey:TS_KEY,appearance:'interaction-only',execution:'execute',
+        callback:t=>done('ok',t),'error-callback':()=>done('no',new Error('ts-fail')),'expired-callback':()=>{},'timeout-callback':()=>done('no',new Error('ts-timeout'))});
+    }else turnstile.reset(tsId);
+    turnstile.execute(tsId);
+  });
+}
 (()=>{
 const $=id=>document.getElementById(id);
 
@@ -960,7 +980,8 @@ $('claimCancel').addEventListener('click',()=>{$('claimForm').hidden=true;$('pri
 const AEW_MAIL='aew.workflow@gmail.com';
 const FORMS_API='https://aew-forms.aew-workflow.workers.dev/signup';
 async function saveSignup(data,btn){btn.disabled=true;const t=btn.textContent;btn.textContent='Sending…';
-  try{const r=await fetch(FORMS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,page:location.pathname+location.hash})});
+  try{let cf_token='';try{cf_token=await getHumanToken()}catch(_){return {ok:false,msg:'We couldn’t confirm you’re a person. Refresh the page and try again.'}}
+    const r=await fetch(FORMS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,cf_token,page:location.pathname+location.hash})});
     const d=await r.json().catch(()=>({}));if(r.ok&&d.ok)return {ok:true};return {ok:false,msg:d.error}}
   catch(_){return {ok:false}}finally{btn.disabled=false;btn.textContent=t}}
 $('claimForm').addEventListener('submit',async e=>{e.preventDefault();const v=id=>$(id).value.trim();const btn=e.submitter||$('claimForm').querySelector('[type=submit]');
@@ -1094,7 +1115,8 @@ async function runReal(text,files,sz,fi){
     add('aew','<small>Your AI Employee</small>'+esc(msg||'I couldn’t finish this one.')+' You won’t be charged for it.')};
   step('Sending it over');
   let id,token;
-  try{const fd=new FormData();fd.append('text',text);if(AEW_VID)fd.append('visitor',AEW_VID);files.forEach(f=>fd.append('files',f,f.name));
+  let cf_token='';try{cf_token=await getHumanToken()}catch(_){fail('I couldn’t confirm you’re a person. Refresh the page and try again.');return}
+  try{const fd=new FormData();fd.append('text',text);fd.append('cf_token',cf_token);if(AEW_VID)fd.append('visitor',AEW_VID);files.forEach(f=>fd.append('files',f,f.name));
     const r=await fetch(AEW_API+'/api/tasks',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
     if(!r.ok||!d.id)throw new Error(d.error||'I couldn’t reach your AI Employee.');id=d.id;token=d.token}
   catch(e){fail(e.message==='Failed to fetch'?'I couldn’t reach your AI Employee.':e.message);return}
