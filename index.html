@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Address of the AEW buffer service. Empty = demo mode (nothing is sent anywhere). -->
-<meta name="aew-api" content="https://aew-forms.aew-workflow.workers.dev">
+<meta name="aew-api" content="/"><!-- same origin: aiemployeeworkflow.com/api/* and /auth/* are passed to aew-forms -->
 <title>AI Employee Workflow</title>
 <meta name="description" content="AI Employee Workflow gives small business owners and professionals an AI Employee you hand work to by voice. Say the task, watch it work, and get it done.">
 <link rel="canonical" href="https://aiemployeeworkflow.com/">
@@ -96,6 +96,11 @@ body{padding-left:60px}
 .sso:hover{border-color:var(--mint)}
 .sso svg{width:20px;height:20px;flex:none}
 .sheet .fine{font-size:12.5px;color:color-mix(in srgb,var(--mist) 80%,transparent);margin-top:4px}
+.sheet .fine a,.disclaim a,.privacy a{color:var(--mist);text-underline-offset:3px}
+.sso:disabled{opacity:.55;cursor:not-allowed;border-color:var(--line)}
+.sso .soon{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.sheet .err{color:var(--warm);font-size:14px;margin:0}
+.tsbox:empty{display:none}.tsbox{display:flex;justify-content:center;margin:4px 0}
 .meter{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:20px}
 .meter .top{display:flex;justify-content:space-between;font-size:14px}
 .meter .top span:last-child{font:500 13px var(--mono);color:var(--mist);font-variant-numeric:tabular-nums}
@@ -265,6 +270,21 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .choices .btn{padding:8px 14px;font-size:14px}
 .msg.ask{border-color:color-mix(in srgb,var(--warm) 45%,transparent)}
 .msg.ask small{color:var(--warm)}
+/* question and playback cards from the AI Employee: styled like a permission prompt */
+.msg.card{max-width:100%;width:100%;border-color:color-mix(in srgb,var(--mint) 55%,var(--line));box-shadow:0 0 0 4px color-mix(in srgb,var(--mint) 8%,transparent)}
+.msg.card .q{margin:2px 0 12px;font:600 17px/1.4 var(--body);color:var(--cloud)}
+.msg.card .opts{display:grid;gap:8px}
+.msg.card .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--ink);color:var(--cloud);font:500 15px var(--body);cursor:pointer}
+.msg.card .opt:hover:not(:disabled),.msg.card .opt:focus-visible{border-color:var(--mint)}
+.msg.card .opt .k{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font:500 12px var(--mono);color:var(--mint);border:1px solid var(--line)}
+.msg.card .opt.picked{border-color:var(--mint);background:color-mix(in srgb,var(--mint) 12%,var(--ink))}
+.msg.card .other{display:flex;gap:8px;margin-top:8px;align-items:center;padding:4px 4px 4px 14px;border-radius:12px;border:1px solid var(--line);background:var(--ink)}
+.msg.card .other:focus-within{border-color:var(--mint)}
+.msg.card .other input{flex:1;min-width:0;background:none;border:0;color:var(--cloud);font:15px var(--body);outline:none;padding:8px 0}
+.msg.card .other .btn{padding:8px 14px;font-size:14px}
+.msg.card .pb{margin:2px 0 12px;font-size:16px;line-height:1.5;color:var(--cloud);white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.card.closed{box-shadow:none;border-color:var(--line)}
+.msg.card.closed .opt:not(.picked),.msg.card.closed .other,.msg.card.closed .row{opacity:.5}
 @media (max-width:700px){.composer{left:0}}
 .msg{max-width:90%;padding:12px 16px;border-radius:18px;animation:rise .45s ease both}
 .msg.you{justify-self:end;background:color-mix(in srgb,var(--warm) 13%,var(--deep));border:1px solid color-mix(in srgb,var(--warm) 30%,transparent);border-bottom-right-radius:6px}
@@ -441,10 +461,10 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <div class="sheet" id="signin" hidden>
     <h2>Activate your AI Employee</h2>
     <p>Sign in with an account you already use. It takes a few seconds.</p>
-    <button class="sso" data-sso="LinkedIn"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0a66c2"/><path d="M7 10v7M7 7.2v.1M11 17v-4.2c0-1.6 1-2.6 2.4-2.6s2.1 1 2.1 2.6V17M11 10v7" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/></svg>Continue with LinkedIn</button>
-    <button class="sso" data-sso="Facebook"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1877f2"/><path d="M13.3 20v-6.4h2.2l.3-2.5h-2.5V9.5c0-.7.2-1.2 1.2-1.2h1.4V6.1a18 18 0 0 0-2-.1c-2 0-3.3 1.2-3.3 3.4v1.8H8.4v2.5h2.2V20z" fill="#fff"/></svg>Continue with Facebook</button>
-    <button class="sso" data-sso="Google"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#fff"/><path d="M18.6 12.2c0-.5 0-.9-.1-1.3H12v2.5h3.7a3.2 3.2 0 0 1-1.4 2v1.7h2.3c1.3-1.2 2-3 2-4.9z" fill="#4285f4"/><path d="M12 19c1.9 0 3.5-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.3.7-1.8 0-3.3-1.2-3.8-2.8H5.8v1.8A7 7 0 0 0 12 19z" fill="#34a853"/><path d="M8.2 13.5a4.2 4.2 0 0 1 0-2.7V9H5.8a7 7 0 0 0 0 6.3z" fill="#fbbc05"/><path d="M12 7.8c1 0 1.9.4 2.6 1l2-2A7 7 0 0 0 5.8 9l2.4 1.8C8.7 9.1 10.2 7.8 12 7.8z" fill="#ea4335"/></svg>Continue with Google</button>
-    <p class="fine" id="ssoNote">Preview: sign-in opens to founding members first. Tapping one continues the preview.</p>
+    <button class="sso" data-sso="google"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#fff"/><path d="M18.6 12.2c0-.5 0-.9-.1-1.3H12v2.5h3.7a3.2 3.2 0 0 1-1.4 2v1.7h2.3c1.3-1.2 2-3 2-4.9z" fill="#4285f4"/><path d="M12 19c1.9 0 3.5-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.3.7-1.8 0-3.3-1.2-3.8-2.8H5.8v1.8A7 7 0 0 0 12 19z" fill="#34a853"/><path d="M8.2 13.5a4.2 4.2 0 0 1 0-2.7V9H5.8a7 7 0 0 0 0 6.3z" fill="#fbbc05"/><path d="M12 7.8c1 0 1.9.4 2.6 1l2-2A7 7 0 0 0 5.8 9l2.4 1.8C8.7 9.1 10.2 7.8 12 7.8z" fill="#ea4335"/></svg><span>Continue with Google</span></button>
+    <button class="sso" data-sso="linkedin"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0a66c2"/><path d="M7 10v7M7 7.2v.1M11 17v-4.2c0-1.6 1-2.6 2.4-2.6s2.1 1 2.1 2.6V17M11 10v7" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/></svg><span>Continue with LinkedIn</span></button>
+    <p class="err" id="ssoErr" hidden role="alert"></p>
+    <p class="fine">We only get your name and email. Read our <a href="/privacy">Privacy Policy</a>.</p>
     <button class="link" id="ssoCancel">Not now</button>
   </div>
   <div class="status" id="status" aria-live="polite"></div>
@@ -477,6 +497,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     </div>
 
     <div class="thread" id="thread"></div>
+    <div class="tsbox" id="tsOrb"></div>
   </div>
   <form class="taskbox" id="typeInstead" autocomplete="off">
     <label class="sr" for="tbText">Type your task</label>
@@ -489,14 +510,14 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <button type="submit" class="btn go tbgo" id="tbSend" disabled>Hand it off</button>
     </div>
   </form>
-  <p class="disclaim" id="disclaim">Beta: your AI Employee can make mistakes. Check its work before you rely on it.</p>
+  <p class="disclaim" id="disclaim">Beta: your AI Employee can make mistakes. Check its work before you rely on it. · <a href="/privacy">Privacy</a></p>
   <div class="composer" id="composer" hidden>
     <div class="bar2">
       <input id="cmsg" placeholder="Message your AI Employee" aria-label="Message your AI Employee">
       <button type="button" class="cbtn" id="cmic" aria-label="Talk instead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button type="button" class="cbtn send" id="csend" aria-label="Send" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
     </div>
-    <p class="hint">Quick questions are free. It always plays your task back before it starts.</p>
+    <p class="hint">Messages go straight to your AI Employee. It plays your task back before it starts.</p>
   </div>
 </main>
 
@@ -569,6 +590,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     </div>
     <input id="clWeb" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" placeholder="Website">
     <textarea id="clTask" rows="3" placeholder="The task you’d hand off first, in your own words" aria-label="The task you would hand off first"></textarea>
+    <div class="tsbox" id="tsClaim"></div>
     <div class="row"><button class="btn go" type="submit">Send my request</button><button class="link" type="button" id="claimCancel">Not now</button></div>
     <p class="toast" id="claimNote" aria-live="polite"></p>
   </form>
@@ -580,9 +602,10 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <input type="email" id="waitEmail" placeholder="Your email" aria-label="Your email" required autocomplete="email">
       <button class="btn go" type="submit">Join the list</button>
     </form>
+    <div class="tsbox" id="tsWait"></div>
     <p class="toast" id="waitNote" aria-live="polite"></p>
   </div>
-  <p class="privacy" id="privacy"><b>Your privacy.</b> We only collect what you send us, like your name, email and the task you describe, and use it to run your AI Employee and reply to you. We never sell your information. Card details are only asked for after week 3, through a secure payment provider, and we don’t store them ourselves. Want something deleted? Email aew.workflow@gmail.com.</p>
+  <p class="privacy" id="privacy"><b>Your privacy.</b> We only collect what you send us, like your name, email and the task you describe, and use it to run your AI Employee and reply to you. We never sell your information. Card details are only asked for after week 3, through a secure payment provider, and we don’t store them ourselves. Want something deleted? Email aew.workflow@gmail.com. <a href="/privacy">Read the full Privacy Policy</a>.</p>
 
   <h2 class="secthead">Full plans · coming soon</h2>
   <p class="sectsub">Here’s how plans will work once they open. Founding members and the waiting list hear first.</p>
@@ -659,10 +682,10 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 <div data-pane-s="devices" hidden><h3>Devices</h3>
   <div class="card"><div class="rowline"><span>This browser<small>Signed in now</small></span><span class="pill-s live">Active</span></div><div class="rowline"><span>Apple Watch<small>Hand off tasks from your wrist with Shortcuts</small></span><span class="pill-s">Coming soon</span></div><div class="rowline"><span>Phone<small>Text your AI Employee any time</small></span><span class="pill-s">Founding members</span></div></div></div>
 <div data-pane-s="data" hidden><h3>Data controls</h3><p class="sub" style="color:var(--mist);margin:-6px 0 14px">Your information stays yours. This is what grows into your Digital Twin.</p>
-  <div class="card"><div class="rowline"><span>Learn from my tasks<small>Helps it get better at your work</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Learn from my tasks"></button></div><div class="rowline"><span>Export my data<small>Everything it has learned and done</small></span><button class="btn" id="exportBtn">Export</button></div><div class="rowline"><span>Erase what it learned<small>Starts your AI Employee fresh</small></span><button class="btn danger" id="eraseBtn">Erase</button></div></div><p class="toast" id="dataNote" aria-live="polite"></p></div>
+  <div class="card"><div class="rowline"><span>Learn from my tasks<small>Helps it get better at your work</small></span><button class="switch" role="switch" aria-checked="true" aria-label="Learn from my tasks"></button></div><div class="rowline"><span>Export my data<small>Everything it has learned and done</small></span><button class="btn" id="exportBtn">Export</button></div><div class="rowline"><span>Delete my account and data<small>Email us from the address you signed in with</small></span><a class="btn danger" href="mailto:aew.workflow@gmail.com?subject=Please%20delete%20my%20AEW%20data">Request</a></div></div><p class="toast" id="dataNote" aria-live="polite"></p></div>
 <div data-pane-s="help" hidden><h3>Help &amp; support</h3>
   <div class="card"><b>Talk to a person</b><span class="sub">Questions, feedback or a task it got wrong. Email us and a human answers.</span><div class="copy"><code id="mail2">aew.workflow@gmail.com</code><button class="btn" id="copy2">Copy</button></div></div>
-  <div class="card"><b>Privacy</b><span class="sub">We only use what you send us to run your AI Employee and reply to you. We never sell it. Email us any time to have it deleted.</span><div class="inline"><a class="btn" href="#pricing">Read more</a></div></div>
+  <div class="card"><b>Privacy</b><span class="sub">We only use what you send us to run your AI Employee and reply to you. We never sell it. Email us any time to have it deleted.</span><div class="inline"><a class="btn" href="/privacy">Privacy Policy</a></div></div>
   <div class="card"><b>How it works</b><span class="sub">The basics of pricing and Eduvolution (education + evolution).</span><div class="inline"><a class="btn" href="#pricing">Pricing</a><a class="btn" href="#eduvolution">Eduvolution</a></div></div></div></div></div></div>
 <button class="empchip" id="empChip" aria-label="Open your AI Employee"><span class="dot"><svg width="16" height="12" viewBox="0 0 16 12"><rect x="3" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/><rect x="10" y="2" width="3" height="8" rx="1.5" fill="#effcf8"/></svg></span>Your AI Employee<span class="count" id="empCount" hidden>0</span></button>
 <div class="scrim" id="empScrim" hidden></div>
@@ -946,29 +969,57 @@ function stopListen(){
 }
 let activated=false;const CAP=100;let used=0;
 function showSignin(){$('invite').hidden=true;$('inviteSub').hidden=true;$('typeInstead').hidden=true;$('signin').hidden=false;G.wake=1;setStatus('Almost yours','idle');}
-let activatedVia='';
-function activate(via){
+let activatedVia='',activatedName='';
+function activate(via,fresh){
   activated=true;activatedVia=via||'';syncAcct();if(pendingTask){const t=pendingTask;pendingTask='';setTimeout(()=>{task.value=t;toReview('Here’s the task. Edit anything, then hand it off.')},350)}$('signin').hidden=true;G.happy=1;G.wake=1;
   $('invite').innerHTML='I’m yours. <span>What should I take off your plate?</span>';$('invite').hidden=false;
   $('inviteSub').textContent='Tap me and talk, or type it below. Take all the time you need.';$('inviteSub').hidden=false;$('typeInstead').hidden=false;
-  setStatus(via?`Activated with ${via}`:'Activated','idle');
+  if(fresh)setStatus(via?`Activated with ${via}`:'Activated','idle');
 }
-document.querySelectorAll('[data-sso]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.sso)));
+/* ---------- Real sign-in: Google or LinkedIn (OpenID Connect), handled by aew-forms on this same site ---------- */
+let tsKey='';
+const ssoErr=msg=>{const e=$('ssoErr');e.textContent=msg||'';e.hidden=!msg};
+const SIGNIN_MSG={failed:'That sign-in didn’t go through. Please try again.',cancelled:'Sign-in was cancelled. Pick one to continue.',unavailable:'That sign-in isn’t available yet. Try the other one.'};
+document.querySelectorAll('[data-sso]').forEach(b=>b.addEventListener('click',()=>{
+  try{if(pendingTask)sessionStorage.setItem('aew_pending',pendingTask);sessionStorage.setItem('aew_signin','1')}catch(_){}
+  b.disabled=true;location.href=`/auth/${b.dataset.sso}/start?return=${encodeURIComponent(location.pathname+location.hash)}`}));
+(async()=>{
+  let q='';try{const u=new URL(location.href);q=u.searchParams.get('signin')||'';if(q){u.searchParams.delete('signin');history.replaceState(null,'',u.pathname+u.search+u.hash)}}catch(_){}
+  let me=null;try{const r=await fetch('/auth/me',{cache:'no-store'});if(r.ok)me=await r.json()}catch(_){}
+  let fresh=false;try{fresh=sessionStorage.getItem('aew_signin')==='1';sessionStorage.removeItem('aew_signin');const t=sessionStorage.getItem('aew_pending');sessionStorage.removeItem('aew_pending');if(t)pendingTask=t}catch(_){}  /* after the await: the rest of the script has run by now */
+  if(me){tsKey=me.turnstile||'';
+    const li=document.querySelector('[data-sso="linkedin"]');
+    if(li&&!(me.providers&&me.providers.linkedin)){li.disabled=true;li.insertAdjacentHTML('beforeend','<span class="soon">Coming soon</span>');li.setAttribute('aria-label','Continue with LinkedIn (coming soon)')}
+    const gg=document.querySelector('[data-sso="google"]');
+    if(gg&&!(me.providers&&me.providers.google)){gg.disabled=true;gg.insertAdjacentHTML('beforeend','<span class="soon">Coming soon</span>')}
+    if(me.user){activatedName=me.user.name||me.user.email||'';activate(me.user.provider,fresh);return}}
+  if(q&&SIGNIN_MSG[q]){showSignin();ssoErr(SIGNIN_MSG[q])}
+})();
+/* ---------- Turnstile (Cloudflare's bot check): invisible unless it needs a tap ---------- */
+let tsLoad=null;
+function loadTS(){return tsLoad||(tsLoad=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';sc.async=true;
+  sc.onload=()=>window.turnstile?res(window.turnstile):rej(new Error('ts'));sc.onerror=()=>{tsLoad=null;rej(new Error('ts'))};document.head.appendChild(sc)}))}
+async function humanToken(boxId){
+  if(!tsKey)return '';
+  try{const ts=await loadTS(),box=$(boxId);box.innerHTML='';
+    return await new Promise(res=>{let id=null;const end=v=>{try{ts.remove(id)}catch(_){}box.innerHTML='';res(v||'')};
+      id=ts.render(box,{sitekey:tsKey,appearance:'interaction-only',theme:'dark',callback:end,'error-callback':()=>{end('');return true},'timeout-callback':()=>end(''),'expired-callback':()=>end('')})})}
+  catch(_){return ''}}
 $('ssoCancel').addEventListener('click',()=>{$('signin').hidden=true;$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle')});
 $('pricingActivate').addEventListener('click',()=>{const f=$('claimForm');f.hidden=false;$('pricingActivate').setAttribute('aria-expanded','true');f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('clName').focus(),300)});
 $('claimCancel').addEventListener('click',()=>{$('claimForm').hidden=true;$('pricingActivate').setAttribute('aria-expanded','false')});
 const AEW_MAIL='aew.workflow@gmail.com';
-const FORMS_API='https://aew-forms.aew-workflow.workers.dev/signup';
-async function saveSignup(data,btn){btn.disabled=true;const t=btn.textContent;btn.textContent='Sending…';
-  try{const r=await fetch(FORMS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,page:location.pathname+location.hash})});
+const FORMS_API='/api/signup';
+async function saveSignup(data,btn,tsBox){btn.disabled=true;const t=btn.textContent;btn.textContent='Sending…';
+  try{const turnstile=await humanToken(tsBox);const r=await fetch(FORMS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,turnstile,page:location.pathname+location.hash})});
     const d=await r.json().catch(()=>({}));if(r.ok&&d.ok)return {ok:true};return {ok:false,msg:d.error}}
   catch(_){return {ok:false}}finally{btn.disabled=false;btn.textContent=t}}
 $('claimForm').addEventListener('submit',async e=>{e.preventDefault();const v=id=>$(id).value.trim();const btn=e.submitter||$('claimForm').querySelector('[type=submit]');
-  const res=await saveSignup({kind:'claim',name:v('clName'),email:v('clEmail'),business:v('clBiz'),phone:v('clPhone'),task:v('clTask'),website:v('clWeb')},btn);
+  const res=await saveSignup({kind:'claim',name:v('clName'),email:v('clEmail'),business:v('clBiz'),phone:v('clPhone'),task:v('clTask'),website:v('clWeb')},btn,'tsClaim');
   if(res.ok){$('claimForm').reset();$('claimNote').textContent='Got it, you’re in line for a founding spot. A real person will reach out within a day.'}
   else $('claimNote').textContent=res.msg||`That didn’t go through. Try again, or email ${AEW_MAIL} and we’ll save your spot.`});
 $('waitForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.submitter||$('waitForm').querySelector('[type=submit]');
-  const res=await saveSignup({kind:'waitlist',email:$('waitEmail').value.trim(),website:$('waitWeb').value.trim()},btn);
+  const res=await saveSignup({kind:'waitlist',email:$('waitEmail').value.trim(),website:$('waitWeb').value.trim()},btn,'tsWait');
   if(res.ok){$('waitForm').reset();$('waitNote').textContent='You’re on the list. We’ll email you when full plans open.'}
   else $('waitNote').textContent=res.msg||`That didn’t go through. Try again, or email ${AEW_MAIL} with “waiting list”.`});
 function sizeOf(text){const w=text.split(/\s+/).length;
@@ -1028,11 +1079,10 @@ function sharpen(s){
   const when=(s.match(/\b((?:every|each)\s+(?:other\s+)?(?:day|morning|afternoon|evening|night|week|weekday|weekend|month|quarter|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday|hour)s?|daily|weekly|monthly|quarterly|yearly|nightly)\b/i)||[])[0];
   return {t,when};
 }
-send.addEventListener('click',()=>{const t=clean(task.value);if(!t)return;task.value='';if(awaiting){const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}runTask(t)});
-let busy=false,lastTask='',awaiting=null;
-const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
+send.addEventListener('click',()=>{const t=clean(task.value);if(!t)return;task.value='';runTask(t)});
+let busy=false,lastTask='';const queued=[];
 async function runTask(text,opts={}){
-  if(busy)return;busy=true;
+  if(busy)return;busy=true;closeCards();
   openPanel('none');review.hidden=true;speak.hidden=true;
   const files=attached.slice();if(!opts.silent)add('you',esc(text)+filesHTML());attached=[];renderFiles();addRecent(text);const sz=sizeOf(text);useTask(sz.u);const fi=feedItem(titleOf(sharpen(text).t));
   const typing=add('aew','<span class="dots" aria-label="Typing"><i></i><i></i><i></i></span>');
@@ -1040,48 +1090,56 @@ async function runTask(text,opts={}){
   await wait(900);
   typing.innerHTML='<small>Your AI Employee</small>On it.';
   await wait(pace*.8);
-  if(text.split(/\s+/).length<7&&!sharpen(text).when){
-    const ans=await askUser('So I get this right: who is it for, and when do you need it done?');
-    text=clean(text.replace(/[.!?]$/,'')+', '+ans.replace(/^[A-Z]/,c=>c.toLowerCase()));
-    add('aew','<small>Your AI Employee</small>Perfect, that’s what I needed.');await wait(pace*.6);setStatus('Got it','working');
-  }
   lastTask=text;
-  const {t,when}=sharpen(text);
-  add('aew',`<small>Here’s what I heard</small>${esc(t)}${when&&!AEW_API?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="note">If that’s off, just tell me in your own words.</span>`);
+  add('aew',`<small>Here’s what I heard</small>${esc(sharpen(text).t)}<br><span class="note">If that’s off, just tell me in your own words.</span>`);
   await wait(pace);
-  if(AEW_API){await runReal(text,files,sz,fi);busy=false;showComposer();return}
-  setStatus('Working it through','working');
-  /* the working line: dots, what it's doing right now, a running clock, tap to see the steps */
-  const card=add('aew work','<button class="workline" aria-expanded="false"><span class="spark" aria-hidden="true"><i></i><i></i><i></i></span><span class="doing">Reading your task</span><span class="secs">0s</span><span class="chev" aria-hidden="true">›</span></button><div class="detail" hidden><ul class="trail"></ul><button class="link" data-go="eduvolution">How does this work?</button></div>');
-  const wl=card.querySelector('.workline'),det=card.querySelector('.detail'),doing=card.querySelector('.doing'),secs=card.querySelector('.secs');
-  wl.addEventListener('click',()=>{det.hidden=!det.hidden;wl.setAttribute('aria-expanded',String(!det.hidden))});
-  card.querySelector('[data-go]').addEventListener('click',()=>go('eduvolution'));
-  const t0=Date.now(),clock=setInterval(()=>secs.textContent=Math.floor((Date.now()-t0)/1000)+'s',250);
-  const trail=card.querySelector('.trail');
-  for(const [now,step,chips] of [
-    ['Reading your task','Pinned down what “done” means for you','<span>your words</span>'],
-    ['Checking the playbook','Pulled the standard playbook for this kind of task','<span>industry rulebooks</span><span>public data</span>'],
-    ['Drafting it','Drafted it and checked it against what you asked',''],
-    ['Packaging it for you','Packaged it so you can approve in one look','']]){
-    doing.textContent=now;fi.sub(now);G.state=now==='Checking the playbook'?'searching':'working';
-    const li=document.createElement('li');li.innerHTML=`<div>${step}${chips?`<div class="chips">${chips}</div>`:''}</div>`;trail.appendChild(li);
-    await wait(pace*1.6);li.classList.add('done');
-  }
-  clearInterval(clock);card.classList.add('finished');doing.textContent='Worked through it';fi.done('Done. Ready for your OK');recordDone(titleOf(sharpen(text).t),text);{const w=sharpen(text).when;if(w){const l=$('schedList');if(l.textContent.includes('Nothing recurring'))l.innerHTML='';const r=document.createElement('div');r.innerHTML='<span></span><span class="on"></span>';r.children[0].textContent=titleOf(sharpen(text).t);r.children[1].textContent=w[0].toUpperCase()+w.slice(1).toLowerCase();l.appendChild(r)}}
-  setStatus('Done','done');
-  const h=add('aew handoff',`<b>It’s done. Next?</b>That was a preview of how your AI Employee works. Founding members get 3 weeks free, and it hands each task back just like this.
-    <p class="tease">The more we work together, the more I understand how you work.</p>
-    <div class="row" style="margin-top:12px"><a class="btn go" href="#pricing">Claim a founding spot</a><button class="link" id="again">Tell me another task</button><button class="link" data-feed>See it in your feed</button><a class="link" href="#twin">What’s a Digital Twin?</a></div>`);
-  h.querySelector('[data-feed]').addEventListener('click',()=>setEmp(true));
-  h.querySelector('#again').addEventListener('click',()=>{$('cmsg').focus()});
-  busy=false;showComposer();
+  await runReal(text,files,sz,fi);finished();
 }
+/* Messages typed under the orb, and answers to its cards, go to the real AI Employee as new tasks (same visitor id) */
+async function sendReal(text,{show=text,replyTo='',title=''}={}){
+  if(busy){queued.push(text);return}
+  busy=true;closeCards();openPanel('none');review.hidden=true;speak.hidden=true;
+  if(show)add('you',esc(show));
+  if(title)addRecent(title);
+  const fi=title?feedItem(titleOf(sharpen(title).t)):{sub(){},done(){}};
+  await runReal(text,[],{u:0},fi,replyTo);finished();
+}
+function finished(){busy=false;showComposer();if(queued.length)sendReal(queued.splice(0).join('\n'),{show:'',title:'Your follow-up'})}
 /* ---------- Real path: buffer service -> relay on the Mini -> finished work back ---------- */
 const AEW_API=(()=>{let a=(document.querySelector('meta[name="aew-api"]')?.content||'').trim();
   try{const q=new URLSearchParams(location.search).get('api');if(q&&/^(localhost|127\.0\.0\.1|)$/.test(location.hostname))a=q}catch(_){}
   return a.replace(/\/$/,'')})();
 const AEW_VID=(()=>{try{let v=localStorage.getItem('aew_vid');if(!/^[a-f0-9]{32}$/.test(v||'')){v=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');localStorage.setItem('aew_vid',v)}return v}catch(_){return ''}})();
-async function runReal(text,files,sz,fi){
+/* The AI Employee can send back a card instead of finished work: AEW_CARD: followed by JSON */
+function parseCard(r){
+  if(typeof r!=='string'||!r.startsWith('AEW_CARD:'))return null;
+  let c;try{c=JSON.parse(r.slice(9).trim())}catch(_){return false}
+  const str=v=>typeof v==='string'&&v.trim()?v.trim():'';
+  if(c&&c.type==='question'&&str(c.question)){const options=(Array.isArray(c.options)?c.options:[]).map(str).filter(Boolean).slice(0,4);
+    return {type:'question',question:str(c.question),options,other:str(c.other_label)||'Something else'}}
+  if(c&&c.type==='playback'&&str(c.task))return {type:'playback',task:str(c.task)};
+  return false}
+function closeCards(){document.querySelectorAll('.msg.card.live').forEach(m=>{m.classList.remove('live');m.classList.add('closed');m.querySelectorAll('button,input').forEach(x=>x.disabled=true)})}
+function showQuestion(c,parent){
+  const m=add('aew card live','<small>Quick question</small><p class="q"></p><div class="opts" role="group"></div><form class="other" autocomplete="off"><input><button class="btn go" type="submit" disabled>Send</button></form>');
+  m.querySelector('.q').textContent=c.question;
+  const box=m.querySelector('.opts');box.setAttribute('aria-label',c.question);
+  const answer=(a,btn)=>{if(!m.classList.contains('live'))return;if(btn)btn.classList.add('picked');closeCards();sendReal(`ANSWER: ${c.question} -> ${a}`,{show:a,replyTo:parent})};
+  c.options.forEach((o,i)=>{const b=document.createElement('button');b.type='button';b.className='opt';b.innerHTML=`<span class="k">${i+1}</span><span></span>`;b.lastChild.textContent=o;b.addEventListener('click',()=>answer(o,b));box.appendChild(b)});
+  const f=m.querySelector('.other'),inp=f.querySelector('input'),sb=f.querySelector('button');
+  inp.placeholder=c.other;inp.setAttribute('aria-label',c.other);inp.maxLength=500;
+  inp.addEventListener('input',()=>sb.disabled=!inp.value.trim());
+  f.addEventListener('submit',e=>{e.preventDefault();const v=inp.value.trim();if(v)answer(v)});
+  showComposer();
+}
+function showPlayback(c,parent){
+  const m=add('aew card live','<small>Here’s your task as I understand it</small><p class="pb"></p><div class="row"><button class="btn go" type="button" data-yes>Yes, start</button><button class="link" type="button" data-change>Change something</button></div>');
+  m.querySelector('.pb').textContent=c.task;
+  m.querySelector('[data-yes]').addEventListener('click',()=>{if(!m.classList.contains('live'))return;closeCards();sendReal(`CONFIRM: ${c.task}`,{show:'Yes, start',replyTo:parent,title:c.task})});
+  m.querySelector('[data-change]').addEventListener('click',()=>{showComposer();cmsg.placeholder='Tell me what to change';cmsg.focus()});
+  showComposer();
+}
+async function runReal(text,files,sz,fi,replyTo=''){
   setStatus('Handing it over','working');
   const card=add('aew work','<button class="workline" aria-expanded="false"><span class="spark" aria-hidden="true"><i></i><i></i><i></i></span><span class="doing">Sending it over</span><span class="secs">0s</span><span class="chev" aria-hidden="true">›</span></button><div class="detail" hidden><ul class="trail"></ul></div>');
   const wl=card.querySelector('.workline'),det=card.querySelector('.detail'),doing=card.querySelector('.doing'),secs=card.querySelector('.secs'),trail=card.querySelector('.trail');
@@ -1091,11 +1149,13 @@ async function runReal(text,files,sz,fi){
   const stop=()=>{clearInterval(clock);trail.querySelectorAll('li').forEach(l=>l.classList.add('done'))};
   const fail=msg=>{stop();card.classList.add('finished');doing.textContent='Didn’t finish';fi.sub('Didn’t finish');
     used=Math.max(0,used-sz.u);useTask(0);setStatus('Needs another try','idle');
-    add('aew','<small>Your AI Employee</small>'+esc(msg||'I couldn’t finish this one.')+' You won’t be charged for it.')};
+    add('aew','<small>Your AI Employee</small>'+esc(msg||'I couldn’t finish this one.'))};
   step('Sending it over');
   let id,token;
-  try{const fd=new FormData();fd.append('text',text);if(AEW_VID)fd.append('visitor',AEW_VID);files.forEach(f=>fd.append('files',f,f.name));
+  try{const fd=new FormData();fd.append('text',text);if(AEW_VID)fd.append('visitor',AEW_VID);if(replyTo)fd.append('reply_to',replyTo);files.forEach(f=>fd.append('files',f,f.name));
+    fd.append('turnstile',await humanToken('tsOrb'));
     const r=await fetch(AEW_API+'/api/tasks',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
+    if(r.status===401&&d.signin){activated=false;activatedVia='';syncAcct();fail('Please sign in again to keep going.');showSignin();return}
     if(!r.ok||!d.id)throw new Error(d.error||'I couldn’t reach your AI Employee.');id=d.id;token=d.token}
   catch(e){fail(e.message==='Failed to fetch'?'I couldn’t reach your AI Employee.':e.message);return}
   step('Waiting its turn');let last='queued',misses=0;
@@ -1107,60 +1167,40 @@ async function runReal(text,files,sz,fi){
     last=d.status;
     if(d.status==='error'){fail(d.error);return}
     if(d.status==='done'){
+      const c=parseCard(d.result);
+      if(c===false){fail('I got a little mixed up there. Could you tell me that again?');return}
+      if(c){stop();card.classList.add('finished');const q=c.type==='question';doing.textContent=q?'Has a quick question':'Checking it with you';fi.sub(q?'Waiting on your answer':'Waiting on your OK');
+        setStatus('Waiting on you','idle');G.happy=1;q?showQuestion(c,id):showPlayback(c,id);return}
       step('Packaging it for you');stop();card.classList.add('finished');doing.textContent='Worked through it';
       const m=add('aew result','<small>Your finished work</small><div class="out"></div><div class="row" style="margin-top:12px"><button class="btn" type="button" data-copy>Copy</button></div>');
       const out=m.querySelector('.out');out.innerHTML=mdRender(d.result);
       m.querySelector('[data-copy]').addEventListener('click',async e=>{try{await navigator.clipboard.writeText(out.innerText.trim());e.target.textContent='Copied'}catch(_){e.target.textContent='Select and copy'}});
       fi.done('Done. Ready for your OK');recordDone(titleOf(sharpen(text).t),text);setStatus('Done','done');G.happy=1;
-      const h=add('aew handoff','<b>It’s done. Next?</b>It’s saved in your feed too.<div class="row" style="margin-top:12px"><button class="link" id="again">Tell me another task</button><button class="link" data-feed>See it in your feed</button></div>');
-      h.querySelector('[data-feed]').addEventListener('click',()=>setEmp(true));h.querySelector('#again').addEventListener('click',()=>$('cmsg').focus());
+      const h=add('aew handoff','<b>It’s done. Next?</b>It’s saved in your feed too.<div class="row" style="margin-top:12px"><button class="link" data-again>Tell me another task</button><button class="link" data-feed>See it in your feed</button></div>');
+      h.querySelector('[data-feed]').addEventListener('click',()=>setEmp(true));h.querySelector('[data-again]').addEventListener('click',()=>$('cmsg').focus());
       return}
   }
   fail('This is taking longer than it should.');
 }
 /* ---------- Agent flow: keep the conversation going ---------- */
 function showComposer(){if(!activated)return;$('composer').hidden=false;home.classList.add('chatting')}
-const cmsg=$('cmsg');
+const cmsg=$('cmsg'),CMSG_HINT=cmsg.placeholder;
 cmsg.addEventListener('input',()=>$('csend').disabled=!cmsg.value.trim());
-$('cmic').addEventListener('click',()=>{if(busy&&!awaiting)return;startListen()});
-const REPLIES=[
-  [/\b(cost|price|pricing|how much|charge)\b/i,'Right now there are 10 founding spots: 4 weeks, the first 3 free. Full plans are coming soon.','pricing'],
-  [/\b(twin|digital twin)\b/i,'Your Digital Twin is what I grow into as we work together: your know-how, your standards, your voice. You earn it over time.','twin'],
-  [/\b(eduvolution|learn|teach)\b/i,'That’s Eduvolution: education + evolution. Every task teaches me how you work, and shows you how it got done. Study, then Execute, then Evolve.','eduvolution'],
-  [/\b(data|privacy|private|my information)\b/i,'Your information stays yours. You can see it, export it, or erase it any time in Settings, under Data controls.',null]];
+$('cmic').addEventListener('click',()=>{if(busy)return;startListen()});
 function reply(html,choices){const m=add('aew',`<small>Your AI Employee</small>${html}`);
   if(choices){const c=document.createElement('div');c.className='choices';choices.forEach(([label,fn,primary])=>{const b=document.createElement('button');b.type='button';b.className='btn'+(primary?' go':'');b.textContent=label;b.addEventListener('click',()=>{c.remove();fn()});c.appendChild(b)});m.appendChild(c)}
   return m}
-async function converse(msg){
-  openPanel('none');add('you',esc(msg));
-  const typing=add('aew','<span class="dots" aria-label="Typing"><i></i><i></i><i></i></span>');G.amp=1;
-  await wait(700);typing.remove();
-  const low=msg.toLowerCase();
-  if(/\b(status|done yet|finished|how('?s| is) it going|update me|where are we)\b/.test(low)){
-    reply(lastTask?`Your last task is done and waiting for your OK: “${esc(titleOf(sharpen(lastTask).t))}”. You can see everything in your feed.`:'Nothing in progress yet. Tell me what to take off your plate.',lastTask?[['Open my feed',()=>setEmp(true)]]:null);return}
-  if(/^(thanks|thank you|thx|appreciate|great|perfect|nice)\b/.test(low)){reply('Anytime. What’s next?');return}
-  if(lastTask&&/\b(actually|instead|change|also|add|make it|but|switch|update)\b/.test(low)){
-    const merged=clean(lastTask.replace(/[.!?]$/,'')+'. Change: '+msg);
-    reply(`Got it. I’ll update the last task with that.`,[['Run the update',()=>runTask(merged,{silent:true}),true],['Leave it as is',()=>reply('No problem, it stays as it was.')]]);return}
-  for(const [re,ans,page] of REPLIES)if(re.test(low)){reply(ans,page?[['Tell me more',()=>go(page)]]:null);return}
-  if(msg.split(/\s+/).length>=3&&!/\?\s*$/.test(msg)){
-    const sz=sizeOf(msg);
-    reply(`Want me to take that on as a task?`,[['Yes, take it on',()=>runTask(clean(msg),{silent:true}),true],['Just talking',()=>reply('Got it, just talking. I’m here whenever you need something done.')]]);return}
-  if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
-  reply('I’m here. Tell me what you need done, or ask me about any task.');
-}
-function sendMsg(){const m=cmsg.value.trim();if(!m)return;cmsg.value='';$('csend').disabled=true;
-  if(awaiting){const r=awaiting;awaiting=null;add('you',esc(m));r(m);return}
-  if(busy){add('you',esc(m));reply('Noted. I’ll finish this one first, then get to that.');return}
-  converse(m)}
+function sendMsg(){const m=cmsg.value.trim();if(!m)return;cmsg.value='';$('csend').disabled=true;cmsg.placeholder=CMSG_HINT;
+  if(busy){add('you',esc(m));queued.push(m);reply('Noted. I’ll finish this one first, then get to that.');return}
+  sendReal(m,{title:m})}
 $('csend').addEventListener('click',sendMsg);
 cmsg.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();sendMsg()}});
 
-$('newTask').addEventListener('click',()=>{awaiting=null;busy=false;go('');thread.innerHTML='';task.value='';
+$('newTask').addEventListener('click',()=>{if(busy)return;go('');thread.innerHTML='';task.value='';
   panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle');
   if(matchMedia('(max-width:700px)').matches)setSide(false);G.happy=1});
 let pendingTask='';let handoffs=0;const libItems=[];
-function syncAcct(){$('acctLine').textContent=activated?`Signed in with ${activatedVia||'your account'}`:'Not activated yet';$('acctBtn').textContent=activated?'Manage':'Activate'}
+function syncAcct(){$('acctLine').textContent=activated?`Signed in with ${activatedVia||'your account'}${activatedName?' as '+activatedName:''}`:'Not activated yet';$('acctBtn').textContent=activated?'Manage':'Activate'}
 function startTask(t){go('');setModal('setModal',false);if(!activated){pendingTask=t;showSignin();return}task.value=t;toReview('Here’s the task. Edit anything, then hand it off.')}
 document.querySelectorAll('[data-idea]').forEach(b=>b.addEventListener('click',()=>startTask(b.dataset.idea)));
 document.querySelectorAll('[data-goal]').forEach(b=>b.addEventListener('click',()=>startTask(`Help me set a ${b.dataset.goal.toLowerCase()} goal for the next 90 days and check in with me on it every week.`)));
@@ -1207,9 +1247,7 @@ $('acctBtn').addEventListener('click',()=>{if(!activated){setModal('setModal',fa
 $('invApply').addEventListener('click',()=>{$('invNote').textContent=$('invCode').value.trim()?'Invite codes open to founding members soon. We saved yours.':'Enter a code first.'});
 document.querySelectorAll('[data-connect]').forEach(b=>b.addEventListener('click',()=>{$('conNote').textContent=`${b.dataset.connect} is coming soon. Your AI Employee will ask before using it.`}));
 $('exportBtn').addEventListener('click',()=>{$('dataNote').textContent='Exports are coming soon. You’ll get everything in one file.'});
-let eraseArm=false;$('eraseBtn').addEventListener('click',()=>{if(!eraseArm){eraseArm=true;$('eraseBtn').textContent='Tap again to erase';$('dataNote').textContent='This clears what it learned about you. Your plan stays.';setTimeout(()=>{eraseArm=false;$('eraseBtn').textContent='Erase'},4000);return}
-  eraseArm=false;$('eraseBtn').textContent='Erase';libItems.length=0;drawLib();$('dataNote').textContent='Erased. Your AI Employee starts fresh.'});
-$('logout').addEventListener('click',()=>{activated=false;activatedVia='';syncAcct();setModal('setModal',false);go('');
+$('logout').addEventListener('click',async()=>{try{await fetch('/auth/logout',{method:'POST'})}catch(_){}activated=false;activatedVia='';activatedName='';syncAcct();queued.length=0;setModal('setModal',false);go('');
   $('invite').innerHTML='Tap to activate <span>your AI Employee.</span>';$('inviteSub').textContent='Your AI Employee starts working the moment you give it its first task.';
   panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;$('signin').hidden=true;$('composer').hidden=true;home.classList.remove('chatting');thread.innerHTML='';setStatus('Signed out','idle')});
 $('copy2').addEventListener('click',async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText($('mail2').textContent);b.textContent='Copied'}catch(_){const r=document.createRange();r.selectNodeContents($('mail2'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}setTimeout(()=>b.textContent='Copy',1800)});
