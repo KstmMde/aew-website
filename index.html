@@ -445,9 +445,8 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     <h2>Activate your AI Employee</h2>
     <p>Sign in with an account you already use. It takes a few seconds.</p>
     <button class="sso" data-sso="LinkedIn"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0a66c2"/><path d="M7 10v7M7 7.2v.1M11 17v-4.2c0-1.6 1-2.6 2.4-2.6s2.1 1 2.1 2.6V17M11 10v7" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/></svg>Continue with LinkedIn</button>
-    <button class="sso" data-sso="Facebook"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1877f2"/><path d="M13.3 20v-6.4h2.2l.3-2.5h-2.5V9.5c0-.7.2-1.2 1.2-1.2h1.4V6.1a18 18 0 0 0-2-.1c-2 0-3.3 1.2-3.3 3.4v1.8H8.4v2.5h2.2V20z" fill="#fff"/></svg>Continue with Facebook</button>
     <button class="sso" data-sso="Google"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#fff"/><path d="M18.6 12.2c0-.5 0-.9-.1-1.3H12v2.5h3.7a3.2 3.2 0 0 1-1.4 2v1.7h2.3c1.3-1.2 2-3 2-4.9z" fill="#4285f4"/><path d="M12 19c1.9 0 3.5-.6 4.6-1.7l-2.3-1.7c-.6.4-1.4.7-2.3.7-1.8 0-3.3-1.2-3.8-2.8H5.8v1.8A7 7 0 0 0 12 19z" fill="#34a853"/><path d="M8.2 13.5a4.2 4.2 0 0 1 0-2.7V9H5.8a7 7 0 0 0 0 6.3z" fill="#fbbc05"/><path d="M12 7.8c1 0 1.9.4 2.6 1l2-2A7 7 0 0 0 5.8 9l2.4 1.8C8.7 9.1 10.2 7.8 12 7.8z" fill="#ea4335"/></svg>Continue with Google</button>
-    <p class="fine" id="ssoNote">Preview: sign-in opens to founding members first. Tapping one continues the preview.</p>
+    <p class="fine" id="ssoNote">We only get your name and email. We never post anything for you.</p>
     <button class="link" id="ssoCancel">Not now</button>
   </div>
   <div class="status" id="status" aria-live="polite"></div>
@@ -585,7 +584,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
     </form>
     <p class="toast" id="waitNote" aria-live="polite"></p>
   </div>
-  <p class="privacy" id="privacy"><b>Your privacy.</b> We only collect what you send us, like your name, email and the task you describe, and use it to run your AI Employee and reply to you. We never sell your information. Card details are only asked for after week 3, through a secure payment provider, and we don’t store them ourselves. Want something deleted? Email aew.workflow@gmail.com.</p>
+  <p class="privacy" id="privacy"><b>Your privacy.</b> We only collect what you send us, like your name, email and the task you describe, and use it to run your AI Employee and reply to you. We never sell your information. Card details are only asked for after week 3, through a secure payment provider, and we don’t store them ourselves. Want something deleted? Email aew.workflow@gmail.com. <a href="/privacy">Read the full privacy policy</a>.</p>
 
   <h2 class="secthead">Full plans · coming soon</h2>
   <p class="sectsub">Here’s how plans will work once they open. Founding members and the waiting list hear first.</p>
@@ -973,7 +972,9 @@ function activate(via){
   $('inviteSub').textContent='Tap me and talk, or type it below. Take all the time you need.';$('inviteSub').hidden=false;$('typeInstead').hidden=false;
   setStatus(via?`Activated with ${via}`:'Activated','idle');
 }
-document.querySelectorAll('[data-sso]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.sso)));
+document.querySelectorAll('[data-sso]').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.sso==='Google'){try{if(pendingTask)sessionStorage.setItem('aew_pending',pendingTask)}catch(_){}b.disabled=true;$('ssoNote').textContent='Taking you to Google…';location.href='/auth/google/start';return}
+  $('ssoNote').textContent='LinkedIn sign-in is coming soon. Use Google for now.'}));
 $('ssoCancel').addEventListener('click',()=>{$('signin').hidden=true;$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle')});
 $('pricingActivate').addEventListener('click',()=>{const f=$('claimForm');f.hidden=false;$('pricingActivate').setAttribute('aria-expanded','true');f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('clName').focus(),300)});
 $('claimCancel').addEventListener('click',()=>{$('claimForm').hidden=true;$('pricingActivate').setAttribute('aria-expanded','false')});
@@ -1231,7 +1232,7 @@ document.querySelectorAll('[data-connect]').forEach(b=>b.addEventListener('click
 $('exportBtn').addEventListener('click',()=>{$('dataNote').textContent='Exports are coming soon. You’ll get everything in one file.'});
 let eraseArm=false;$('eraseBtn').addEventListener('click',()=>{if(!eraseArm){eraseArm=true;$('eraseBtn').textContent='Tap again to erase';$('dataNote').textContent='This clears what it learned about you. Your plan stays.';setTimeout(()=>{eraseArm=false;$('eraseBtn').textContent='Erase'},4000);return}
   eraseArm=false;$('eraseBtn').textContent='Erase';libItems.length=0;drawLib();$('dataNote').textContent='Erased. Your AI Employee starts fresh.'});
-$('logout').addEventListener('click',()=>{activated=false;activatedVia='';syncAcct();setModal('setModal',false);go('');
+$('logout').addEventListener('click',()=>{fetch('/auth/logout',{method:'POST',credentials:'same-origin'}).catch(()=>{});activated=false;activatedVia='';syncAcct();setModal('setModal',false);go('');
   $('invite').innerHTML='Tap to activate <span>your AI Employee.</span>';$('inviteSub').textContent='Your AI Employee starts working the moment you give it its first task.';
   panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;$('signin').hidden=true;$('composer').hidden=true;home.classList.remove('chatting');thread.innerHTML='';setStatus('Signed out','idle')});
 $('copy2').addEventListener('click',async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText($('mail2').textContent);b.textContent='Copied'}catch(_){const r=document.createRange();r.selectNodeContents($('mail2'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}setTimeout(()=>b.textContent='Copy',1800)});
@@ -1242,6 +1243,18 @@ $('copy').addEventListener('click',async e=>{
   catch(_){const r=document.createRange();r.selectNodeContents($('mail'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}
   setTimeout(()=>b.textContent='Copy',1800);
 });
+/* ---------- Real sign-in: pick up the session set by /auth/google/callback ---------- */
+(async()=>{
+  const h=location.hash;
+  if(h==='#signed-in'||h==='#signin-failed'){try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}}
+  if(h==='#signin-failed'){showSignin();$('ssoNote').textContent='Google sign-in didn’t finish. Please try again.';return}
+  try{const r=await fetch('/auth/me',{credentials:'same-origin',cache:'no-store'});if(!r.ok)return;const me=await r.json();
+    if(!me.signedIn)return;
+    try{const t=sessionStorage.getItem('aew_pending');if(t){pendingTask=t;sessionStorage.removeItem('aew_pending')}}catch(_){}
+    activate(me.provider||'Google');
+    if(me.name){const first=String(me.name).split(' ')[0];$('invite').innerHTML='';$('invite').append('I’m yours, '+first+'. ');const sp=document.createElement('span');sp.textContent='What should I take off your plate?';$('invite').append(sp)}
+  }catch(_){}
+})();
 })();
 </script>
 </body>
