@@ -1,0 +1,12 @@
+{
+  // aew-website: static site + a small Worker that passes /api/* and /auth/* to aew-forms (same origin for sign-in cookies)
+  "name": "aew-website",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/auth/*"]
+  },
+  "services": [{ "binding": "FORMS", "service": "aew-forms" }]
+}
