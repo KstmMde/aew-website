@@ -972,8 +972,9 @@ function activate(via){
   setStatus(via?`Activated with ${via}`:'Activated','idle');
 }
 document.querySelectorAll('[data-sso]').forEach(b=>b.addEventListener('click',()=>{
-  if(b.dataset.sso==='Google'){try{if(pendingTask)sessionStorage.setItem('aew_pending',pendingTask)}catch(_){}b.disabled=true;$('ssoNote').textContent='Taking you to Google…';location.href='/auth/google/start';return}
-  $('ssoNote').textContent='LinkedIn sign-in is coming soon. Use Google for now.'}));
+  const prov=b.dataset.sso;try{if(pendingTask)sessionStorage.setItem('aew_pending',pendingTask)}catch(_){}
+  document.querySelectorAll('[data-sso]').forEach(x=>x.disabled=true);$('ssoNote').textContent='Taking you to '+prov+'…';
+  location.href='/auth/'+prov.toLowerCase()+'/start'}));
 $('ssoCancel').addEventListener('click',()=>{$('signin').hidden=true;$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle')});
 $('pricingActivate').addEventListener('click',()=>{const f=$('claimForm');f.hidden=false;$('pricingActivate').setAttribute('aria-expanded','true');f.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('clName').focus(),300)});
 $('claimCancel').addEventListener('click',()=>{$('claimForm').hidden=true;$('pricingActivate').setAttribute('aria-expanded','false')});
@@ -1242,11 +1243,11 @@ $('copy').addEventListener('click',async e=>{
   catch(_){const r=document.createRange();r.selectNodeContents($('mail'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}
   setTimeout(()=>b.textContent='Copy',1800);
 });
-/* ---------- Real sign-in: pick up the session set by /auth/google/callback ---------- */
+/* ---------- Real sign-in: pick up the session set by /auth/google or /auth/linkedin callback ---------- */
 (async()=>{
   const h=location.hash;
   if(h==='#signed-in'||h==='#signin-failed'){try{history.replaceState(null,'',location.pathname+location.search)}catch(_){}}
-  if(h==='#signin-failed'){showSignin();$('ssoNote').textContent='Google sign-in didn’t finish. Please try again.';return}
+  if(h==='#signin-failed'){showSignin();$('ssoNote').textContent='Sign-in didn’t finish. Please try again.';return}
   try{const r=await fetch('/auth/me',{credentials:'same-origin',cache:'no-store'});if(!r.ok)return;const me=await r.json();
     if(!me.signedIn)return;
     try{const t=sessionStorage.getItem('aew_pending');if(t){pendingTask=t;sessionStorage.removeItem('aew_pending')}}catch(_){}
