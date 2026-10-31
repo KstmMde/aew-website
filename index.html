@@ -432,7 +432,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   <a class="item" href="#pricing" title="Pricing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><span class="label">Pricing</span></a>
   <div class="grouplabel">Your handoffs</div>
   <div class="recent" id="recent"><em>Tasks you hand off show up here.</em></div>
-  <div class="foot"><button class="item" id="openSettings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></button><a class="item" href="#pricing" title="Start your 4-week founding program"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span class="label">4-week founding program</span></a></div>
+  <div class="foot"><button class="item" id="openSettings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></button><a class="item" href="#pricing" title="Start your 4-week founding program"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg><span class="label">4-week founding program</span></a><button class="item" id="sideLogout" title="Log out" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg><span class="label">Log out</span></button></div>
 </aside>
 
 <div id="tsBox" style="position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999"></div>
@@ -482,7 +482,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
   </div>
   <form class="taskbox" id="typeInstead" autocomplete="off">
     <label class="sr" for="tbText">Type your task</label>
-    <textarea id="tbText" rows="1" placeholder="Or type the task you want off your plate…"></textarea>
+    <textarea id="tbText" rows="1" placeholder="Or type your task in your own words…"></textarea>
     <div class="tbfiles" id="tbFiles" aria-live="polite"></div>
     <div class="tbrow">
       <input type="file" id="tbFile" aria-label="Attach a file to your task" hidden accept=".pdf,.docx,.txt,.csv,.md">
@@ -749,6 +749,9 @@ function setSide(open){side.classList.toggle('open',open);$('scrim').hidden=!(op
 $('sideToggle').addEventListener('click',()=>setSide(!side.classList.contains('open')));
 $('mobToggle').addEventListener('click',()=>setSide(true));
 $('scrim').addEventListener('click',()=>setSide(false));
+// Close the open sidebar when you click anywhere outside it (desktop too, not just phones)
+document.addEventListener('click',e=>{if(side.classList.contains('open')&&!side.contains(e.target)&&!$('mobToggle').contains(e.target))setSide(false)});
+$('sideLogout').addEventListener('click',()=>$('logout').click());
 addEventListener('hashchange',()=>{try{current=location.hash.slice(1)}catch(_){}route()});route();
 const emp=$('emp');
 function setEmp(open){emp.classList.toggle('open',open);emp.setAttribute('aria-hidden',String(!open));$('empScrim').hidden=!open;if(open){setSide(false)}}
@@ -1183,7 +1186,7 @@ $('newTask').addEventListener('click',()=>{awaiting=null;busy=false;go('');threa
   panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle');
   if(matchMedia('(max-width:700px)').matches)setSide(false);G.happy=1});
 let pendingTask='';let handoffs=0;const libItems=[];
-function syncAcct(){$('acctLine').textContent=activated?`Signed in with ${activatedVia||'your account'}`:'Not activated yet';$('acctBtn').textContent=activated?'Manage':'Activate'}
+function syncAcct(){const lo=$('sideLogout');if(lo)lo.style.display=activated?'':'none';$('acctLine').textContent=activated?`Signed in with ${activatedVia||'your account'}`:'Not activated yet';$('acctBtn').textContent=activated?'Manage':'Activate'}
 function startTask(t){go('');setModal('setModal',false);if(!activated){pendingTask=t;showSignin();return}task.value=t;toReview('Here’s the task. Edit anything, then hand it off.')}
 document.querySelectorAll('[data-idea]').forEach(b=>b.addEventListener('click',()=>startTask(b.dataset.idea)));
 document.querySelectorAll('[data-goal]').forEach(b=>b.addEventListener('click',()=>startTask(`Help me set a ${b.dataset.goal.toLowerCase()} goal for the next 90 days and check in with me on it every week.`)));
