@@ -466,6 +466,8 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <label class="eyebrow" for="task">Your task, in your words</label>
       <textarea id="task" style="margin-top:10px" placeholder="Like: “Every Friday I chase down invoices that are past due. Send a friendly reminder to anyone over 14 days and give me a list of who paid.”"></textarea>
       <div class="tbfiles" id="rvFiles" aria-live="polite"></div>
+      <label class="eyebrow" for="done" style="display:block;margin-top:16px">What does done look like to you?</label>
+      <textarea id="done" style="margin-top:10px;min-height:76px" placeholder="Like: “Reminders go out every Friday, and by Monday morning I have a list of who paid and who didn’t.”"></textarea>
       <div class="row" style="margin-top:10px">
         <button class="btn go" id="send" disabled>Hand it off</button>
         <button class="link" id="more">Keep talking</button>
@@ -908,7 +910,7 @@ function drawMini(t){
 requestAnimationFrame(frame);
 
 /* ---------- Talking: no time limit, filler words cleaned up ---------- */
-const home=$('home'),panel=$('panel'),speak=$('speak'),review=$('review'),live=$('live'),task=$('task'),send=$('send'),thread=$('thread'),statusEl=$('status'),timer=$('timer');
+const home=$('home'),panel=$('panel'),speak=$('speak'),review=$('review'),live=$('live'),task=$('task'),doneBox=$('done'),send=$('send'),thread=$('thread'),statusEl=$('status'),timer=$('timer');
 const setStatus=(txt,state)=>{statusEl.textContent=txt;if(state)G.state=state;const e=document.getElementById('empStatus');if(e)e.textContent=txt||'Here and ready'};
 const FILL=/\b(um+|uh+|erm|you know|i mean)\b,?\s*/gi;
 const clean=s=>{let o=s.trim().replace(/^["“”'‘’\s]+|["“”'‘’,;:\s\-–—]+$/g,'').replace(FILL,'').replace(/\s{2,}/g,' ').replace(/\s+([,.!?])/g,'$1').trim();
@@ -936,7 +938,7 @@ function openPanel(mode){
   speak.hidden=mode!=='speak';review.hidden=mode!=='review';
 }
 function toReview(msg){
-  openPanel('review');send.disabled=!task.value.trim();
+  openPanel('review');canSend();
   setStatus(msg||(task.value?'Read it over. Edit anything.':'Type it however it comes out.'),'idle');
   task.focus();
 }
@@ -1039,8 +1041,10 @@ $('typeInstead').addEventListener('submit',e=>{e.preventDefault();
   const t=clean(tbText.value);
   if(!t){hint('Add a line about what to do with the file.',true);tbText.focus();return}
   tbText.value='';growTB();hint();G.wake=1;G.happy=1;startTask(t)});
-task.addEventListener('input',()=>{send.disabled=!task.value.trim();G.amp=Math.min(1,G.amp+.2)});
-$('example').addEventListener('click',()=>{task.value=clean('um so every Friday I chase down invoices that are past due, uh, I want a friendly reminder sent to anybody over 14 days and then give me a list of who paid');send.disabled=false;G.amp=1});
+function canSend(){send.disabled=!task.value.trim()||(!awaiting&&!doneBox.value.trim())}
+task.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
+doneBox.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
+$('example').addEventListener('click',()=>{task.value=clean('um so every Friday I chase down invoices that are past due, uh, I want a friendly reminder sent to anybody over 14 days and then give me a list of who paid');doneBox.value='Reminders go out every Friday, and by Monday morning I have a list of who paid and who didn’t.';send.disabled=false;G.amp=1});
 
 let pace=1100;
 document.querySelectorAll('.pace button').forEach(b=>b.addEventListener('click',()=>{
@@ -1055,7 +1059,8 @@ function sharpen(s){
   const when=(s.match(/\b((?:every|each)\s+(?:other\s+)?(?:day|morning|afternoon|evening|night|week|weekday|weekend|month|quarter|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday|hour)s?|daily|weekly|monthly|quarterly|yearly|nightly)\b/i)||[])[0];
   return {t,when};
 }
-send.addEventListener('click',()=>{const t=clean(task.value);if(!t)return;task.value='';if(awaiting){const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}runTask(t)});
+send.addEventListener('click',()=>{const t=clean(task.value);if(!t)return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
+  const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
 let busy=false,lastTask='',awaiting=null;
 const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
 async function runTask(text,opts={}){
@@ -1173,7 +1178,7 @@ async function converse(msg){
   for(const [re,ans,page] of REPLIES)if(re.test(low)){reply(ans,page?[['Tell me more',()=>go(page)]]:null);return}
   if(msg.split(/\s+/).length>=3&&!/\?\s*$/.test(msg)){
     const sz=sizeOf(msg);
-    reply(`Want me to take that on as a task?`,[['Yes, take it on',()=>runTask(clean(msg),{silent:true}),true],['Just talking',()=>reply('Got it, just talking. I’m here whenever you need something done.')]]);return}
+    reply(`Want me to take that on as a task?`,[['Yes, take it on',async()=>{const dn=(await askUser('What does done look like to you?')).trim();runTask(clean(msg)+'\n\nWhat done looks like: '+dn,{silent:true})},true],['Just talking',()=>reply('Got it, just talking. I’m here whenever you need something done.')]]);return}
   if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
   reply('I’m here. Tell me what you need done, or ask me about any task.');
 }
