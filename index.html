@@ -1128,7 +1128,7 @@ async function runReal(text,files,sz,fi){
   let id,token;
   let cf_token='';try{cf_token=await getHumanToken()}catch(_){fail('I couldn’t confirm you’re a person. Refresh the page and try again.');return}
   try{const fd=new FormData();fd.append('text',text);fd.append('cf_token',cf_token);if(AEW_VID)fd.append('visitor',AEW_VID);files.forEach(f=>fd.append('files',f,f.name));
-    const r=await fetch(AEW_API+'/api/tasks',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
+    const r=await fetch('/auth/task',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
     if(!r.ok||!d.id)throw new Error(d.error||'I couldn’t reach your AI Employee.');id=d.id;token=d.token}
   catch(e){fail(e.message==='Failed to fetch'?'I couldn’t reach your AI Employee.':e.message);return}
   step('Waiting its turn');let last='queued',misses=0;
