@@ -404,6 +404,22 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 @media (max-width:800px){.steps,.tiers,.trial{grid-template-columns:1fr}.pace{margin-left:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* cloud flow: quick questions with 5 answer boxes, playback, dictation */
+.msg.ask .q{margin-top:2px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.opt{text-align:left;padding:11px 13px;border-radius:14px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--cloud);font:500 15px/1.35 var(--body);cursor:pointer}
+.opt:hover,.opt:focus-visible{border-color:var(--mint)}
+.opt.other-btn{grid-column:1/-1;color:var(--mist);border-style:dashed}
+.other{margin-top:10px;display:grid;gap:8px}
+.other textarea{min-height:60px;font-size:16px;background:var(--ink)}
+.orow{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.cbtn.rec{color:var(--mint);box-shadow:0 0 0 2px color-mix(in srgb,var(--mint) 55%,transparent);animation:recpulse 1.4s ease-in-out infinite}
+@keyframes recpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--mint) 20%,transparent)}}
+.dlabel{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px}
+.dlabel .cbtn{border:1px solid var(--line)}
+.msg.plan .sum{margin-top:2px}
+.answered .opts,.answered .other,.answered .row{opacity:.5;pointer-events:none}
+@media(max-width:480px){.opts{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -466,7 +482,7 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
       <label class="eyebrow" for="task">Your task, in your words</label>
       <textarea id="task" style="margin-top:10px" placeholder="Like: “Every Friday I chase down invoices that are past due. Send a friendly reminder to anyone over 14 days and give me a list of who paid.”"></textarea>
       <div class="tbfiles" id="rvFiles" aria-live="polite"></div>
-      <label class="eyebrow" for="done" style="display:block;margin-top:16px">What does done look like to you?</label>
+      <div class="dlabel"><label class="eyebrow" for="done">What does done look like to you?</label><button type="button" class="cbtn" id="doneMic" aria-pressed="false" aria-label="Speak what done looks like" title="Speak it"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>
       <textarea id="done" style="margin-top:10px;min-height:76px" placeholder="Like: “Reminders go out every Friday, and by Monday morning I have a list of who paid and who didn’t.”"></textarea>
       <div class="row" style="margin-top:10px">
         <button class="btn go" id="send" disabled>Hand it off</button>
@@ -969,6 +985,23 @@ function stopListen(){
   try{rec&&rec.stop()}catch(_){}
   task.value=clean(finalText);
 }
+/* Dictation into a specific box (done step, "Other" answers, chat). One mic at a time; words land in that box. */
+let dict=null;
+function stopDictate(){if(!dict)return;const d=dict;dict=null;try{d.rec.onend=null;d.rec.stop()}catch(_){}d.btn.classList.remove('rec');d.btn.setAttribute('aria-pressed','false');stopMeter();if(G.state==='listening')G.state='idle'}
+function dictate(field,btn,onChange){
+  if(dict&&dict.btn===btn){stopDictate();return}
+  stopDictate();
+  if(!SR){field.placeholder='Voice isn’t available in this browser. Type it instead.';field.focus();return}
+  if(listening){listening=false;try{rec&&rec.abort()}catch(_){}clearInterval(tick);clearTimeout(quiet);timer.textContent='';stopMeter()}
+  const r=new SR();r.continuous=true;r.interimResults=true;r.lang='en-US';
+  const base=field.value.trim()?field.value.replace(/\s*$/,' '):'';let fin='';
+  r.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];if(x.isFinal)fin+=x[0].transcript+' ';else interim+=x[0].transcript}
+    field.value=(base+fin+interim).replace(/\s{2,}/g,' ');if(onChange)onChange();G.amp=1};
+  r.onerror=e=>{if(/not-allowed|service-not-allowed|audio-capture/.test(e.error)){stopDictate();field.placeholder='I can’t hear you here. Type it instead.'}};
+  r.onend=()=>{if(dict&&dict.rec===r){try{r.start()}catch(_){stopDictate()}}};
+  dict={rec:r,btn};btn.classList.add('rec');btn.setAttribute('aria-pressed','true');
+  try{r.start();startMeter();G.state='listening';field.focus()}catch(_){stopDictate()}
+}
 let activated=false;const CAP=100;let used=0;
 function showSignin(){$('invite').hidden=true;$('inviteSub').hidden=true;$('typeInstead').hidden=true;$('signin').hidden=false;G.wake=1;setStatus('Almost there','idle');}
 let activatedVia='';
@@ -1044,6 +1077,7 @@ $('typeInstead').addEventListener('submit',e=>{e.preventDefault();
 function canSend(){send.disabled=!task.value.trim()||(!awaiting&&!doneBox.value.trim())}
 task.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
 doneBox.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
+$('doneMic').addEventListener('click',()=>dictate(doneBox,$('doneMic'),canSend));
 $('example').addEventListener('click',()=>{task.value=clean('um so every Friday I chase down invoices that are past due, uh, I want a friendly reminder sent to anybody over 14 days and then give me a list of who paid');doneBox.value='Reminders go out every Friday, and by Monday morning I have a list of who paid and who didn’t.';send.disabled=false;G.amp=1});
 
 let pace=1100;
@@ -1059,9 +1093,9 @@ function sharpen(s){
   const when=(s.match(/\b((?:every|each)\s+(?:other\s+)?(?:day|morning|afternoon|evening|night|week|weekday|weekend|month|quarter|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday|hour)s?|daily|weekly|monthly|quarterly|yearly|nightly)\b/i)||[])[0];
   return {t,when};
 }
-send.addEventListener('click',()=>{const t=clean(task.value);if(!t)return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
+send.addEventListener('click',()=>{stopDictate();const t=clean(task.value);if(!t)return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
   const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
-let busy=false,lastTask='',awaiting=null;
+let busy=false,lastTask='',awaiting=null,CLOUD=false,qaPending=null;
 const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
 async function runTask(text,opts={}){
   if(busy)return;busy=true;
@@ -1072,15 +1106,15 @@ async function runTask(text,opts={}){
   await wait(900);
   typing.innerHTML='<small>Your AI Employee</small>On it.';
   await wait(pace*.8);
-  if(text.split(/\s+/).length<7&&!sharpen(text).when){
+  if(!CLOUD&&text.split(/\s+/).length<7&&!sharpen(text).when){
     const ans=await askUser('So I get this right: who is it for, and when do you need it done?');
     text=clean(text.replace(/[.!?]$/,'')+', '+ans.replace(/^[A-Z]/,c=>c.toLowerCase()));
     add('aew','<small>Your AI Employee</small>Perfect, that’s what I needed.');await wait(pace*.6);setStatus('Got it','working');
   }
   lastTask=text;
   const {t,when}=sharpen(text);
-  add('aew',`<small>Here’s what I heard</small>${esc(t)}${when&&!AEW_API?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="note">If that’s off, just tell me in your own words.</span>`);
-  await wait(pace);
+  if(!CLOUD)add('aew',`<small>Here’s what I heard</small>${esc(t)}${when&&!AEW_API?`<br><span class="note">Runs ${esc(when.toLowerCase())}. I’ll keep it on the schedule.</span>`:''}<br><span class="note">If that’s off, just tell me in your own words.</span>`);
+  if(!CLOUD)await wait(pace);
   if(AEW_API){await runReal(text,files,sz,fi);busy=false;showComposer();return}
   setStatus('Working it through','working');
   /* the working line: dots, what it's doing right now, a running clock, tap to see the steps */
@@ -1125,12 +1159,13 @@ async function runReal(text,files,sz,fi){
     used=Math.max(0,used-sz.u);useTask(0);setStatus('Needs another try','idle');
     add('aew','<small>Your AI Employee</small>'+esc(msg||'I couldn’t finish this one.')+' You won’t be charged for it.')};
   step('Sending it over');
-  let id,token;
+  let id,token,qa=null;
   let cf_token='';try{cf_token=await getHumanToken()}catch(_){fail('I couldn’t confirm you’re a person. Refresh the page and try again.');return}
   try{const fd=new FormData();fd.append('text',text);fd.append('cf_token',cf_token);if(AEW_VID)fd.append('visitor',AEW_VID);files.forEach(f=>fd.append('files',f,f.name));
     const r=await fetch('/auth/task',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
-    if(!r.ok||!d.id)throw new Error(d.error||'I couldn’t reach your AI Employee.');id=d.id;token=d.token}
+    if(!r.ok||!d.id)throw new Error(d.error||'I couldn’t reach your AI Employee.');id=d.id;token=d.token;if(d.flow==='qa'&&d.step)qa=d.step}
   catch(e){fail(e.message==='Failed to fetch'?'I couldn’t reach your AI Employee.':e.message);return}
+  if(qa){clearInterval(clock);card.remove();await cloudFlow(id,token,qa,text,sz,fi);return}
   step('Waiting its turn');let last='queued',misses=0;
   for(const end=Date.now()+12*60*1000;Date.now()<end;){
     await wait(2500);
@@ -1151,11 +1186,99 @@ async function runReal(text,files,sz,fi){
   }
   fail('This is taking longer than it should.');
 }
+/* ---------- Cloud flow: the AI Employee asks what it needs (inside the same task), plays it back, then does the work. No timeouts. ---------- */
+const MIC_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+async function cpost(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));return {ok:r.ok,status:r.status,d}}
+const typingDots=()=>add('aew','<span class="dots" aria-label="Typing"><i></i><i></i><i></i></span>');
+function answerBox(placeholder,label,onSend){
+  const w=document.createElement('div');w.className='other';
+  w.innerHTML='<textarea rows="2"></textarea><div class="orow"><button type="button" class="cbtn omic" aria-pressed="false" aria-label="Speak your answer" title="Speak it">'+MIC_SVG+'</button><button type="button" class="btn go osend" disabled></button></div>';
+  const ta=w.querySelector('textarea'),mic=w.querySelector('.omic'),sb=w.querySelector('.osend');
+  ta.placeholder=placeholder;ta.setAttribute('aria-label',placeholder);sb.textContent=label;
+  const upd=()=>sb.disabled=!ta.value.trim();
+  ta.addEventListener('input',upd);
+  ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(ta.value.trim())sb.click()}});
+  mic.addEventListener('click',()=>dictate(ta,mic,upd));
+  sb.addEventListener('click',()=>{const v=ta.value.trim();if(!v)return;stopDictate();onSend(v)});
+  return w}
+function lock(el){stopDictate();el.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);el.classList.add('answered')}
+async function cloudFlow(id,token,step,text,sz,fi){
+  let qn=0;
+  for(;;){
+    if(step.action==='ask'){
+      qn++;setStatus('Quick question','idle');fi.sub('Asking a quick question');
+      const m=add('aew ask','<small>Quick question</small><div class="q"></div><div class="opts"></div>');
+      m.querySelector('.q').textContent=step.question;
+      const ans=await new Promise(res=>{
+        qaPending=res;
+        const box=m.querySelector('.opts');
+        step.options.slice(0,4).forEach(o=>{const b=document.createElement('button');b.type='button';b.className='opt';b.textContent=o;b.addEventListener('click',()=>res(o));box.appendChild(b)});
+        const ob=document.createElement('button');ob.type='button';ob.className='opt other-btn';ob.textContent='Other: I’ll say it my way';box.appendChild(ob);
+        ob.addEventListener('click',()=>{ob.hidden=true;const w=answerBox('Type or speak your answer…','Send',res);m.appendChild(w);w.querySelector('textarea').focus()});
+      });
+      qaPending=null;lock(m);add('you',esc(ans));
+      const typing=typingDots();G.state='working';
+      let r;try{r=await cpost('/auth/task/answer',{id,token,answer:ans})}catch(_){r={ok:false,d:{}}}
+      typing.remove();
+      if(!r.ok||!r.d.step){add('aew','<small>Your AI Employee</small>'+esc(r.d.error||'I lost the connection for a second.')+' Pick your answer again.');qn--;continue}
+      step=r.d.step;continue}
+    if(step.action==='decline'){used=Math.max(0,used-sz.u);useTask(0);fi.sub('Not taken on');setStatus('Needs a different task','idle');
+      add('aew','<small>Your AI Employee</small>'+esc(step.reason)+' This one didn’t use a task.');return}
+    setStatus('Ready when you are','idle');fi.sub('Waiting for your OK');
+    const p=add('aew plan','<small>Here’s the plan</small><div class="sum"></div><div class="row" style="margin-top:12px"><button class="btn go" type="button" data-go>Hand it off</button><button class="link" type="button" data-change>Change something</button></div>');
+    p.querySelector('.sum').textContent=step.summary;
+    const choice=await new Promise(res=>{
+      qaPending=v=>res({change:v});
+      p.querySelector('[data-go]').addEventListener('click',()=>res({go:true}));
+      p.querySelector('[data-change]').addEventListener('click',e=>{e.currentTarget.hidden=true;const w=answerBox('What should change?','Update the plan',v=>res({change:v}));p.appendChild(w);w.querySelector('textarea').focus()})});
+    qaPending=null;lock(p);
+    if(choice.change){add('you',esc(choice.change));const typing=typingDots();
+      let r;try{r=await cpost('/auth/task/answer',{id,token,answer:choice.change,change:true})}catch(_){r={ok:false,d:{}}}typing.remove();
+      if(!r.ok||!r.d.step){add('aew','<small>Your AI Employee</small>'+esc(r.d.error||'I lost the connection for a second.')+' Try that change again.')}
+      else step=r.d.step;
+      continue}
+    add('you','Hand it off');
+    await cloudWork(id,token,'/auth/task/go',{id,token},text,fi);return}
+}
+async function cloudWork(id,token,path,body,text,fi){
+  setStatus('On it','working');G.state='working';if(fi)fi.sub('On it');
+  const card=add('aew work','<button class="workline" aria-expanded="false"><span class="spark" aria-hidden="true"><i></i><i></i><i></i></span><span class="doing">On it</span><span class="chev" aria-hidden="true">›</span></button><div class="detail" hidden><ul class="trail"></ul></div>');
+  const wl=card.querySelector('.workline'),det=card.querySelector('.detail'),doing=card.querySelector('.doing'),trail=card.querySelector('.trail');
+  wl.addEventListener('click',()=>{det.hidden=!det.hidden;wl.setAttribute('aria-expanded',String(!det.hidden))});
+  const step=t=>{trail.querySelectorAll('li').forEach(l=>l.classList.add('done'));const li=document.createElement('li');li.innerHTML='<div></div>';li.firstChild.textContent=t;trail.appendChild(li);doing.textContent=t;if(fi)fi.sub(t)};
+  step('Reading the brief');
+  const steps=['Working it through','Checking it against what you asked','Packaging it for you'];let si=0,fin=null;
+  const ticker=setInterval(()=>{if(si<steps.length)step(steps[si++])},7000);
+  cpost(path,body).then(r=>{if(r.ok&&(r.d.status==='done'||r.d.status==='error'))fin=fin||r.d;else if(!r.ok&&r.d.error)fin=fin||{status:'error',error:r.d.error==='newtask'?r.d.message:r.d.error}}).catch(()=>{});
+  while(!fin){await wait(4000);if(fin)break;
+    try{const r=await fetch(`${AEW_API}/api/tasks/${id}`,{headers:{Authorization:'Bearer '+token}});const d=await r.json();if(r.ok&&(d.status==='done'||d.status==='error'))fin=d}catch(_){}}
+  clearInterval(ticker);trail.querySelectorAll('li').forEach(l=>l.classList.add('done'));card.classList.add('finished');
+  if(fin.status==='error'){doing.textContent='Didn’t finish';if(fi)fi.sub('Didn’t finish');setStatus('Needs another try','idle');add('aew','<small>Your AI Employee</small>'+esc(fin.error||'I couldn’t finish this one.'));return}
+  doing.textContent='Worked through it';showResult(id,token,fin,text,fi)}
+function showResult(id,token,d,text,fi){
+  const m=add('aew result','<small>Your finished work</small><div class="out"></div><div class="row" style="margin-top:12px"><button class="btn" type="button" data-copy>Copy</button><button class="link" type="button" data-rev></button><button class="link" type="button" data-again>Tell me another task</button></div>');
+  const out=m.querySelector('.out');out.innerHTML=mdRender(d.result);
+  m.querySelector('[data-copy]').addEventListener('click',async e=>{try{await navigator.clipboard.writeText(out.innerText.trim());e.target.textContent='Copied'}catch(_){e.target.textContent='Select and copy'}});
+  m.querySelector('[data-again]').addEventListener('click',()=>$('cmsg').focus());
+  const rv=m.querySelector('[data-rev]'),left=d.revisionsLeft??0;
+  if(left>0){rv.textContent=`Request changes (${left} left)`;rv.addEventListener('click',()=>{rv.hidden=true;const w=answerBox('What should change?','Make the change',async v=>{lock(m);add('you',esc(v));await cloudWork(id,token,'/auth/task/revise',{id,token,change:v},text,fi)});m.appendChild(w);w.querySelector('textarea').focus()})}
+  else rv.hidden=true;
+  setStatus('Done','done');G.happy=1;
+  if(fi){fi.done('Done. Ready for your OK');recordDone(titleOf(sharpen(text).t),text)}
+}
+/* Activity feed after a reload: your cloud tasks come back, finished ones open with a tap */
+function feedOpen(el,t){el.style.cursor='pointer';el.addEventListener('click',()=>{setEmp(false);go('');openPanel('none');thread.innerHTML='';showResult(t.id,t.token,t,t.title,null);showComposer()})}
+async function loadMyTasks(){try{const r=await fetch('/auth/my-tasks',{credentials:'same-origin',cache:'no-store'});const d=await r.json();
+  (d.tasks||[]).slice().reverse().forEach(t=>{const fi=feedItem(t.title);const el=$('today').firstElementChild;$('empCount').textContent='0';$('empCount').hidden=true;
+    if(t.status==='done'){fi.done('Done. Tap to open');feedOpen(el,t)}
+    else if(t.status==='error')fi.sub('Didn’t finish');
+    else{fi.sub('Working on it');(async()=>{for(;;){await wait(6000);try{const x=await fetch(`${AEW_API}/api/tasks/${t.id}`,{headers:{Authorization:'Bearer '+t.token}});const s=await x.json();
+      if(s.status==='done'){Object.assign(t,s);fi.done('Done. Tap to open');feedOpen(el,t);return}if(s.status==='error'){fi.sub('Didn’t finish');return}}catch(_){}}})()}})}catch(_){}}
 /* ---------- Agent flow: keep the conversation going ---------- */
 function showComposer(){if(!activated)return;$('composer').hidden=false;home.classList.add('chatting')}
 const cmsg=$('cmsg');
 cmsg.addEventListener('input',()=>$('csend').disabled=!cmsg.value.trim());
-$('cmic').addEventListener('click',()=>{if(busy&&!awaiting)return;startListen()});
+$('cmic').addEventListener('click',()=>{if(awaiting||qaPending){dictate(cmsg,$('cmic'),()=>$('csend').disabled=!cmsg.value.trim());return}if(busy)return;startListen()});
 const REPLIES=[
   [/\b(cost|price|pricing|how much|charge)\b/i,'Right now there are 10 founding spots: 4 weeks, the first 3 free. Full plans are coming soon.','pricing'],
   [/\b(twin|digital twin)\b/i,'Your Digital Twin is what I grow into as we work together: your know-how, your standards, your voice. You earn it over time.','twin'],
@@ -1182,7 +1305,8 @@ async function converse(msg){
   if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
   reply('I’m here. Tell me what you need done, or ask me about any task.');
 }
-function sendMsg(){const m=cmsg.value.trim();if(!m)return;cmsg.value='';$('csend').disabled=true;
+function sendMsg(){stopDictate();const m=cmsg.value.trim();if(!m)return;cmsg.value='';$('csend').disabled=true;
+  if(qaPending){const r=qaPending;qaPending=null;r(m);return}
   if(awaiting){const r=awaiting;awaiting=null;add('you',esc(m));r(m);return}
   if(busy){add('you',esc(m));reply('Noted. I’ll finish this one first, then get to that.');return}
   converse(m)}
@@ -1261,7 +1385,7 @@ $('copy').addEventListener('click',async e=>{
   try{const r=await fetch('/auth/me',{credentials:'same-origin',cache:'no-store'});if(!r.ok)return;const me=await r.json();
     if(!me.signedIn)return;
     try{const t=sessionStorage.getItem('aew_pending');if(t){pendingTask=t;sessionStorage.removeItem('aew_pending')}}catch(_){}
-    activate(me.provider||'Google');
+    activate(me.provider||'Google');CLOUD=!!me.cloud;if(CLOUD)loadMyTasks();
     if(me.name){const first=String(me.name).split(' ')[0];$('invite').innerHTML='';$('invite').append('Welcome, '+first+'. ');const sp=document.createElement('span');sp.textContent='Tell me the task in your own words.';$('invite').append(sp)}
   }catch(_){}
 })();
