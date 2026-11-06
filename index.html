@@ -557,7 +557,7 @@ body.dv-open{overflow:hidden}
     <textarea id="tbText" rows="1" placeholder="Or type your task in your own words…"></textarea>
     <div class="tbfiles" id="tbFiles" aria-live="polite"></div>
     <div class="tbrow">
-      <input type="file" id="tbFile" aria-label="Attach a file to your task" hidden accept=".pdf,.docx,.txt,.csv,.md">
+      <input type="file" id="tbFile" aria-label="Attach a file to your task" hidden accept=".pdf,.docx,.xlsx,.txt,.csv,.md">
       <button type="button" class="cbtn" id="tbAttach" aria-label="Upload a file" title="Upload a file (1 per task, up to 1.5 MB)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg></button>
       <span class="tbhint" id="tbHint">Upload one file (PDF, Word, TXT or CSV) if it helps explain the job.</span>
       <button type="submit" class="btn go tbgo" id="tbSend" disabled>Hand it off</button>
@@ -1163,7 +1163,7 @@ function renderFiles(){
       c.querySelector('button').addEventListener('click',()=>{attached.splice(i,1);renderFiles();hint()});box.appendChild(c)})});
   tbSend.disabled=!tbText.value.trim()&&!attached.length}
 function addFiles(list){let skipped=0;
-  for(const f of list){if(attached.length>=MAXF){skipped++;continue}if(!OKX.includes((f.name.split('.').pop()||'').toLowerCase())){hint('For now I can read PDF, Word (.docx), TXT, CSV or MD files.',true);fileRefused=f.name+' isn’t a type I can read yet (PDF, Word .docx, TXT, CSV or MD)';continue}if(f.size>MAXB){hint(`${f.name} is over 1.5 MB. Try a smaller one.`,true);fileRefused=f.name+' is over 1.5 MB';continue}
+  for(const f of list){if(attached.length>=MAXF){skipped++;continue}const fx=(f.name.split('.').pop()||'').toLowerCase();if(!OKX.includes(fx)&&!(CLOUD&&fx==='xlsx')){hint(CLOUD?'For now I can read PDF, Word (.docx), Excel (.xlsx), TXT, CSV or MD files.':'For now I can read PDF, Word (.docx), TXT, CSV or MD files.',true);fileRefused=f.name+' isn’t a type I can read yet (PDF, Word .docx, '+(CLOUD?'Excel .xlsx, ':'')+'TXT, CSV or MD)';continue}if(f.size>MAXB){hint(`${f.name} is over 1.5 MB. Try a smaller one.`,true);fileRefused=f.name+' is over 1.5 MB';continue}
     if(!attached.some(a=>a.name===f.name&&a.size===f.size)){attached.push(f);fileRefused=''}}
   if(skipped)hint('One file per task while you’re trying it out.',true);renderFiles();G.wake=1;G.amp=1}
 const filesHTML=()=>attached.map(f=>`<span class="chip"><span class="nm">${esc(f.name)}</span><span class="sz">${kb(f.size)}</span></span>`).join('');
@@ -1199,8 +1199,8 @@ function guardSend(text,final){
   const say=m=>add('aew','<small>Before I send it</small>'+esc(m));
   if(text.length>TASK_MAX){say('That task is '+text.length.toLocaleString()+' characters. The limit is '+TASK_MAX.toLocaleString()+'. Trim it a little, or attach the long part as a file, and send again.');return false}
   const key=text.length+'|'+attached.length;
-  if(!nudged&&fileRefused&&!attached.length&&warnedFor!=='r'+key){warnedFor='r'+key;say(fileRefused+', so it isn’t attached. Attach a file I can read (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
-  if(!nudged&&!attached.length&&MENTIONS_FILE.test(text)&&warnedFor!=='m'+key){warnedFor='m'+key;say('Your task mentions a list or file, but nothing is attached. Attach it (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
+  if(!nudged&&fileRefused&&!attached.length&&warnedFor!=='r'+key){warnedFor='r'+key;say(fileRefused+', so it isn’t attached. Attach a file I can read (PDF, Word, Excel, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
+  if(!nudged&&!attached.length&&MENTIONS_FILE.test(text)&&warnedFor!=='m'+key){warnedFor='m'+key;say('Your task mentions a list or file, but nothing is attached. Attach it (PDF, Word, Excel, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
   if(warnedFor)nudged=true;if(final)nudged=false;
   fileRefused='';warnedFor='';return true}
 $('example').addEventListener('click',()=>{task.value=clean('um so every Friday I chase down invoices that are past due, uh, I want a friendly reminder sent to anybody over 14 days and then give me a list of who paid');doneBox.value='Reminders go out every Friday, and by Monday morning I have a list of who paid and who didn’t.';send.disabled=false;G.amp=1});
