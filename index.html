@@ -420,6 +420,9 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .msg.plan .sum{margin-top:2px}
 .answered .opts,.answered .other,.answered .row{opacity:.5;pointer-events:none}
 @media(max-width:480px){.opts{grid-template-columns:1fr}}
+.lenc{font-size:12px;opacity:.7;margin-top:4px;text-align:right}
+.lenc.warn{opacity:1;color:#c98a12}
+.lenc.err{opacity:1;color:#d24b4b;font-weight:600}
 </style>
 </head>
 <body>
@@ -1058,8 +1061,8 @@ function renderFiles(){
       c.querySelector('button').addEventListener('click',()=>{attached.splice(i,1);renderFiles();hint()});box.appendChild(c)})});
   tbSend.disabled=!tbText.value.trim()&&!attached.length}
 function addFiles(list){let skipped=0;
-  for(const f of list){if(attached.length>=MAXF){skipped++;continue}if(!OKX.includes((f.name.split('.').pop()||'').toLowerCase())){hint('For now I can read PDF, Word (.docx), TXT, CSV or MD files.',true);continue}if(f.size>MAXB){hint(`${f.name} is over 1.5 MB. Try a smaller one.`,true);continue}
-    if(!attached.some(a=>a.name===f.name&&a.size===f.size))attached.push(f)}
+  for(const f of list){if(attached.length>=MAXF){skipped++;continue}if(!OKX.includes((f.name.split('.').pop()||'').toLowerCase())){hint('For now I can read PDF, Word (.docx), TXT, CSV or MD files.',true);fileRefused=f.name+' isn’t a type I can read yet (PDF, Word .docx, TXT, CSV or MD)';continue}if(f.size>MAXB){hint(`${f.name} is over 1.5 MB. Try a smaller one.`,true);fileRefused=f.name+' is over 1.5 MB';continue}
+    if(!attached.some(a=>a.name===f.name&&a.size===f.size)){attached.push(f);fileRefused=''}}
   if(skipped)hint('One file per task while you’re trying it out.',true);renderFiles();G.wake=1;G.amp=1}
 const filesHTML=()=>attached.map(f=>`<span class="chip"><span class="nm">${esc(f.name)}</span><span class="sz">${kb(f.size)}</span></span>`).join('');
 function growTB(){tbText.style.height='auto';tbText.style.height=Math.min(tbText.scrollHeight,220)+'px'}
@@ -1073,11 +1076,30 @@ $('typeInstead').addEventListener('drop',e=>{if(e.dataTransfer?.files?.length)ad
 $('typeInstead').addEventListener('submit',e=>{e.preventDefault();
   const t=clean(tbText.value);
   if(!t){hint('Add a line about what to do with the file.',true);tbText.focus();return}
+  if(!guardSend(t))return;
   tbText.value='';growTB();hint();G.wake=1;G.happy=1;startTask(t)});
 function canSend(){send.disabled=!task.value.trim()||(!awaiting&&!doneBox.value.trim())}
 task.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
 doneBox.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
 $('doneMic').addEventListener('click',()=>dictate(doneBox,$('doneMic'),canSend));
+/* ---------- Length limits and file checks (Nov 6 2026). Only for accounts on the new flow (CLOUD) until rollout. ---------- */
+const TASK_MAX=20000,ANSWER_MAX=8000;let fileRefused='',warnedFor='';
+function lenCounter(el,max,extra){const c=document.createElement('div');c.className='lenc';c.hidden=true;c.setAttribute('aria-live','polite');el.insertAdjacentElement('afterend',c);
+  const upd=()=>{if(!CLOUD){c.hidden=true;return}const n=el.value.length+(extra?extra():0);c.hidden=false;
+    c.textContent=n.toLocaleString()+' / '+max.toLocaleString()+' characters'+(n>max?'. Too long to send: trim it, or attach the long part as a file.':n>=max*.8?'. Getting close to the limit.':'');
+    c.classList.toggle('err',n>max);c.classList.toggle('warn',n>=max*.8&&n<=max)};
+  el.addEventListener('input',upd);return upd}
+const updTaskLen=lenCounter(task,TASK_MAX,()=>doneBox.value.length+25),updDoneLen=lenCounter(doneBox,TASK_MAX,()=>task.value.length+25),updTbLen=lenCounter(tbText,TASK_MAX);
+task.addEventListener('input',updDoneLen);doneBox.addEventListener('input',updTaskLen);
+const MENTIONS_FILE=/\b(attach(ed|ing|ment)?|upload(ed|ing)?|my(\s+[\w-]+){0,2}\s+(list|spreadsheet|sheet|file|document|csv|register|tracker|records?)|(list|file|spreadsheet|sheet|csv|document|register|tracker)\s+(that\s+)?(I|we)\s+(provide|attach|send|share|have|keep|gave|made))\b/i;
+function guardSend(text){
+  if(!CLOUD)return true;
+  const say=m=>add('aew','<small>Before I send it</small>'+esc(m));
+  if(text.length>TASK_MAX){say('That task is '+text.length.toLocaleString()+' characters. The limit is '+TASK_MAX.toLocaleString()+'. Trim it a little, or attach the long part as a file, and send again.');return false}
+  const key=text.length+'|'+attached.length;
+  if(fileRefused&&!attached.length&&warnedFor!=='r'+key){warnedFor='r'+key;say(fileRefused+', so it isn’t attached. Attach a file I can read (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
+  if(!attached.length&&MENTIONS_FILE.test(text)&&warnedFor!=='m'+key){warnedFor='m'+key;say('Your task mentions a list or file, but nothing is attached. Attach it (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
+  fileRefused='';warnedFor='';return true}
 $('example').addEventListener('click',()=>{task.value=clean('um so every Friday I chase down invoices that are past due, uh, I want a friendly reminder sent to anybody over 14 days and then give me a list of who paid');doneBox.value='Reminders go out every Friday, and by Monday morning I have a list of who paid and who didn’t.';send.disabled=false;G.amp=1});
 
 let pace=1100;
@@ -1094,7 +1116,7 @@ function sharpen(s){
   return {t,when};
 }
 send.addEventListener('click',()=>{stopDictate();const t=clean(task.value);if(!t)return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
-  const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
+  const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}if(!guardSend(t+'\n\nWhat done looks like: '+dn))return;task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
 let busy=false,lastTask='',awaiting=null,CLOUD=false,qaPending=null;
 const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
 async function runTask(text,opts={}){
@@ -1195,8 +1217,8 @@ function answerBox(placeholder,label,onSend){
   w.innerHTML='<textarea rows="2"></textarea><div class="orow"><button type="button" class="cbtn omic" aria-pressed="false" aria-label="Speak your answer" title="Speak it">'+MIC_SVG+'</button><button type="button" class="btn go osend" disabled></button></div>';
   const ta=w.querySelector('textarea'),mic=w.querySelector('.omic'),sb=w.querySelector('.osend');
   ta.placeholder=placeholder;ta.setAttribute('aria-label',placeholder);sb.textContent=label;
-  const upd=()=>sb.disabled=!ta.value.trim();
-  ta.addEventListener('input',upd);
+  const upd=()=>sb.disabled=!ta.value.trim()||(CLOUD&&ta.value.length>ANSWER_MAX);
+  ta.addEventListener('input',upd);lenCounter(ta,ANSWER_MAX);
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(ta.value.trim())sb.click()}});
   mic.addEventListener('click',()=>dictate(ta,mic,upd));
   sb.addEventListener('click',()=>{const v=ta.value.trim();if(!v)return;stopDictate();onSend(v)});
