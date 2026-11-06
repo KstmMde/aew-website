@@ -1015,7 +1015,8 @@ function docModel(src,text){
   if(m0){title=m0[1].replace(/\*\*/g,'').trim();L.shift()}
   if(!title)title=titleOf(sharpen(String(text||'Your finished work')).t);
   const secs=[];let cur={h:'',lines:[]};
-  for(const l of L){const h=l.match(/^\s*#{1,2}\s+(.+?)\s*#*$/)||l.match(/^\s*\*\*([^*|]{2,80})\*\*:?\s*$/);
+  const hasMd=L.some(l=>/^\s*#{1,2}\s+/.test(l));
+  for(const l of L){const h=l.match(/^\s*#{1,2}\s+(.+?)\s*#*$/)||(!hasMd&&l.match(/^\s*\*\*([^*|]{2,80})\*\*:?\s*$/));
     if(h){if(cur.h||cur.lines.join('').trim())secs.push(cur);cur={h:h[1].replace(/\*\*/g,'').replace(/:$/,'').trim(),lines:[]}}else cur.lines.push(l)}
   if(cur.h||cur.lines.join('').trim())secs.push(cur);
   let glance=null;const gi=secs.findIndex(s=>/^(at a glance|in short|summary|tl;?dr)\b/i.test(s.h));
