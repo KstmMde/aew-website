@@ -435,7 +435,7 @@ body.dv-open{overflow:hidden}
 .dv-title{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:10px 0 20px;letter-spacing:-.01em;color:var(--cloud)}
 .dv-glance{border:1px solid color-mix(in srgb,var(--mint) 45%,var(--line));background:color-mix(in srgb,var(--mint) 8%,var(--deep));border-radius:18px;padding:18px 20px;margin-bottom:18px;font-size:17px}
 .dv-tag{display:inline-block;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:var(--mint);border-radius:999px;padding:5px 10px;margin-bottom:10px}
-.dv-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 14px;border-bottom:1px solid var(--line)}
+.dv-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 14px;border-bottom:1px solid var(--line);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .dv-tabs button{white-space:nowrap;border:1px solid var(--line);background:var(--deep);color:var(--cloud);border-radius:999px;padding:8px 14px;font:600 14px/1 inherit;cursor:pointer}
 .dv-tabs button:hover{border-color:var(--mint)}
 .dv-doc section{padding:20px 0;border-bottom:1px solid var(--line);scroll-margin-top:72px}
@@ -1015,14 +1015,14 @@ function docModel(src,text){
   if(m0){title=m0[1].replace(/\*\*/g,'').trim();L.shift()}
   if(!title)title=titleOf(sharpen(String(text||'Your finished work')).t);
   const secs=[];let cur={h:'',lines:[]};
-  for(const l of L){const h=l.match(/^\s*#{1,4}\s+(.+?)\s*#*$/)||l.match(/^\s*\*\*([^*|]{2,80})\*\*:?\s*$/);
+  for(const l of L){const h=l.match(/^\s*#{1,2}\s+(.+?)\s*#*$/)||l.match(/^\s*\*\*([^*|]{2,80})\*\*:?\s*$/);
     if(h){if(cur.h||cur.lines.join('').trim())secs.push(cur);cur={h:h[1].replace(/\*\*/g,'').replace(/:$/,'').trim(),lines:[]}}else cur.lines.push(l)}
   if(cur.h||cur.lines.join('').trim())secs.push(cur);
   let glance=null;const gi=secs.findIndex(s=>/^(at a glance|in short|summary|tl;?dr)\b/i.test(s.h));
   if(gi>=0)glance=secs.splice(gi,1)[0];
   else if(secs.length>1&&!secs[0].h&&secs[0].lines.join(' ').trim().length<700&&!secs[0].lines.some(l=>/^\s*\|/.test(l)))glance=secs.shift();
   const isCheck=h=>/check before|to confirm|confirm on|unverified|before (you|calling|sending|using)|still open/i.test(h);
-  const plain=main.replace(/[#*|`_>-]+/g,' ').replace(/\s+/g,' ').trim();
+  const plain=L.join('\n').replace(/[#*|`_>-]+/g,' ').replace(/\s+/g,' ').trim();
   return {title,glance,glanceHTML:glance?renderBody(glance.lines):'<p class="rc-note">'+esc(plain.slice(0,220))+(plain.length>220?'…':'')+'</p>',secs:secs.map((s,i)=>({...s,id:'dv-s'+i,check:isCheck(s.h)})),doneHTML:done.trim()?renderBody(done.split('\n')):'',raw:all}}
 function docArticle(doc){const tabs=doc.secs.filter(s=>s.h);const date=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   return '<div class="dv-eyebrow">Finished work · '+esc(date)+'</div><h1 class="dv-title">'+esc(doc.title)+'</h1>'
