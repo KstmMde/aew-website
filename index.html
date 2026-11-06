@@ -1083,7 +1083,7 @@ task.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
 doneBox.addEventListener('input',()=>{canSend();G.amp=Math.min(1,G.amp+.2)});
 $('doneMic').addEventListener('click',()=>dictate(doneBox,$('doneMic'),canSend));
 /* ---------- Length limits and file checks (Nov 6 2026). Only for accounts on the new flow (CLOUD) until rollout. ---------- */
-const TASK_MAX=20000,ANSWER_MAX=8000;let fileRefused='',warnedFor='';
+const TASK_MAX=20000,ANSWER_MAX=8000;let fileRefused='',warnedFor='',nudged=false;
 function lenCounter(el,max,extra){const c=document.createElement('div');c.className='lenc';c.hidden=true;c.setAttribute('aria-live','polite');el.insertAdjacentElement('afterend',c);
   const upd=()=>{if(!CLOUD){c.hidden=true;return}const n=el.value.length+(extra?extra():0);c.hidden=false;
     c.textContent=n.toLocaleString()+' / '+max.toLocaleString()+' characters'+(n>max?'. Too long to send: trim it, or attach the long part as a file.':n>=max*.8?'. Getting close to the limit.':'');
@@ -1092,13 +1092,14 @@ function lenCounter(el,max,extra){const c=document.createElement('div');c.classN
 const updTaskLen=lenCounter(task,TASK_MAX,()=>doneBox.value.length+25),updDoneLen=lenCounter(doneBox,TASK_MAX,()=>task.value.length+25),updTbLen=lenCounter(tbText,TASK_MAX);
 task.addEventListener('input',updDoneLen);doneBox.addEventListener('input',updTaskLen);
 const MENTIONS_FILE=/\b(attach(ed|ing|ment)?|upload(ed|ing)?|my(\s+[\w-]+){0,2}\s+(list|spreadsheet|sheet|file|document|csv|register|tracker|records?)|(list|file|spreadsheet|sheet|csv|document|register|tracker)\s+(that\s+)?(I|we)\s+(provide|attach|send|share|have|keep|gave|made))\b/i;
-function guardSend(text){
+function guardSend(text,final){
   if(!CLOUD)return true;
   const say=m=>add('aew','<small>Before I send it</small>'+esc(m));
   if(text.length>TASK_MAX){say('That task is '+text.length.toLocaleString()+' characters. The limit is '+TASK_MAX.toLocaleString()+'. Trim it a little, or attach the long part as a file, and send again.');return false}
   const key=text.length+'|'+attached.length;
-  if(fileRefused&&!attached.length&&warnedFor!=='r'+key){warnedFor='r'+key;say(fileRefused+', so it isn’t attached. Attach a file I can read (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
-  if(!attached.length&&MENTIONS_FILE.test(text)&&warnedFor!=='m'+key){warnedFor='m'+key;say('Your task mentions a list or file, but nothing is attached. Attach it (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
+  if(!nudged&&fileRefused&&!attached.length&&warnedFor!=='r'+key){warnedFor='r'+key;say(fileRefused+', so it isn’t attached. Attach a file I can read (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
+  if(!nudged&&!attached.length&&MENTIONS_FILE.test(text)&&warnedFor!=='m'+key){warnedFor='m'+key;say('Your task mentions a list or file, but nothing is attached. Attach it (PDF, Word, TXT, CSV or MD, up to 1.5 MB), or press send again to go without it.');return false}
+  if(warnedFor)nudged=true;if(final)nudged=false;
   fileRefused='';warnedFor='';return true}
 $('example').addEventListener('click',()=>{task.value=clean('um so every Friday I chase down invoices that are past due, uh, I want a friendly reminder sent to anybody over 14 days and then give me a list of who paid');doneBox.value='Reminders go out every Friday, and by Monday morning I have a list of who paid and who didn’t.';send.disabled=false;G.amp=1});
 
@@ -1116,7 +1117,7 @@ function sharpen(s){
   return {t,when};
 }
 send.addEventListener('click',()=>{stopDictate();const t=clean(task.value);if(!t)return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
-  const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}if(!guardSend(t+'\n\nWhat done looks like: '+dn))return;task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
+  const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}if(!guardSend(t+'\n\nWhat done looks like: '+dn,true))return;task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
 let busy=false,lastTask='',awaiting=null,CLOUD=false,qaPending=null;
 const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
 async function runTask(text,opts={}){
