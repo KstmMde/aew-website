@@ -423,6 +423,56 @@ textarea::placeholder{color:color-mix(in srgb,var(--mist) 55%,transparent)}
 .lenc{font-size:12px;opacity:.7;margin-top:4px;text-align:right}
 .lenc.warn{opacity:1;color:#c98a12}
 .lenc.err{opacity:1;color:#d24b4b;font-weight:600}
+/* Finished-work view (Nov 6 2026): document layout, real tables, print to PDF */
+.msg.result .out .rc-title{font-weight:700;font-size:18px;line-height:1.3;margin:2px 0 8px;color:var(--cloud)}
+.msg.result .out .rc-note{color:var(--mist)}
+body.dv-open{overflow:hidden}
+.docview{position:fixed;inset:0;z-index:200;background:var(--ink);color:var(--cloud);overflow-y:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.dv-bar{position:sticky;top:0;z-index:2;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:color-mix(in srgb,var(--ink) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.dv-bar .sp{flex:1}
+.dv-doc{max-width:980px;margin:0 auto;padding:28px 16px 72px}
+.dv-eyebrow{font:600 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
+.dv-title{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:10px 0 20px;letter-spacing:-.01em;color:var(--cloud)}
+.dv-glance{border:1px solid color-mix(in srgb,var(--mint) 45%,var(--line));background:color-mix(in srgb,var(--mint) 8%,var(--deep));border-radius:18px;padding:18px 20px;margin-bottom:18px;font-size:17px}
+.dv-tag{display:inline-block;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:var(--mint);border-radius:999px;padding:5px 10px;margin-bottom:10px}
+.dv-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 14px;border-bottom:1px solid var(--line)}
+.dv-tabs button{white-space:nowrap;border:1px solid var(--line);background:var(--deep);color:var(--cloud);border-radius:999px;padding:8px 14px;font:600 14px/1 inherit;cursor:pointer}
+.dv-tabs button:hover{border-color:var(--mint)}
+.dv-doc section{padding:20px 0;border-bottom:1px solid var(--line);scroll-margin-top:72px}
+.dv-doc h2{font-size:20px;margin:0 0 12px;color:var(--mint)}
+.dv-doc p{margin:0 0 10px;line-height:1.6}.dv-doc ul,.dv-doc ol{padding-left:22px;margin:0 0 10px;line-height:1.55}.dv-doc li{margin:3px 0}
+.dv-doc a{color:var(--mint)}.dv-doc h4{margin:14px 0 6px;font-size:16px;color:var(--mint)}
+.dtwrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;margin:4px 0 12px}
+.dt{width:100%;border-collapse:collapse;font-size:14px;line-height:1.45}
+.dt th{text-align:left;font:700 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mist);background:var(--deep);padding:10px 12px;border-bottom:1px solid var(--line)}
+.dt td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+.dt tr:last-child td{border-bottom:0}
+.dt tbody tr:nth-child(odd) td{background:color-mix(in srgb,var(--deep) 45%,transparent)}
+.dv-doc section.dv-check{border:1px solid color-mix(in srgb,var(--warm) 50%,var(--line));background:color-mix(in srgb,var(--warm) 7%,transparent);border-radius:16px;padding:16px 18px;margin:20px 0}
+.dv-check h2{color:var(--warm)}
+.dv-done{margin-top:20px;border:1px solid var(--line);border-radius:14px;padding:12px 16px;color:var(--mist)}
+.dv-done summary{cursor:pointer;font-weight:700;color:var(--cloud)}
+.dv-foot{margin-top:28px;font:500 12px var(--mono);color:var(--mist)}
+@media(max-width:700px){.dt thead{display:none}.dt,.dt tbody,.dt tr,.dt td{display:block;width:100%}.dt tr{border-bottom:1px solid var(--line);padding:8px 0}.dt tr:last-child{border-bottom:0}.dt td{border:0;padding:6px 12px}.dt td::before{content:attr(data-label);display:block;font:700 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mist);margin-bottom:2px}.dt tbody tr:nth-child(odd) td{background:none}}
+@media print{
+  @page{size:letter;margin:.5in}
+  body.dv-open>*:not(.docview){display:none!important}
+  body.dv-open{overflow:visible;background:#fff}
+  .docview{position:static;overflow:visible;background:#fff;color:#111}
+  .dv-bar,.dv-tabs{display:none!important}
+  .dv-doc{max-width:none;padding:0;color:#111}
+  .dv-eyebrow,.dv-foot,.dv-done{color:#555}
+  .dv-title{color:#111;font-size:26px;margin-bottom:14px}
+  .dv-glance{background:#f1faf6;border-color:#9fd9c6;color:#111;font-size:14px}
+  .dv-tag{background:#0d8f6b;color:#fff}
+  .dv-doc h2,.dv-doc h4{color:#0d6f54}.dv-doc a{color:#0d6f54}
+  .dv-doc section{border-color:#ddd;padding:12px 0}
+  .dtwrap{overflow:visible;border-color:#ccc}
+  .dt{display:table!important;font-size:10.5px}.dt thead{display:table-header-group!important}.dt tbody{display:table-row-group!important}.dt tr{display:table-row!important;break-inside:avoid}
+  .dt th{display:table-cell!important;background:#eef5f2;color:#333}.dt td{display:table-cell!important;color:#111;border-bottom:1px solid #ddd!important;padding:6px 8px}
+  .dt td::before{display:none!important}.dt tbody tr:nth-child(odd) td{background:#fafafa}
+  .dv-doc section.dv-check{background:#fff8ef;border-color:#f0c58a}.dv-check h2{color:#9a5b00}
+}
 </style>
 </head>
 <body>
@@ -950,6 +1000,57 @@ function mdRender(src){const L=String(src||'').replace(/\r\n?/g,'\n').split('\n'
     if(m=l.match(/^\s*\d+[.)]\s+(.*)$/)){flushP();if(!list||list.t!=='ol'){flushL();list={t:'ol',i:[]}}list.i.push(m[1]);continue}
     flushL();para.push(l)}
   if(code!==null)o.push('<pre>'+esc(code.join('\n'))+'</pre>');flushP();flushL();return o.join('')}
+/* ---------- Finished-work view (Nov 6 2026). Used by the new flow's results only. ---------- */
+function mdTable(rows){const cells=r=>r.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());const head=cells(rows[0]),body=rows.slice(2).map(cells);
+  return '<div class="dtwrap"><table class="dt"><thead><tr>'+head.map(h=>'<th>'+mdInline(h)+'</th>').join('')+'</tr></thead><tbody>'+body.map(r=>'<tr>'+head.map((h,i)=>'<td data-label="'+esc(h.replace(/[*_`]/g,''))+'">'+mdInline(r[i]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'}
+function renderBody(lines){const out=[];let buf=[];const flush=()=>{if(buf.join('').trim())out.push(mdRender(buf.join('\n')));buf=[]};
+  for(let i=0;i<lines.length;i++){if(/^\s*\|/.test(lines[i])&&lines[i+1]&&/^\s*\|?\s*:?-{2,}/.test(lines[i+1])){flush();const rows=[];while(i<lines.length&&/^\s*\|/.test(lines[i]))rows.push(lines[i++]);i--;out.push(mdTable(rows))}else buf.push(lines[i])}
+  flush();return out.join('')}
+function docModel(src,text){
+  const all=String(src||'').replace(/\r\n?/g,'\n');let main=all,done='';
+  const dm=all.match(/\n\s*-{3,}\s*\n+\s*(?:\*\*|#+\s*)?Done check[\s\S]*$/i);
+  if(dm){main=all.slice(0,dm.index);done=dm[0].replace(/^\s*-{3,}\s*\n+/,'').replace(/^\s*(?:\*\*|#+\s*)?Done check\**:?\**\s*\n?/i,'')}
+  const L=main.split('\n');while(L.length&&!L[0].trim())L.shift();
+  let title='';const m0=L.length&&(L[0].match(/^\s*#{1,2}\s+(.+?)\s*#*$/)||L[0].match(/^\s*\*\*([^*]{3,140})\*\*\s*$/));
+  if(m0){title=m0[1].replace(/\*\*/g,'').trim();L.shift()}
+  if(!title)title=titleOf(sharpen(String(text||'Your finished work')).t);
+  const secs=[];let cur={h:'',lines:[]};
+  for(const l of L){const h=l.match(/^\s*#{1,4}\s+(.+?)\s*#*$/)||l.match(/^\s*\*\*([^*|]{2,80})\*\*:?\s*$/);
+    if(h){if(cur.h||cur.lines.join('').trim())secs.push(cur);cur={h:h[1].replace(/\*\*/g,'').replace(/:$/,'').trim(),lines:[]}}else cur.lines.push(l)}
+  if(cur.h||cur.lines.join('').trim())secs.push(cur);
+  let glance=null;const gi=secs.findIndex(s=>/^(at a glance|in short|summary|tl;?dr)\b/i.test(s.h));
+  if(gi>=0)glance=secs.splice(gi,1)[0];
+  else if(secs.length>1&&!secs[0].h&&secs[0].lines.join(' ').trim().length<700&&!secs[0].lines.some(l=>/^\s*\|/.test(l)))glance=secs.shift();
+  const isCheck=h=>/check before|to confirm|confirm on|unverified|before (you|calling|sending|using)|still open/i.test(h);
+  const plain=main.replace(/[#*|`_>-]+/g,' ').replace(/\s+/g,' ').trim();
+  return {title,glance,glanceHTML:glance?renderBody(glance.lines):'<p class="rc-note">'+esc(plain.slice(0,220))+(plain.length>220?'…':'')+'</p>',secs:secs.map((s,i)=>({...s,id:'dv-s'+i,check:isCheck(s.h)})),doneHTML:done.trim()?renderBody(done.split('\n')):'',raw:all}}
+function docArticle(doc){const tabs=doc.secs.filter(s=>s.h);const date=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  return '<div class="dv-eyebrow">Finished work · '+esc(date)+'</div><h1 class="dv-title">'+esc(doc.title)+'</h1>'
+    +(doc.glance?'<div class="dv-glance"><div class="dv-tag">At a glance</div>'+renderBody(doc.glance.lines)+'</div>':'')
+    +(tabs.length>=2?'<nav class="dv-tabs" aria-label="Sections">'+tabs.map(s=>'<button type="button" data-go="'+s.id+'">'+esc(s.h)+'</button>').join('')+'</nav>':'')
+    +doc.secs.map(s=>'<section id="'+s.id+'"'+(s.check?' class="dv-check"':'')+'>'+(s.h?'<h2>'+esc(s.h)+'</h2>':'')+renderBody(s.lines)+'</section>').join('')
+    +(doc.doneHTML?'<details class="dv-done"><summary>Done check</summary>'+doc.doneHTML+'</details>':'')
+    +'<div class="dv-foot">Prepared by your AI Employee · AI Employee Workflow</div>'}
+function printDoc(v){const d=v.querySelector('.dv-done'),was=d&&d.open;if(d)d.open=true;const t=document.title;document.title=v.querySelector('.dv-title').textContent;window.print();document.title=t;if(d)d.open=was}
+async function richCopy(doc,btn){
+  const a=document.createElement('article');a.innerHTML=docArticle(doc);a.querySelectorAll('.dv-tabs,.dv-foot,.dv-done,.dv-tag,.dv-eyebrow').forEach(x=>x.remove());
+  a.querySelectorAll('table').forEach(t=>{t.setAttribute('style','border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px');t.querySelectorAll('th,td').forEach(c=>{c.removeAttribute('data-label');c.setAttribute('style','border:1px solid #cccccc;padding:6px 8px;text-align:left;vertical-align:top'+(c.tagName==='TH'?';background:#eef5f2;font-weight:bold':''))})});
+  a.querySelectorAll('[class],[id]').forEach(x=>{x.removeAttribute('class');x.removeAttribute('id')});
+  const html='<div style="font-family:Arial,sans-serif;font-size:14px;color:#111111">'+a.innerHTML+'</div>',text=doc.raw.trim();
+  try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]);btn.textContent='Copied'}
+  catch(_){try{await navigator.clipboard.writeText(text);btn.textContent='Copied as text'}catch(__){btn.textContent='Select and copy'}}
+  setTimeout(()=>btn.textContent='Copy',1800)}
+function openDoc(doc,print){
+  document.querySelectorAll('.docview').forEach(x=>x.remove());
+  const v=document.createElement('div');v.className='docview';v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');v.setAttribute('aria-label',doc.title);
+  v.innerHTML='<div class="dv-bar"><button class="btn" type="button" data-x>← Back</button><span class="sp"></span><button class="btn" type="button" data-pdf>Download PDF</button><button class="btn go" type="button" data-copy>Copy</button></div><article class="dv-doc">'+docArticle(doc)+'</article>';
+  document.body.appendChild(v);document.body.classList.add('dv-open');
+  const key=e=>{if(e.key==='Escape')close()},close=()=>{v.remove();document.body.classList.remove('dv-open');document.removeEventListener('keydown',key)};
+  document.addEventListener('keydown',key);v.querySelector('[data-x]').addEventListener('click',close);
+  v.querySelector('[data-pdf]').addEventListener('click',()=>printDoc(v));
+  v.querySelector('[data-copy]').addEventListener('click',e=>richCopy(doc,e.currentTarget));
+  v.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>v.querySelector('#'+b.dataset.go).scrollIntoView({behavior:'smooth',block:'start'})));
+  v.querySelector('[data-x]').focus();if(print)setTimeout(()=>printDoc(v),300)}
 const markFill=s=>esc(s).replace(FILL,m=>`<span class="filler">${m.trim()}</span> `);
 
 function openPanel(mode){
@@ -1279,9 +1380,11 @@ async function cloudWork(id,token,path,body,text,fi){
   if(fin.status==='error'){doing.textContent='Didn’t finish';if(fi)fi.sub('Didn’t finish');setStatus('Needs another try','idle');add('aew','<small>Your AI Employee</small>'+esc(fin.error||'I couldn’t finish this one.'));return}
   doing.textContent='Worked through it';showResult(id,token,fin,text,fi)}
 function showResult(id,token,d,text,fi){
-  const m=add('aew result','<small>Your finished work</small><div class="out"></div><div class="row" style="margin-top:12px"><button class="btn" type="button" data-copy>Copy</button><button class="link" type="button" data-rev></button><button class="link" type="button" data-again>Tell me another task</button></div>');
-  const out=m.querySelector('.out');out.innerHTML=mdRender(d.result);
-  m.querySelector('[data-copy]').addEventListener('click',async e=>{try{await navigator.clipboard.writeText(out.innerText.trim());e.target.textContent='Copied'}catch(_){e.target.textContent='Select and copy'}});
+  const m=add('aew result','<small>Your finished work</small><div class="out"></div><div class="row" style="margin-top:12px"><button class="btn go" type="button" data-open>Open full view</button><button class="btn" type="button" data-pdf>Download PDF</button><button class="btn" type="button" data-copy>Copy</button><button class="link" type="button" data-rev></button><button class="link" type="button" data-again>Tell me another task</button></div>');
+  const doc=docModel(d.result,text),out=m.querySelector('.out');out.innerHTML='<div class="rc-title">'+esc(doc.title)+'</div>'+doc.glanceHTML;
+  m.querySelector('[data-open]').addEventListener('click',()=>openDoc(doc));
+  m.querySelector('[data-pdf]').addEventListener('click',()=>openDoc(doc,true));
+  m.querySelector('[data-copy]').addEventListener('click',e=>richCopy(doc,e.currentTarget));
   m.querySelector('[data-again]').addEventListener('click',()=>$('cmsg').focus());
   const rv=m.querySelector('[data-rev]'),left=d.revisionsLeft??0;
   if(left>0){rv.textContent=`Request changes (${left} left)`;rv.addEventListener('click',()=>{rv.hidden=true;const w=answerBox('What should change?','Make the change',async v=>{lock(m);add('you',esc(v));await cloudWork(id,token,'/auth/task/revise',{id,token,change:v},text,fi)});m.appendChild(w);w.querySelector('textarea').focus()})}
