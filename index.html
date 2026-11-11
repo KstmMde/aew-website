@@ -1374,12 +1374,24 @@ async function cloudWork(id,token,path,body,text,fi){
   step('Reading the brief');
   const steps=['Working it through','Checking it against what you asked','Packaging it for you'];let si=0,fin=null;
   const ticker=setInterval(()=>{if(si<steps.length)step(steps[si++])},7000);
-  cpost(path,body).then(r=>{if(r.ok&&(r.d.status==='done'||r.d.status==='error'))fin=fin||r.d;else if(!r.ok&&r.d.error)fin=fin||{status:'error',error:r.d.error==='newtask'?r.d.message:r.d.error}}).catch(()=>{});
+  cpost(path,body).then(r=>{if(r.ok&&(r.d.status==='done'||r.d.status==='error'||r.d.status==='quote'))fin=fin||r.d;else if(!r.ok&&r.d.error)fin=fin||{status:'error',error:r.d.error==='newtask'?r.d.message:r.d.error}}).catch(()=>{});
   while(!fin){await wait(4000);if(fin)break;
-    try{const r=await fetch(`${AEW_API}/api/tasks/${id}`,{headers:{Authorization:'Bearer '+token}});const d=await r.json();if(r.ok&&(d.status==='done'||d.status==='error'))fin=d}catch(_){}}
+    try{const r=await fetch(`${AEW_API}/api/tasks/${id}`,{headers:{Authorization:'Bearer '+token}});const d=await r.json();if(r.ok&&(d.status==='done'||d.status==='error'||d.status==='quote'))fin=d}catch(_){}}
   clearInterval(ticker);trail.querySelectorAll('li').forEach(l=>l.classList.add('done'));card.classList.add('finished');
   if(fin.status==='error'){doing.textContent='Didn’t finish';if(fi)fi.sub('Didn’t finish');setStatus('Needs another try','idle');add('aew','<small>Your AI Employee</small>'+esc(fin.error||'I couldn’t finish this one.'));return}
+  if(fin.status==='quote'){doing.textContent='Needs your OK';showQuote(id,token,fin,text,fi);return}
   doing.textContent='Worked through it';showResult(id,token,fin,text,fi)}
+/* Overtime quote: a task estimated over the included cap waits here for Approve or Pass */
+function showQuote(id,token,d,text,fi){
+  setStatus('Needs your OK','idle');G.state='idle';if(fi)fi.sub('Needs your OK');
+  const q=add('aew plan','<small>Bigger than an included task</small><div class="sum"></div><div class="row" style="margin-top:12px"><button class="btn go" type="button" data-approve>Approve</button><button class="link" type="button" data-pass>Pass</button></div>');
+  q.querySelector('.sum').textContent=d.quoteText||('Overtime for this one is $'+Number(d.quote||0).toFixed(2)+'. Approve it and I’ll start, or pass and nothing is charged.');
+  const ap=q.querySelector('[data-approve]'),ps=q.querySelector('[data-pass]');
+  ap.addEventListener('click',async()=>{lock(q);add('you','Approve');await cloudWork(id,token,'/auth/task/approve',{id,token},text,fi)});
+  ps.addEventListener('click',async()=>{lock(q);add('you','Pass');let r;try{r=await cpost('/auth/task/pass',{id,token})}catch(_){r={ok:false,d:{}}}
+    if(fi)fi.sub('Passed');setStatus('Ready when you are','idle');
+    add('aew','<small>Your AI Employee</small>'+esc(r.d.error||'Passed. This one didn’t run and nothing was charged.'))});
+}
 function showResult(id,token,d,text,fi){
   const m=add('aew result','<small>Your finished work</small><div class="out"></div><div class="row" style="margin-top:12px"><button class="btn go" type="button" data-open>Open full view</button><button class="btn" type="button" data-pdf>Download PDF</button><button class="btn" type="button" data-copy>Copy</button><button class="link" type="button" data-rev></button><button class="link" type="button" data-again>Tell me another task</button></div>');
   const doc=docModel(d.result,text),out=m.querySelector('.out');out.innerHTML='<div class="rc-title">'+esc(doc.title)+'</div>'+doc.glanceHTML;
@@ -1399,8 +1411,9 @@ async function loadMyTasks(){try{const r=await fetch('/auth/my-tasks',{credentia
   (d.tasks||[]).slice().reverse().forEach(t=>{const fi=feedItem(t.title);const el=$('today').firstElementChild;$('empCount').textContent='0';$('empCount').hidden=true;
     if(t.status==='done'){fi.done('Done. Tap to open');feedOpen(el,t)}
     else if(t.status==='error')fi.sub('Didn’t finish');
+    else if(t.status==='quote'){fi.sub('Needs your OK. Tap to decide');el.style.cursor='pointer';el.addEventListener('click',()=>{setEmp(false);go('');openPanel('none');thread.innerHTML='';showQuote(t.id,t.token,t,t.title,null);showComposer()},{once:true})}
     else{fi.sub('Working on it');(async()=>{for(;;){await wait(6000);try{const x=await fetch(`${AEW_API}/api/tasks/${t.id}`,{headers:{Authorization:'Bearer '+t.token}});const s=await x.json();
-      if(s.status==='done'){Object.assign(t,s);fi.done('Done. Tap to open');feedOpen(el,t);return}if(s.status==='error'){fi.sub('Didn’t finish');return}}catch(_){}}})()}})}catch(_){}}
+      if(s.status==='done'){Object.assign(t,s);fi.done('Done. Tap to open');feedOpen(el,t);return}if(s.status==='error'){fi.sub('Didn’t finish');return}if(s.status==='quote'){Object.assign(t,s);fi.sub('Needs your OK. Tap to decide');el.style.cursor='pointer';el.addEventListener('click',()=>{setEmp(false);go('');openPanel('none');thread.innerHTML='';showQuote(t.id,t.token,t,t.title,null);showComposer()},{once:true});return}}catch(_){}}})()}})}catch(_){}}
 /* ---------- Agent flow: keep the conversation going ---------- */
 function showComposer(){if(!activated)return;$('composer').hidden=false;home.classList.add('chatting')}
 const cmsg=$('cmsg');
