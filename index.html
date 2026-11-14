@@ -1525,7 +1525,8 @@ $('copy').addEventListener('click',async e=>{
 /* ---------- Voice mode (Nov 14 2026): the AI Employee talks back. A speech layer over the same flow:
    same front desk, same question cards (4 answers + your own words), same limits. Every card still works by tap or typing. ---------- */
 const V={ok:false,on:false,sess:0,job:0,st:null,ac:null,an:null,buf:null,el:null,ids:null,hearing:false,speaking:false,endNow:null,cancelHear:null,stopSay:null,relisten:null,cache:new Map()};
-const V_SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+/* silent clip as a blob: the site's security policy allows blob audio, not data: audio */
+const V_SILENT=URL.createObjectURL(new Blob([Uint8Array.from(atob('UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA='),c=>c.charCodeAt(0))],{type:'audio/wav'}));
 const V_YES=/^(yes|yeah|yep|yup|sure|ok|okay|go|go ahead|do it|hand it off|send it|sounds good|looks good|that works|that'?s (right|it|good|correct)|correct|perfect|approved?)\b/i;
 const vRms=()=>{V.an.getByteTimeDomainData(V.buf);let s=0;for(const v of V.buf){const d=(v-128)/128;s+=d*d}return Math.sqrt(s/V.buf.length)};
 function vPill(show){let b=$('vPill');if(!b){b=document.createElement('button');b.type='button';b.id='vPill';b.className='link';b.textContent='Voice is on · turn it off';b.style.cssText='display:block;margin:6px auto 0';b.addEventListener('click',()=>{vEnd();setStatus('Voice is off. Tap or type your answers.','idle')});statusEl.after(b)}b.hidden=!show}
