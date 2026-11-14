@@ -1145,11 +1145,13 @@ function useTask(u){used+=u;$('useTxt').textContent='';$('useBar').style.width=M
   if(used>=CAP*.8)$('useNote').textContent=''}
 $('globeBtn').addEventListener('click',()=>{
   if(!activated){showSignin();return}
+  if(V.on){vTap();return}
   if(listening){stopListen();toReview();return}
   if(G.state==='working'||G.state==='searching')return;
+  if(V.ok&&CLOUD&&!busy){thread.innerHTML='';voiceStart();return}
   thread.innerHTML='';startListen();
 });
-$('doneTalking').addEventListener('click',()=>{stopListen();toReview()});
+$('doneTalking').addEventListener('click',()=>{if(V.on){vTap();return}stopListen();toReview()});
 $('more').addEventListener('click',startListen);
 /* ---------- Type-or-upload task box ---------- */
 const tbText=$('tbText'),tbSend=$('tbSend'),tbFile=$('tbFile'),tbHint=$('tbHint'),TB_HINT=tbHint.textContent;
@@ -1326,9 +1328,9 @@ function answerBox(placeholder,label,onSend){
   mic.addEventListener('click',()=>dictate(ta,mic,upd));
   sb.addEventListener('click',()=>{const v=ta.value.trim();if(!v)return;stopDictate();onSend(v)});
   return w}
-function lock(el){stopDictate();el.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);el.classList.add('answered')}
+function lock(el){vCancel();stopDictate();el.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);el.classList.add('answered')}
 async function cloudFlow(id,token,step,text,sz,fi){
-  let qn=0;
+  let qn=0;if(V.on)V.ids={id,token};
   for(;;){
     if(step.action==='ask'){
       qn++;setStatus('Quick question','idle');fi.sub('Asking a quick question');
@@ -1339,7 +1341,8 @@ async function cloudFlow(id,token,step,text,sz,fi){
         const box=m.querySelector('.opts');
         step.options.slice(0,4).forEach(o=>{const b=document.createElement('button');b.type='button';b.className='opt';b.textContent=o;b.addEventListener('click',()=>res(o));box.appendChild(b)});
         const ob=document.createElement('button');ob.type='button';ob.className='opt other-btn';ob.textContent='Other: I’ll say it my way';box.appendChild(ob);
-        ob.addEventListener('click',()=>{ob.hidden=true;const w=answerBox('Type or speak your answer…','Send',res);m.appendChild(w);w.querySelector('textarea').focus()});
+        ob.addEventListener('click',()=>{vCancel();ob.hidden=true;const w=answerBox('Type or speak your answer…','Send',res);m.appendChild(w);w.querySelector('textarea').focus()});
+        vAsk(step,res);
       });
       qaPending=null;lock(m);add('you',esc(ans));
       const typing=typingDots();G.state='working';
@@ -1348,14 +1351,15 @@ async function cloudFlow(id,token,step,text,sz,fi){
       if(!r.ok||!r.d.step){add('aew','<small>Your AI Employee</small>'+esc(r.d.error||'I lost the connection for a second.')+' Pick your answer again.');qn--;continue}
       step=r.d.step;continue}
     if(step.action==='decline'){used=Math.max(0,used-sz.u);useTask(0);fi.sub('Not taken on');setStatus('Needs a different task','idle');
-      add('aew','<small>Your AI Employee</small>'+esc(step.reason)+' This one didn’t use a task.');return}
+      add('aew','<small>Your AI Employee</small>'+esc(step.reason)+' This one didn’t use a task.');vLast(step.reason);return}
     setStatus('Ready when you are','idle');fi.sub('Waiting for your OK');
     const p=add('aew plan','<small>Here’s the plan</small><div class="sum"></div><div class="row" style="margin-top:12px"><button class="btn go" type="button" data-go>Hand it off</button><button class="link" type="button" data-change>Change something</button></div>');
     p.querySelector('.sum').textContent=step.summary;
     const choice=await new Promise(res=>{
       qaPending=v=>res({change:v});
       p.querySelector('[data-go]').addEventListener('click',()=>res({go:true}));
-      p.querySelector('[data-change]').addEventListener('click',e=>{e.currentTarget.hidden=true;const w=answerBox('What should change?','Update the plan',v=>res({change:v}));p.appendChild(w);w.querySelector('textarea').focus()})});
+      vPlan(step,p,res);
+      p.querySelector('[data-change]').addEventListener('click',e=>{vCancel();e.currentTarget.hidden=true;const w=answerBox('What should change?','Update the plan',v=>res({change:v}));p.appendChild(w);w.querySelector('textarea').focus()})});
     qaPending=null;lock(p);
     if(choice.change){add('you',esc(choice.change));const typing=typingDots();
       let r;try{r=await cpost('/auth/task/answer',{id,token,answer:choice.change,change:true})}catch(_){r={ok:false,d:{}}}typing.remove();
@@ -1371,14 +1375,14 @@ async function cloudWork(id,token,path,body,text,fi){
   const wl=card.querySelector('.workline'),det=card.querySelector('.detail'),doing=card.querySelector('.doing'),trail=card.querySelector('.trail');
   wl.addEventListener('click',()=>{det.hidden=!det.hidden;wl.setAttribute('aria-expanded',String(!det.hidden))});
   const step=t=>{trail.querySelectorAll('li').forEach(l=>l.classList.add('done'));const li=document.createElement('li');li.innerHTML='<div></div>';li.firstChild.textContent=t;trail.appendChild(li);doing.textContent=t;if(fi)fi.sub(t)};
-  step('Reading the brief');
+  step('Reading the brief');vSay(path==='/auth/task/revise'?'Making that change now.':'On it. I’ll tell you when it’s ready.');
   const steps=['Working it through','Checking it against what you asked','Packaging it for you'];let si=0,fin=null;
   const ticker=setInterval(()=>{if(si<steps.length)step(steps[si++])},7000);
   cpost(path,body).then(r=>{if(r.ok&&(r.d.status==='done'||r.d.status==='error'||r.d.status==='quote'))fin=fin||r.d;else if(!r.ok&&r.d.error)fin=fin||{status:'error',error:r.d.error==='newtask'?r.d.message:r.d.error}}).catch(()=>{});
   while(!fin){await wait(4000);if(fin)break;
     try{const r=await fetch(`${AEW_API}/api/tasks/${id}`,{headers:{Authorization:'Bearer '+token}});const d=await r.json();if(r.ok&&(d.status==='done'||d.status==='error'||d.status==='quote'))fin=d}catch(_){}}
   clearInterval(ticker);trail.querySelectorAll('li').forEach(l=>l.classList.add('done'));card.classList.add('finished');
-  if(fin.status==='error'){doing.textContent='Didn’t finish';if(fi)fi.sub('Didn’t finish');setStatus('Needs another try','idle');add('aew','<small>Your AI Employee</small>'+esc(fin.error||'I couldn’t finish this one.'));return}
+  if(fin.status==='error'){doing.textContent='Didn’t finish';if(fi)fi.sub('Didn’t finish');setStatus('Needs another try','idle');add('aew','<small>Your AI Employee</small>'+esc(fin.error||'I couldn’t finish this one.'));vLast(fin.error||'I couldn’t finish this one.');return}
   if(fin.status==='quote'){doing.textContent='Needs your OK';showQuote(id,token,fin,text,fi);return}
   doing.textContent='Worked through it';showResult(id,token,fin,text,fi)}
 /* Overtime quote: a task estimated over the included cap waits here for Approve or Pass */
@@ -1386,7 +1390,7 @@ function showQuote(id,token,d,text,fi){
   setStatus('Needs your OK','idle');G.state='idle';if(fi)fi.sub('Needs your OK');
   const q=add('aew plan','<small>Bigger than an included task</small><div class="sum"></div><div class="row" style="margin-top:12px"><button class="btn go" type="button" data-approve>Approve</button><button class="link" type="button" data-pass>Pass</button></div>');
   q.querySelector('.sum').textContent=d.quoteText||('Overtime for this one is $'+Number(d.quote||0).toFixed(2)+'. Approve it and I’ll start, or pass and nothing is charged.');
-  const ap=q.querySelector('[data-approve]'),ps=q.querySelector('[data-pass]');
+  const ap=q.querySelector('[data-approve]'),ps=q.querySelector('[data-pass]');vQuote(q,d);
   ap.addEventListener('click',async()=>{lock(q);add('you','Approve');await cloudWork(id,token,'/auth/task/approve',{id,token},text,fi)});
   ps.addEventListener('click',async()=>{lock(q);add('you','Pass');let r;try{r=await cpost('/auth/task/pass',{id,token})}catch(_){r={ok:false,d:{}}}
     if(fi)fi.sub('Passed');setStatus('Ready when you are','idle');
@@ -1404,6 +1408,7 @@ function showResult(id,token,d,text,fi){
   else rv.hidden=true;
   setStatus('Done','done');G.happy=1;
   if(fi){fi.done('Done. Ready for your OK');recordDone(titleOf(sharpen(text).t),text)}
+  if(V.on){const g=document.createElement('div');g.innerHTML=doc.glanceHTML||'';const li=[...g.querySelectorAll('li')].map(x=>x.textContent.trim().replace(/[.;]$/,'')).filter(Boolean);vLast('It’s ready. '+doc.title+'. '+(li.length?li.join('. '):g.textContent.replace(/\s+/g,' ').trim()).slice(0,320)+'. The full page is on your screen.')}
 }
 /* Activity feed after a reload: your cloud tasks come back, finished ones open with a tap */
 function feedOpen(el,t){el.style.cursor='pointer';el.addEventListener('click',()=>{setEmp(false);go('');openPanel('none');thread.innerHTML='';showResult(t.id,t.token,t,t.title,null);showComposer()})}
@@ -1453,7 +1458,7 @@ function sendMsg(){stopDictate();const m=cmsg.value.trim();if(!m)return;cmsg.val
 $('csend').addEventListener('click',sendMsg);
 cmsg.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();sendMsg()}});
 
-$('newTask').addEventListener('click',()=>{awaiting=null;busy=false;go('');thread.innerHTML='';task.value='';
+$('newTask').addEventListener('click',()=>{vEnd();awaiting=null;busy=false;go('');thread.innerHTML='';task.value='';
   panel.hidden=true;home.classList.remove('talking');$('invite').hidden=false;$('inviteSub').hidden=false;$('typeInstead').hidden=false;setStatus('','idle');
   if(matchMedia('(max-width:700px)').matches)setSide(false);G.happy=1});
 let pendingTask='';let handoffs=0;const libItems=[];
@@ -1517,6 +1522,102 @@ $('copy').addEventListener('click',async e=>{
   catch(_){const r=document.createRange();r.selectNodeContents($('mail'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent='Selected'}
   setTimeout(()=>b.textContent='Copy',1800);
 });
+/* ---------- Voice mode (Nov 14 2026): the AI Employee talks back. A speech layer over the same flow:
+   same front desk, same question cards (4 answers + your own words), same limits. Every card still works by tap or typing. ---------- */
+const V={ok:false,on:false,sess:0,job:0,st:null,ac:null,an:null,buf:null,el:null,ids:null,hearing:false,speaking:false,endNow:null,cancelHear:null,stopSay:null,relisten:null,cache:new Map()};
+const V_SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+const V_YES=/^(yes|yeah|yep|yup|sure|ok|okay|go|go ahead|do it|hand it off|send it|sounds good|looks good|that works|that'?s (right|it|good|correct)|correct|perfect|approved?)\b/i;
+const vRms=()=>{V.an.getByteTimeDomainData(V.buf);let s=0;for(const v of V.buf){const d=(v-128)/128;s+=d*d}return Math.sqrt(s/V.buf.length)};
+function vPill(show){let b=$('vPill');if(!b){b=document.createElement('button');b.type='button';b.id='vPill';b.className='link';b.textContent='Voice is on · turn it off';b.style.cssText='display:block;margin:6px auto 0';b.addEventListener('click',()=>{vEnd();setStatus('Voice is off. Tap or type your answers.','idle')});statusEl.after(b)}b.hidden=!show}
+function vBeep(){try{const o=V.ac.createOscillator(),g=V.ac.createGain();o.frequency.value=660;g.gain.value=.04;o.connect(g);g.connect(V.ac.destination);o.start();o.stop(V.ac.currentTime+.08)}catch(_){}}
+function vCancel(){V.job++;V.relisten=null;if(V.stopSay)V.stopSay();if(V.cancelHear)V.cancelHear()}
+function vEnd(){V.on=false;V.sess++;vCancel();V.ids=null;try{V.st&&V.st.getTracks().forEach(t=>t.stop())}catch(_){}try{V.ac&&V.ac.close()}catch(_){}V.st=V.ac=V.an=null;if($('vPill'))vPill(false);if(G.state==='listening')G.state='idle'}
+function vFail(d){const lim=d&&d.error==='voice-limit';vEnd();if(lim)add('aew','<small>Your AI Employee</small>'+esc(d.message||'You’ve used today’s voice minutes. You can keep going by typing.'));setStatus(lim?'Voice minutes used up for today':'Voice isn’t available right now. Tap or type instead.','idle')}
+function vTap(){if(V.speaking&&V.stopSay){V.stopSay('cut');return}if(V.hearing&&V.endNow){V.endNow();return}if(V.relisten){const r=V.relisten;V.relisten=null;r()}}
+/* Listen for one answer: starts on your voice, ends after a pause (or a tap on the orb), then turns it into words. */
+function vHear(){
+  return new Promise(res=>{
+    if(!V.on||!V.st)return res('');
+    const job=V.job,mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+    let rec;try{rec=new MediaRecorder(V.st,mime?{mimeType:mime,audioBitsPerSecond:32000}:{audioBitsPerSecond:32000})}catch(_){return res('')}
+    const chunks=[],t0=performance.now();let spoke=false,loud=0,quietAt=0,amb=.02,done=false,iv=0;
+    rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+    const finish=async keep=>{if(done)return;done=true;clearInterval(iv);V.hearing=false;V.endNow=V.cancelHear=null;
+      await new Promise(r=>{rec.onstop=r;try{rec.stop()}catch(_){r()}});
+      if(!keep||job!==V.job||!spoke){if(G.state==='listening')G.state='idle';res('');return}
+      const secs=(performance.now()-t0)/1000,type=rec.mimeType||mime||'audio/webm';setStatus('Got it','working');vBeep();
+      try{const h={'Content-Type':type,'X-Audio-Secs':secs.toFixed(1)};if(V.ids){h['X-Task-Id']=V.ids.id;h['X-Task-Token']=V.ids.token}
+        const r=await fetch('/auth/voice/stt',{method:'POST',credentials:'same-origin',headers:h,body:new Blob(chunks,{type})});const d=await r.json().catch(()=>({}));
+        if(!r.ok){vFail(d);res('');return}
+        res(job===V.job&&V.on?clean(String(d.text||'')):'')}
+      catch(_){vFail({});res('')}};
+    V.hearing=true;V.endNow=()=>{spoke=true;finish(true)};V.cancelHear=()=>finish(false);
+    setStatus('Listening…','listening');try{rec.start(250)}catch(_){done=true;V.hearing=false;return res('')}
+    iv=setInterval(()=>{const now=performance.now(),el=now-t0,r=vRms();G.level=Math.max(G.level,Math.min(1,r*5));
+      amb=Math.min(amb*1.02+.0002,Math.max(r,.004));const th=Math.max(.03,amb*3);
+      if(r>th){loud+=50;quietAt=0;if(loud>=150)spoke=true}else{loud=0;if(spoke){quietAt=quietAt||now;if(now-quietAt>=1200)finish(true)}}
+      if(!spoke&&el>9000)finish(false);if(el>75000)finish(true)},50)})}
+/* Say one thing out loud. Start talking over it (or tap the orb) and it stops and listens. Resolves true, 'cut' or false. */
+async function vSay(text){
+  if(!V.on||!text)return false;const job=V.job;text=String(text).replace(/\s+/g,' ').trim().slice(0,680);
+  try{let url=V.cache.get(text);
+    if(!url){const r=await fetch('/auth/voice/tts',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,...(V.ids||{})})});
+      if(!r.ok){vFail(await r.json().catch(()=>({})));return false}
+      url=URL.createObjectURL(await r.blob());if(text.length<=80)V.cache.set(text,url)}
+    if(job!==V.job||!V.on)return false;
+    return await new Promise(res=>{const a=V.el,t0=performance.now(),SP='Tap me or just talk to cut in',was=[statusEl.textContent,G.state];let loud=0,iv=0;
+      const end=v=>{clearInterval(iv);a.onended=a.onerror=null;V.speaking=false;V.stopSay=null;if(statusEl.textContent===SP)setStatus(was[0],was[1]);res(v)};
+      V.speaking=true;V.stopSay=v=>{try{a.pause()}catch(_){}end(v==='cut'?'cut':false)};
+      a.onended=()=>end(true);a.onerror=()=>end(false);a.src=url;setStatus(SP,'working');a.play().catch(()=>end(false));
+      iv=setInterval(()=>{G.amp=1;if(!V.an||performance.now()-t0<400)return;if(vRms()>.09){loud+=50;if(loud>=250){try{a.pause()}catch(_){}end('cut')}}else loud=0},50)})}
+  catch(_){return false}}
+/* One spoken turn: say it, listen, hand the words to `use`. If nothing is heard, the card waits; tap the orb to answer by voice again. */
+function vTurn(prompt,use){
+  const go=async sayIt=>{V.relisten=null;const job=V.job;
+    if(sayIt){await vSay(prompt);if(job!==V.job||!V.on)return}
+    const t=await vHear();if(job!==V.job||!V.on)return;
+    if(!t){setStatus('Tap an answer, or tap me to talk','idle');V.relisten=()=>go(false);return}
+    const again=await use(t);if(again&&job===V.job&&V.on){prompt=again;go(true)}};
+  go(true)}
+/* A spoken answer that matches one of the four suggestions picks it; anything else goes through in your own words (the fifth box). */
+function vMatch(t,opts){const n=x=>String(x).toLowerCase().replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim(),u=n(t);
+  let m=u.match(/^(?:the |option |number )?(first|second|third|fourth|last)(?: one| option)?$/);if(m){const i={first:0,second:1,third:2,fourth:3,last:opts.length-1}[m[1]];return opts[i]||null}
+  m=u.match(/^(?:option|number) (one|two|three|four|[1-4]|[a-d])$/);if(m){const i={one:0,two:1,three:2,four:3,1:0,2:1,3:2,4:3,a:0,b:1,c:2,d:3}[m[1]];return opts[i]||null}
+  for(const o of opts){const k=n(o);if(k&&(k===u||(u.split(' ').length<=k.split(' ').length+3&&u.includes(k))))return o}
+  return null}
+function vAsk(step,res){if(!V.on)return;const opts=step.options.slice(0,4);vTurn(step.question,async t=>{res(vMatch(t,opts)||t)})}
+function vPlan(step,p,res){if(!V.on)return;
+  vTurn(step.summary+' Should I hand it off, or change something?',async t=>{
+    if(V_YES.test(t)&&t.split(/\s+/).length<=7){p.querySelector('[data-go]').click();return}
+    if(/^(no|nope|nah|not yet|wait|hold on|change( it| something)?)[.!]?$/i.test(t))return 'Okay. What should change?';
+    res({change:t})})}
+function vQuote(q,d){if(!V.on)return;let asked=0;
+  vTurn(d.quoteText||('Overtime for this one is $'+Number(d.quote||0).toFixed(2)+'. Approve it, or pass?'),async t=>{
+    if(/\b(pass|no|nope|skip|cancel|don'?t)\b/i.test(t)){q.querySelector('[data-pass]').click();return}
+    if(/\bapprove/i.test(t)||(V_YES.test(t)&&t.split(/\s+/).length<=5)){q.querySelector('[data-approve]').click();return}
+    if(!asked++)return 'Say approve, or pass.'})}
+/* Last word of a voice session (the finished work, a decline, an error), then the mic is released. */
+function vLast(text){if(!V.on)return;const s=V.sess;vCancel();vSay(text).then(()=>{if(s===V.sess)vEnd()})}
+async function voiceStart(){
+  const s=++V.sess;
+  try{V.el=V.el||new Audio();V.el.src=V_SILENT;V.el.play().catch(()=>{});   /* unlock sound inside the tap (phones need this) */
+    V.st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    V.ac=new (window.AudioContext||window.webkitAudioContext)();if(V.ac.state==='suspended')await V.ac.resume();
+    V.an=V.ac.createAnalyser();V.an.fftSize=1024;V.ac.createMediaStreamSource(V.st).connect(V.an);V.buf=new Uint8Array(V.an.fftSize);
+  }catch(_){vEnd();startListen();return}
+  if(s!==V.sess){try{V.st.getTracks().forEach(t=>t.stop())}catch(_){}return}
+  V.on=true;V.ids=null;vPill(true);G.wake=1;G.happy=1;
+  openPanel('speak');timer.textContent='';live.innerHTML='<span class="interim">Go ahead, I’m listening…</span>';
+  const t=await vHear();if(s!==V.sess||!V.on)return;
+  if(!t){vEnd();toReview('I didn’t catch that. Type it here, or tap me to try again.');return}
+  live.textContent=t;
+  let dn='';
+  for(let i=0;i<2&&!dn;i++){await vSay(i?'I didn’t catch that. What does done look like?':'Got it. What does done look like to you?');if(s!==V.sess||!V.on)return;dn=await vHear();if(s!==V.sess||!V.on)return}
+  if(!dn){vEnd();task.value=t;toReview('Add what done looks like, then hand it off.');return}
+  const full=t+'\n\nWhat done looks like: '+dn;
+  if(!guardSend(full,true)){vEnd();return}
+  runTask(full);
+}
 /* ---------- Real sign-in: pick up the session set by /auth/google or /auth/linkedin callback ---------- */
 (async()=>{
   const h=location.hash;
@@ -1526,6 +1627,7 @@ $('copy').addEventListener('click',async e=>{
     if(!me.signedIn)return;
     try{const t=sessionStorage.getItem('aew_pending');if(t){pendingTask=t;sessionStorage.removeItem('aew_pending')}}catch(_){}
     activate(me.provider||'Google');CLOUD=!!me.cloud;if(CLOUD)loadMyTasks();
+    V.ok=!!me.voice&&CLOUD&&!!(navigator.mediaDevices&&window.MediaRecorder);if(V.ok)$('inviteSub').textContent='Tap me and talk. I’ll talk back. Or type it below.';
     if(me.name){const first=String(me.name).split(' ')[0];$('invite').innerHTML='';$('invite').append('Welcome, '+first+'. ');const sp=document.createElement('span');sp.textContent='Tell me the task in your own words.';$('invite').append(sp)}
   }catch(_){}
 })();
