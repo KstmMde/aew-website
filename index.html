@@ -1110,6 +1110,8 @@ function dictate(field,btn,onChange){
 let activated=false;const CAP=100;let used=0;
 function showSignin(){$('invite').hidden=true;$('inviteSub').hidden=true;$('typeInstead').hidden=true;$('signin').hidden=false;G.wake=1;setStatus('Almost there','idle');}
 let activatedVia='';
+/* No task without a signed-in account: keep what they wrote and open sign-in. It comes back after they sign in. */
+function needSignin(t){if(activated)return false;if(t)pendingTask=t;$('composer').hidden=true;home.classList.remove('chatting');showSignin();return true}
 function activate(via){
   activated=true;activatedVia=via||'';syncAcct();if(pendingTask){const t=pendingTask;pendingTask='';setTimeout(()=>{task.value=t;toReview('Here’s the task. Edit anything, then hand it off.')},350)}$('signin').hidden=true;G.happy=1;G.wake=1;
   $('invite').innerHTML='Welcome. <span>Tell me the task in your own words.</span>';$('invite').hidden=false;
@@ -1218,7 +1220,7 @@ function sharpen(s){
   const when=(s.match(/\b((?:every|each)\s+(?:other\s+)?(?:day|morning|afternoon|evening|night|week|weekday|weekend|month|quarter|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday|hour)s?|daily|weekly|monthly|quarterly|yearly|nightly)\b/i)||[])[0];
   return {t,when};
 }
-send.addEventListener('click',()=>{stopDictate();const t=clean(task.value);if(!t)return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
+send.addEventListener('click',()=>{stopDictate();const t=clean(task.value);if(!t)return;if(needSignin(t))return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
   const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}if(!guardSend(t+'\n\nWhat done looks like: '+dn,true))return;task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
 let busy=false,lastTask='',awaiting=null,CLOUD=false,qaPending=null;
 const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
@@ -1288,6 +1290,7 @@ async function runReal(text,files,sz,fi){
   let cf_token='';try{cf_token=await getHumanToken()}catch(_){fail('I couldn’t confirm you’re a person. Refresh the page and try again.');return}
   try{const fd=new FormData();fd.append('text',text);fd.append('cf_token',cf_token);if(AEW_VID)fd.append('visitor',AEW_VID);files.forEach(f=>fd.append('files',f,f.name));
     const r=await fetch('/auth/task',{method:'POST',body:fd});const d=await r.json().catch(()=>({}));
+    if(r.status===401&&d.signin){stop();card.classList.add('finished');doing.textContent='Needs sign-in';fi.sub('Needs sign-in');used=Math.max(0,used-sz.u);useTask(0);add('aew','<small>Your AI Employee</small>'+esc(d.error));activated=false;activatedVia='';syncAcct();needSignin(text.replace(/\n\nWhat done looks like: [\s\S]*$/,''));return}
     if(!r.ok||!d.id)throw new Error(d.error||'I couldn’t reach your AI Employee.');id=d.id;token=d.token;if(d.flow==='qa'&&d.step)qa=d.step}
   catch(e){fail(e.message==='Failed to fetch'?'I couldn’t reach your AI Employee.':e.message);return}
   if(qa){clearInterval(clock);card.remove();await cloudFlow(id,token,qa,text,sz,fi);return}
@@ -1445,7 +1448,7 @@ async function converse(msg){
   if(/\?\s*$/.test(msg)){reply('Good question. Once I’m connected to your work, I’ll answer from your own files and trusted sources, and show you where every answer came from.');return}
   reply('I’m here. Tell me what you need done, or ask me about any task.');
 }
-function sendMsg(){stopDictate();const m=cmsg.value.trim();if(!m)return;cmsg.value='';$('csend').disabled=true;
+function sendMsg(){stopDictate();const m=cmsg.value.trim();if(!m)return;if(needSignin(clean(m))){cmsg.value='';return}cmsg.value='';$('csend').disabled=true;
   if(qaPending){const r=qaPending;qaPending=null;r(m);return}
   if(awaiting){const r=awaiting;awaiting=null;add('you',esc(m));r(m);return}
   if(busy){add('you',esc(m));reply('Noted. I’ll finish this one first, then get to that.');return}
