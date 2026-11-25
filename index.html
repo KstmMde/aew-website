@@ -960,7 +960,7 @@ function frame(ms){
 }
 /* live voice level (where the browser allows the mic): livelier when you're louder */
 let meter=null;
-async function startMeter(){try{if(meter||!navigator.mediaDevices)return;const st=await navigator.mediaDevices.getUserMedia({audio:true});
+async function startMeter(){try{if(meter||!navigator.mediaDevices)return;const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
   const ac=new (window.AudioContext||window.webkitAudioContext)(),an=ac.createAnalyser();an.fftSize=512;ac.createMediaStreamSource(st).connect(an);
   const buf=new Uint8Array(an.fftSize);meter={st,ac,raf:0};
   const tick=()=>{if(!meter)return;an.getByteTimeDomainData(buf);let sum=0;for(const v of buf){const d=(v-128)/128;sum+=d*d}
@@ -1075,29 +1075,110 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let listenTarget=null;
 const listenBox=()=>listenTarget||task;
 let rec=null,listening=false,finalText='',startAt=0,tick=null,quiet=null;
+/* ---------- Conversation mode (Nov 25 2026, stage 2) ----------
+   One spoken session. You talk, a pause ends your turn, AEW answers out loud and opens
+   the mic again on its own. Talking while it speaks cuts it off. No clicks in between. */
+let convo=null,turnQuiet=null,turnMax=null,bargeTimer=null;
+const TURN_QUIET_MS=1300, TURN_MAX_MS=90000, BARGE_LEVEL=0.22;
+const YES=/^\s*(y|ye|yes|yeah|yep|yup|sure|ok|okay|correct|right|perfect|good|send it|go ahead|do it|hand it off|that works|sounds good)\b/i;
+
+/* Resolves once nothing is queued and nothing is still playing. */
+function sayIdle(){
+  return new Promise(res=>{
+    const t=setInterval(()=>{if(!sayBusy&&!sayQ.length&&!vplay){clearInterval(t);res()}},120);
+    setTimeout(()=>{clearInterval(t);res()},25000);
+  });
+}
+/* Watch the mic while AEW talks. Loud enough for a moment = you cut in. */
+function watchBarge(){
+  stopBarge();let hot=0;
+  bargeTimer=setInterval(()=>{
+    if(!convo)return;
+    if(vstate!=='speaking'){hot=0;return}
+    if(G.level>BARGE_LEVEL){if(++hot>=3){hot=0;stopSpeaking();if(convo&&!listening)startListen()}}
+    else hot=0;
+  },90);
+}
+function stopBarge(){if(bargeTimer){clearInterval(bargeTimer);bargeTimer=null}}
+
+/* Say a line, then reopen the mic when it has finished. */
+async function convoAsk(line){
+  if(!convo)return;
+  if(listening)stopListen();
+  live.innerHTML='<span class="interim">'+esc(line)+'</span>';
+  setStatus('Speaking…','idle');
+  say(line);
+  await sayIdle();
+  if(!convo)return;
+  startListen();
+}
+function convoStart(){
+  if(!VOICE||!voiceOn||!SR){startListen();return}
+  convo={step:task.value.trim()?'done':'task'};
+  listenTarget=convo.step==='done'?doneBox:null;
+  openPanel('speak');startMeter();watchBarge();
+  convoAsk(convo.step==='done'?'What does done look like to you?':'Go ahead. Tell me the task in your own words.');
+}
+function convoEnd(msg){
+  const was=convo;convo=null;
+  clearTimeout(turnQuiet);clearTimeout(turnMax);stopBarge();stopSpeaking();
+  if(listening)stopListen();
+  stopMeter();listenTarget=null;
+  if(was)toReview(msg);
+}
+/* A turn closed. Take what was said and move the conversation on. */
+function convoTurn(){
+  if(!convo)return;
+  clearTimeout(turnQuiet);clearTimeout(turnMax);
+  const heard=clean(finalText).trim();
+  stopListen();
+  if(!heard){convoAsk('I didn’t catch that. Say it again?');return}
+  if(convo.step==='task'){
+    task.value=heard;canSend();
+    convo.step='done';listenTarget=doneBox;
+    convoAsk('Got it. What does done look like to you?');
+  }else if(convo.step==='done'){
+    doneBox.value=heard;canSend();
+    convo.step='confirm';listenTarget=null;
+    const trim=t=>String(t).replace(/[.\s]+$/,'');
+    convoAsk('Here is what I have. '+trim(task.value)+'. Done looks like: '+trim(doneBox.value)+'. Should I hand it off?');
+  }else{
+    if(YES.test(heard)){
+      convo=null;clearTimeout(turnQuiet);clearTimeout(turnMax);stopBarge();stopMeter();listenTarget=null;
+      openPanel('review');canSend();
+      say('Handing it off now.');
+      setTimeout(()=>{if(!send.disabled)send.click()},500);
+    }else{
+      convo.step='task';listenTarget=null;
+      convoAsk('No problem. Tell me what to change.');
+    }
+  }
+}
 function startListen(){
   G.wake=1;G.happy=1;
   if(!SR){toReview('Voice isn’t available in this browser. Type it instead, same result.');return}
   try{
     rec=new SR();rec.continuous=true;rec.interimResults=true;rec.lang='en-US';
-    const box=listenBox();finalText=box.value?box.value+' ':'';
+    const box=listenBox();finalText=convo?'':(box.value?box.value+' ':'');
     rec.onresult=e=>{let interim='';
       for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)finalText+=r[0].transcript+' ';else interim+=r[0].transcript}
       live.innerHTML=markFill(finalText)+`<span class="interim">${markFill(interim)}</span>`;
       G.amp=1;setStatus('Listening…','listening');
-      clearTimeout(quiet);quiet=setTimeout(()=>{if(listening)setStatus('Still here. Take your time…')},2600)};
+      clearTimeout(quiet);quiet=setTimeout(()=>{if(listening&&!convo)setStatus('Still here. Take your time…')},2600);
+      if(convo){clearTimeout(turnQuiet);turnQuiet=setTimeout(convoTurn,TURN_QUIET_MS)}};
     rec.onend=()=>{if(listening){try{rec.start()}catch(_){}}};   /* keeps going through long pauses */
     rec.onerror=e=>{if(/not-allowed|service-not-allowed|audio-capture/.test(e.error)){listening=false;stopListen();toReview('I can’t hear you here. Type it instead, same result.')}};
     rec.start();listening=true;startMeter();setVstate('listening');
+    if(convo){clearTimeout(turnMax);turnMax=setTimeout(()=>{if(convo&&listening)convoTurn()},TURN_MAX_MS)}
     openPanel('speak');live.innerHTML='<span class="interim">Go ahead, I’m listening…</span>';
     setStatus('Listening…','listening');startAt=Date.now();
     tick=setInterval(()=>{const s=Math.floor((Date.now()-startAt)/1000);timer.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`},500);
   }catch(_){toReview('Type it instead, same result.')}
 }
 function stopListen(){
-  listening=false;clearInterval(tick);clearTimeout(quiet);timer.textContent='';stopMeter();
+  listening=false;clearInterval(tick);clearTimeout(quiet);timer.textContent='';if(!convo)stopMeter();
   try{rec&&rec.stop()}catch(_){}
-  listenBox().value=clean(finalText);
+  if(!convo)listenBox().value=clean(finalText);
   if(vstate==='listening')setVstate('idle');
   try{canSend()}catch(_){}
 }
@@ -1259,14 +1340,16 @@ function sizeOf(text){const w=text.split(/\s+/).length;
 function useTask(u){used+=u;$('useTxt').textContent='';$('useBar').style.width=Math.min(100,used/CAP*100)+'%';
   if(used>=CAP*.8)$('useNote').textContent=''}
 $('globeBtn').addEventListener('click',()=>{
-  stopSpeaking();
-  if(!greeted&&voiceOn&&VOICE&&activated){greeted=true;say($('invite').textContent)}
   if(!activated){showSignin();return}
+  if(convo){convoEnd('Stopped. Everything you said is here — edit anything.');return}
   if(listening){stopListen();toReview();return}
   if(G.state==='working'||G.state==='searching')return;
-  thread.innerHTML='';startListen();
+  stopSpeaking();thread.innerHTML='';
+  if(VOICE&&voiceOn&&SR){convoStart();return}
+  if(!greeted&&voiceOn&&VOICE){greeted=true;say($('invite').textContent)}
+  startListen();
 });
-$('doneTalking').addEventListener('click',()=>{stopListen();toReview()});
+$('doneTalking').addEventListener('click',()=>{if(convo){convoEnd();return}stopListen();toReview()});
 $('more').addEventListener('click',startListen);
 /* ---------- Type-or-upload task box ---------- */
 const tbText=$('tbText'),tbSend=$('tbSend'),tbFile=$('tbFile'),tbHint=$('tbHint'),TB_HINT=tbHint.textContent;
