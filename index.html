@@ -567,7 +567,7 @@ body.dv-open{overflow:hidden}
   <div class="composer" id="composer" hidden>
     <div class="bar2">
       <input id="cmsg" placeholder="Message your AI Employee" aria-label="Message your AI Employee">
-      <button type="button" class="cbtn" id="cmic" aria-label="Talk instead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button type="button" class="cbtn" id="cspeak" aria-pressed="false" hidden aria-label="Spoken replies" title="Spoken replies off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9.5a4 4 0 0 1 0 5"/><path d="M19.5 7a7.5 7.5 0 0 1 0 10"/></svg></button><button type="button" class="cbtn" id="cmic" aria-label="Talk instead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button type="button" class="cbtn send" id="csend" aria-label="Send" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
     </div>
     <p class="hint">Quick questions are free. It always plays your task back before it starts.</p>
@@ -1092,8 +1092,9 @@ function stopListen(){
 }
 /* Dictation into a specific box (done step, "Other" answers, chat). One mic at a time; words land in that box. */
 let dict=null;
-function stopDictate(){if(!dict)return;const d=dict;dict=null;try{d.rec.onend=null;d.rec.stop()}catch(_){}d.btn.classList.remove('rec');d.btn.setAttribute('aria-pressed','false');stopMeter();if(G.state==='listening')G.state='idle'}
+function stopDictate(){stopRecord();if(!dict)return;const d=dict;dict=null;try{d.rec.onend=null;d.rec.stop()}catch(_){}d.btn.classList.remove('rec');d.btn.setAttribute('aria-pressed','false');stopMeter();if(G.state==='listening')G.state='idle'}
 function dictate(field,btn,onChange){
+  if(VOICE&&voiceSupported()){recordInto(field,btn,onChange);return}
   if(dict&&dict.btn===btn){stopDictate();return}
   stopDictate();
   if(!SR){field.placeholder='Voice isn’t available in this browser. Type it instead.';field.focus();return}
@@ -1106,6 +1107,82 @@ function dictate(field,btn,onChange){
   r.onend=()=>{if(dict&&dict.rec===r){try{r.start()}catch(_){stopDictate()}}};
   dict={rec:r,btn};btn.classList.add('rec');btn.setAttribute('aria-pressed','true');
   try{r.start();startMeter();G.state='listening';field.focus()}catch(_){stopDictate()}
+}
+/* ---------- Voice mode (Nov 14 2026): recorded speech up to the worker, spoken replies back down.
+   The worker runs Cloudflare Workers AI on the free daily neurons first and only falls through to
+   Deepgram on the credit once those are gone, so nothing here needs to know which tier answered.
+   This only switches on for signed-in people the worker says voice is on for. For everyone else the
+   browser's own speech recognition keeps doing exactly what it did before. ---------- */
+const VOICE_SECS=90,VOICE_BYTES=1500000,VOICE_SAY_MAX=700;
+let voiceOn=false,rbox=null,vplay=null,vtask={};
+function voiceSupported(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)}
+function voiceMime(){const want=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'];
+  if(!window.MediaRecorder||!MediaRecorder.isTypeSupported)return '';
+  for(const t of want){try{if(MediaRecorder.isTypeSupported(t))return t}catch(_){}}return ''}
+function stopSpeaking(){if(!vplay)return;const a=vplay;vplay=null;try{a.pause()}catch(_){}try{URL.revokeObjectURL(a.src)}catch(_){}}
+function setVoice(on){
+  voiceOn=!!on&&VOICE;
+  try{localStorage.setItem('aew_voice',voiceOn?'1':'0')}catch(_){}
+  const b=$('cspeak');
+  if(b){b.classList.toggle('rec',voiceOn);b.setAttribute('aria-pressed',voiceOn?'true':'false');b.title=voiceOn?'Spoken replies on':'Spoken replies off'}
+  if(!voiceOn)stopSpeaking();
+}
+/* Say one short line out loud. Silent if voice is off or the audio can't play. */
+async function sayLine(text){
+  if(!voiceOn||!VOICE)return;
+  const line=String(text||'').replace(/\s+/g,' ').trim();
+  if(!line)return;
+  stopSpeaking();
+  try{
+    const b={text:line.slice(0,VOICE_SAY_MAX)};
+    if(vtask.id){b.id=vtask.id;b.token=vtask.token}
+    const r=await fetch('/auth/voice/tts',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(b)});
+    if(!r.ok){if(r.status===429)setVoice(false);return}
+    const a=new Audio(URL.createObjectURL(await r.blob()));
+    vplay=a;a.play().catch(()=>{});
+  }catch(_){}
+}
+function stopRecord(){if(rbox){try{rbox.mr.stop()}catch(_){rbox=null}}}
+/* Record what they say, send the clip to the worker, put the words in their box. */
+async function recordInto(field,btn,onChange){
+  if(rbox&&rbox.btn===btn){stopRecord();return}
+  if(rbox)stopRecord();
+  stopSpeaking();
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+  catch(_){field.placeholder='I can’t hear you here. Type it instead, same result.';field.focus();return}
+  const mime=voiceMime();
+  let mr;
+  try{mr=new MediaRecorder(stream,mime?{mimeType:mime}:undefined)}
+  catch(_){try{stream.getTracks().forEach(t=>t.stop())}catch(__){}VOICE=false;dictate(field,btn,onChange);return}
+  const parts=[],t0=Date.now(),was=field.placeholder;
+  mr.ondataavailable=e=>{if(e.data&&e.data.size)parts.push(e.data)};
+  mr.onstop=async()=>{
+    rbox=null;
+    try{stream.getTracks().forEach(t=>t.stop())}catch(_){}
+    btn.classList.remove('rec');btn.setAttribute('aria-pressed','false');stopMeter();
+    if(G.state==='listening')G.state='idle';
+    const blob=new Blob(parts,{type:mime||'audio/webm'});
+    if(!blob.size){field.placeholder=was;return}
+    if(blob.size>VOICE_BYTES){field.placeholder='That one ran long. Say it in a shorter stretch, or type it.';return}
+    field.placeholder='Writing that down…';
+    try{
+      const h={'Content-Type':blob.type||'audio/webm','X-Audio-Secs':String(Math.min(VOICE_SECS,Math.max(1,Math.round((Date.now()-t0)/1000))))};
+      if(vtask.id){h['X-Task-Id']=vtask.id;h['X-Task-Token']=vtask.token}
+      const r=await fetch('/auth/voice/stt',{method:'POST',headers:h,credentials:'same-origin',body:blob});
+      const d=await r.json().catch(()=>({}));
+      field.placeholder=was;
+      if(!r.ok||!d.text){
+        if(d.error==='voice-limit'&&d.message){field.placeholder=d.message;setVoice(false)}
+        else if(d.error==='voice-off'){VOICE=false;setVoice(false);field.placeholder='Voice isn’t available right now. Type it instead, same result.'}
+        field.focus();return}
+      field.value=(field.value.trim()?field.value.replace(/\s*$/,' '):'')+d.text;
+      if(onChange)onChange();field.focus();
+    }catch(_){field.placeholder=was}
+  };
+  rbox={mr,btn};btn.classList.add('rec');btn.setAttribute('aria-pressed','true');
+  try{mr.start();startMeter();G.state='listening';field.focus()}catch(_){stopRecord()}
+  setTimeout(()=>{if(rbox&&rbox.mr===mr)stopRecord()},VOICE_SECS*1000);
 }
 let activated=false;const CAP=100;let used=0;
 function showSignin(){$('invite').hidden=true;$('inviteSub').hidden=true;$('typeInstead').hidden=true;$('signin').hidden=false;G.wake=1;setStatus('Almost there','idle');}
@@ -1222,7 +1299,7 @@ function sharpen(s){
 }
 send.addEventListener('click',()=>{stopDictate();const t=clean(task.value);if(!t)return;if(needSignin(t))return;if(awaiting){task.value='';const r=awaiting;awaiting=null;review.hidden=true;add('you',esc(t));r(t);return}
   const dn=doneBox.value.trim();if(!dn){doneBox.focus();return}if(!guardSend(t+'\n\nWhat done looks like: '+dn,true))return;task.value='';doneBox.value='';runTask(t+'\n\nWhat done looks like: '+dn)});
-let busy=false,lastTask='',awaiting=null,CLOUD=false,qaPending=null;
+let busy=false,lastTask='',awaiting=null,CLOUD=false,VOICE=false,qaPending=null;
 const askUser=q=>new Promise(res=>{add('aew ask',`<small>Quick question</small>${q}`);setStatus('Waiting on you','idle');awaiting=res;showComposer();$('cmsg').focus()});
 async function runTask(text,opts={}){
   if(busy)return;busy=true;
@@ -1331,12 +1408,13 @@ function answerBox(placeholder,label,onSend){
   return w}
 function lock(el){stopDictate();el.querySelectorAll('button,textarea').forEach(x=>x.disabled=true);el.classList.add('answered')}
 async function cloudFlow(id,token,step,text,sz,fi){
+  vtask={id,token};
   let qn=0;
   for(;;){
     if(step.action==='ask'){
       qn++;setStatus('Quick question','idle');fi.sub('Asking a quick question');
       const m=add('aew ask','<small>Quick question</small><div class="q"></div><div class="opts"></div>');
-      m.querySelector('.q').textContent=step.question;
+      m.querySelector('.q').textContent=step.question;sayLine(step.question);
       const ans=await new Promise(res=>{
         qaPending=res;
         const box=m.querySelector('.opts');
@@ -1354,7 +1432,7 @@ async function cloudFlow(id,token,step,text,sz,fi){
       add('aew','<small>Your AI Employee</small>'+esc(step.reason)+' This one didn’t use a task.');return}
     setStatus('Ready when you are','idle');fi.sub('Waiting for your OK');
     const p=add('aew plan','<small>Here’s the plan</small><div class="sum"></div><div class="row" style="margin-top:12px"><button class="btn go" type="button" data-go>Hand it off</button><button class="link" type="button" data-change>Change something</button></div>');
-    p.querySelector('.sum').textContent=step.summary;
+    p.querySelector('.sum').textContent=step.summary;sayLine(step.summary);
     const choice=await new Promise(res=>{
       qaPending=v=>res({change:v});
       p.querySelector('[data-go]').addEventListener('click',()=>res({go:true}));
@@ -1529,6 +1607,9 @@ $('copy').addEventListener('click',async e=>{
     if(!me.signedIn)return;
     try{const t=sessionStorage.getItem('aew_pending');if(t){pendingTask=t;sessionStorage.removeItem('aew_pending')}}catch(_){}
     activate(me.provider||'Google');CLOUD=!!me.cloud;if(CLOUD)loadMyTasks();
+    VOICE=!!me.voice&&voiceSupported();
+    if(VOICE){const b=$('cspeak');if(b){b.hidden=false;b.addEventListener('click',()=>setVoice(!voiceOn))}
+      let saved='1';try{saved=localStorage.getItem('aew_voice')||'1'}catch(_){}setVoice(saved==='1')}
     if(me.name){const first=String(me.name).split(' ')[0];$('invite').innerHTML='';$('invite').append('Welcome, '+first+'. ');const sp=document.createElement('span');sp.textContent='Tell me the task in your own words.';$('invite').append(sp)}
   }catch(_){}
 })();
